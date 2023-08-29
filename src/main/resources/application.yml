@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: api-invoice-sender
+
+# OpenAPI
+openapi:
+  name: invoice-sender
+  title: InvoiceSender
+  version: '@project.version@'
+
