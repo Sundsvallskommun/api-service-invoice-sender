@@ -1,6 +1,13 @@
 spring:
   application:
     name: api-invoice-sender
+  flyway:
+    enabled: true
+    group: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
 
 # OpenAPI
 openapi:
