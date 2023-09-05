@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test
+    driver-class-name: org.h2.Driver
+    username: sa
+  jpa:
+    hibernate:
+      ddl-auto: update
+  flyway:
+    enabled: false
+
+integration:
+  # Raindance
+  raindance:
+    host: someHost
+    domain: HOME
+    username: user
+    password: p4ssw0rd
+    share: mnt/
+    work-directory: /tmp/raindance/incoming
+    filename-prefixes:
+      - Faktura-pdf
+  
+  # Party
+  party:
+    url: http://something.com/party
+    oauth2:
+      token-url: http://something.com/token
+      client-id: someClientId
+      client-secret: someClientSecret
+  
+  # Messaging
+  messaging:
+    url: http://something.com/messaging
+    oauth2:
+      token-url: http://something.com/token
+      client-id: someClientId
+      client-secret: someClientSecret
+    invoice:
+      subject: someSubject
+      reference-prefix: 'Faktura #'
+    status-report:
+      sender-name: SomeSender
+      sender-email-address: noreply@something.com
+      recipient: someoneelse@something.com
+      subject-prefix: somePrefix

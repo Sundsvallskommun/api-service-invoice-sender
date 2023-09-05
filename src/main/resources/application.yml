@@ -1,10 +1,16 @@
 spring:
   application:
     name: api-invoice-sender
+  flyway:
+    enabled: true
+    group: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
 
 # OpenAPI
 openapi:
   name: invoice-sender
   title: InvoiceSender
   version: '@project.version@'
-
