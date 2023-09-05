@@ -16,7 +16,6 @@
 		<!-- Pipeline properties -->
 		<docker.image.name>ms-invoicesender</docker.image.name>
 		<exposed.app.port>8080</exposed.app.port>
-		<published.container.port.sandbox>8228</published.container.port.sandbox>
 		<published.container.port.test>8338</published.container.port.test>
 		<published.container.port.production>8338</published.container.port.production>
 	</properties>
