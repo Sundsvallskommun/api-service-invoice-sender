@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "3.1"
+  version: "3.3"
 servers:
-- url: https://api.sundsvall.se/messaging
+- url: http://localhost:8080
   description: Generated server url
 paths:
   /webmessage:
@@ -506,6 +506,68 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /digital-invoice:
+    post:
+      tags:
+      - Sending Resources
+      summary: Send a digital invoice
+      operationId: sendDigitalInvoice
+      parameters:
+      - name: async
+        in: query
+        description: Whether to send the message asynchronously
+        required: false
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalInvoiceRequest'
+        required: true
+      responses:
+        "201":
+          description: Successful Operation
+          headers:
+            Location:
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResult'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/MessageResult'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "502":
+          description: Bad Gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /status/message/{messageId}:
     get:
       tags:
@@ -648,6 +710,7 @@ paths:
           - SMS
           - WEB_MESSAGE
           - DIGITAL_MAIL
+          - DIGITAL_INVOICE
           - SNAIL_MAIL
           - LETTER
           - SLACK
@@ -801,54 +864,6 @@ paths:
       x-wso2-mutual-ssl: Optional
 components:
   schemas:
-    DeliveryResult:
-      type: object
-      properties:
-        deliveryId:
-          type: string
-          description: The delivery id
-          format: uuid
-        messageType:
-          $ref: '#/components/schemas/MessageType'
-        status:
-          $ref: '#/components/schemas/MessageStatus'
-      description: Delivery result
-    MessageResult:
-      type: object
-      properties:
-        messageId:
-          type: string
-          description: The message id
-          format: uuid
-        deliveries:
-          type: array
-          description: The message deliveries
-          items:
-            $ref: '#/components/schemas/DeliveryResult'
-      description: Message result
-    MessageStatus:
-      type: string
-      description: Status
-      enum:
-      - PENDING
-      - AWAITING_FEEDBACK
-      - SENT
-      - NOT_SENT
-      - FAILED
-      - NO_FEEDBACK_SETTINGS_FOUND
-      - NO_FEEDBACK_WANTED
-    MessageType:
-      type: string
-      description: Message type
-      enum:
-      - MESSAGE
-      - EMAIL
-      - SMS
-      - WEB_MESSAGE
-      - DIGITAL_MAIL
-      - SNAIL_MAIL
-      - LETTER
-      - SLACK
     ExternalReference:
       required:
       - key
@@ -864,26 +879,6 @@ components:
           description: The external reference value
           example: 356t4r34f
       description: External references
-    Header:
-      required:
-      - values
-      type: object
-      properties:
-        name:
-          type: string
-          description: The header name
-          enum:
-          - DISTRIBUTION_RULE
-          - CATEGORY
-          - FACILITY_ID
-          - TYPE
-        values:
-          type: array
-          description: The header values
-          items:
-            type: string
-            description: The header values
-      description: Headers
     WebMessageAttachment:
       type: object
       properties:
@@ -920,11 +915,6 @@ components:
       properties:
         party:
           $ref: '#/components/schemas/WebMessageParty'
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
         message:
           type: string
           description: Message
@@ -947,20 +937,69 @@ components:
           type: object
           additionalProperties:
             type: object
+        status:
+          $ref: '#/components/schemas/StatusType'
         title:
           type: string
         detail:
           type: string
-        status:
-          $ref: '#/components/schemas/StatusType'
     StatusType:
       type: object
       properties:
+        reasonPhrase:
+          type: string
         statusCode:
           type: integer
           format: int32
-        reasonPhrase:
+    DeliveryResult:
+      type: object
+      properties:
+        deliveryId:
           type: string
+          description: The delivery id
+          format: uuid
+        messageType:
+          $ref: '#/components/schemas/MessageType'
+        status:
+          $ref: '#/components/schemas/MessageStatus'
+      description: Delivery result
+    MessageResult:
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: The message id
+          format: uuid
+        deliveries:
+          type: array
+          description: The message deliveries
+          items:
+            $ref: '#/components/schemas/DeliveryResult'
+      description: Message result
+    MessageStatus:
+      type: string
+      description: Status
+      enum:
+      - PENDING
+      - AWAITING_FEEDBACK
+      - SENT
+      - NOT_SENT
+      - FAILED
+      - NO_CONTACT_SETTINGS_FOUND
+      - NO_CONTACT_WANTED
+    MessageType:
+      type: string
+      description: Message type
+      enum:
+      - MESSAGE
+      - EMAIL
+      - SMS
+      - WEB_MESSAGE
+      - DIGITAL_MAIL
+      - DIGITAL_INVOICE
+      - SNAIL_MAIL
+      - LETTER
+      - SLACK
     SnailmailAttachment:
       required:
       - content
@@ -1000,11 +1039,6 @@ components:
       properties:
         party:
           $ref: '#/components/schemas/SnailmailParty'
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
         department:
           type: string
           description: Department and unit that should be billed
@@ -1026,11 +1060,6 @@ components:
       properties:
         party:
           $ref: '#/components/schemas/SmsRequestParty'
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
         sender:
           type: string
           description: Sender
@@ -1060,11 +1089,6 @@ components:
       - token
       type: object
       properties:
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
         token:
           type: string
           description: App/bot token
@@ -1074,19 +1098,6 @@ components:
         message:
           type: string
           description: Message (supports Slack markdown formatting)
-    MessageBatchResult:
-      type: object
-      properties:
-        batchId:
-          type: string
-          description: The batch id
-          format: uuid
-        messages:
-          type: array
-          description: The individual message results
-          items:
-            $ref: '#/components/schemas/MessageResult'
-      description: Message batch result
     Email:
       required:
       - address
@@ -1112,11 +1123,22 @@ components:
       properties:
         party:
           $ref: '#/components/schemas/MessageParty'
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
+        filters:
+          type: object
+          additionalProperties:
+            type: array
+            description: Filters
+            example:
+              someAttributeName:
+              - someAttributeValue
+            items:
+              type: string
+              description: Filters
+              example: "{\"someAttributeName\":[\"someAttributeValue\"]}"
+          description: Filters
+          example:
+            someAttributeName:
+            - someAttributeValue
         sender:
           $ref: '#/components/schemas/MessageSender'
         subject:
@@ -1173,6 +1195,19 @@ components:
           type: string
           description: The sender of the SMS
           example: sender
+    MessageBatchResult:
+      type: object
+      properties:
+        batchId:
+          type: string
+          description: The batch id
+          format: uuid
+        messages:
+          type: array
+          description: The individual message results
+          items:
+            $ref: '#/components/schemas/MessageResult'
+      description: Message batch result
     LetterAttachment:
       required:
       - content
@@ -1200,7 +1235,7 @@ components:
         content:
           type: string
           description: Content (BASE64-encoded)
-      description: Attachments
+      description: Attachment
     LetterParty:
       required:
       - partyIds
@@ -1229,11 +1264,6 @@ components:
       properties:
         party:
           $ref: '#/components/schemas/LetterParty'
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
         subject:
           type: string
           description: Subject
@@ -1272,20 +1302,22 @@ components:
       description: Sender
     LetterSenderSupportInfo:
       required:
-      - emailAddress
-      - phoneNumber
       - text
-      - url
       type: object
       properties:
         text:
           type: string
+          description: Text
         emailAddress:
           type: string
+          description: E-mail address
         phoneNumber:
           type: string
+          description: Phone number
         url:
           type: string
+          description: URL
+      description: Support info
     EmailAttachment:
       required:
       - content
@@ -1313,11 +1345,6 @@ components:
       properties:
         party:
           $ref: '#/components/schemas/EmailRequestParty'
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
         emailAddress:
           type: string
           description: Recipient e-mail address
@@ -1384,7 +1411,7 @@ components:
         filename:
           type: string
           description: Filename
-      description: Attachments
+      description: Attachment
     DigitalMailParty:
       required:
       - partyIds
@@ -1412,11 +1439,6 @@ components:
       properties:
         party:
           $ref: '#/components/schemas/DigitalMailParty'
-        headers:
-          type: array
-          description: Headers
-          items:
-            $ref: '#/components/schemas/Header'
         sender:
           $ref: '#/components/schemas/DigitalMailSender'
         subject:
@@ -1448,20 +1470,124 @@ components:
       description: Sender
     DigitalMailSenderSupportInfo:
       required:
-      - emailAddress
-      - phoneNumber
       - text
-      - url
       type: object
       properties:
         text:
           type: string
+          description: Text
         emailAddress:
           type: string
+          description: E-mail address
         phoneNumber:
           type: string
+          description: Phone number
         url:
           type: string
+          description: URL
+      description: Support info
+    Details:
+      required:
+      - accountNumber
+      - accountType
+      - amount
+      - dueDate
+      - paymentReference
+      - paymentReferenceType
+      type: object
+      properties:
+        amount:
+          type: number
+          description: The invoice amount
+          format: float
+          example: 123.45
+        dueDate:
+          type: string
+          description: The invoice due date
+          format: date
+          example: 2023-10-09
+        paymentReferenceType:
+          type: string
+          enum:
+          - SE_OCR
+          - TENANT_REF
+        paymentReference:
+          maxLength: 25
+          type: string
+          description: The payment reference number
+          example: "426523791"
+        accountType:
+          type: string
+          enum:
+          - BANKGIRO
+          - PLUSGIRO
+        accountNumber:
+          type: string
+          description: The receiving account (a valid BANKGIRO or PLUSGIRO number)
+          example: "12345"
+      description: Invoice details
+    DigitalInvoiceFile:
+      required:
+      - content
+      - contentType
+      - filename
+      type: object
+      properties:
+        contentType:
+          type: string
+          description: Content type
+          enum:
+          - application/pdf
+        content:
+          type: string
+          description: Content (BASE64-encoded)
+        filename:
+          type: string
+          description: Filename
+      description: Files
+    DigitalInvoiceParty:
+      type: object
+      properties:
+        partyId:
+          type: string
+          description: The recipient party id
+          format: uuid
+        externalReferences:
+          type: array
+          description: External references
+          items:
+            $ref: '#/components/schemas/ExternalReference'
+      description: Party
+    DigitalInvoiceRequest:
+      required:
+      - details
+      - party
+      - type
+      type: object
+      properties:
+        party:
+          $ref: '#/components/schemas/DigitalInvoiceParty'
+        type:
+          type: string
+          description: Invoice type
+          enum:
+          - INVOICE
+          - REMINDER
+        subject:
+          type: string
+          description: Subject
+          nullable: true
+        reference:
+          type: string
+          description: Invoice reference
+          example: "Faktura #12345"
+        details:
+          $ref: '#/components/schemas/Details'
+        files:
+          type: array
+          description: Files
+          items:
+            $ref: '#/components/schemas/DigitalInvoiceFile'
     LetterStatistics:
       type: object
       properties:
@@ -1516,6 +1642,7 @@ components:
           - SMS
           - WEB_MESSAGE
           - DIGITAL_MAIL
+          - DIGITAL_INVOICE
           - SNAIL_MAIL
           - LETTER
           - SLACK
@@ -1527,12 +1654,11 @@ components:
           - SENT
           - NOT_SENT
           - FAILED
-          - NO_FEEDBACK_SETTINGS_FOUND
-          - NO_FEEDBACK_WANTED
+          - NO_CONTACT_SETTINGS_FOUND
+          - NO_CONTACT_WANTED
         content:
           type: object
         timestamp:
           type: string
           format: date-time
   securitySchemes: {}
-

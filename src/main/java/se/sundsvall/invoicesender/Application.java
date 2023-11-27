@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 
 import se.sundsvall.dept44.ServiceApplication;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
 import se.sundsvall.invoicesender.service.InvoiceSenderService;
 
 @ServiceApplication
@@ -15,10 +16,19 @@ public class Application {
 		run(Application.class, args);
 	}
 
-	@Bean
-	CommandLineRunner test(final InvoiceSenderService service) {
+	//@Bean
+	CommandLineRunner doStuff2(final InvoiceSenderService service) {
 		return args -> {
 			service.doStuff();
+		};
+	}
+
+	@Bean
+	CommandLineRunner doStuff(final RaindanceIntegration raindanceIntegration) {
+		return args -> {
+			var batches = raindanceIntegration.readBatch();
+
+			raindanceIntegration.writeBatch(batches.get(0));
 		};
 	}
 }

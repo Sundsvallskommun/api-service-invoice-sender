@@ -8,6 +8,7 @@ public class Batch {
 
     private String path;
     private String sevenZipFilename;
+    private String remotePath;
     private List<Item> items;
     private final LocalDateTime startedAt = LocalDateTime.now();
     private LocalDateTime completedAt;
@@ -16,7 +17,7 @@ public class Batch {
         return path;
     }
 
-    public Batch setPath(final String path) {
+    public Batch withPath(final String path) {
         this.path = path;
         return this;
     }
@@ -25,8 +26,17 @@ public class Batch {
         return sevenZipFilename;
     }
 
-    public Batch setSevenZipFilename(final String sevenZipFilename) {
+    public Batch withSevenZipFilename(final String sevenZipFilename) {
         this.sevenZipFilename = sevenZipFilename;
+        return this;
+    }
+
+    public String getRemotePath() {
+        return remotePath;
+    }
+
+    public Batch withRemotePath(final String remotePath) {
+        this.remotePath = remotePath;
         return this;
     }
 
@@ -42,7 +52,7 @@ public class Batch {
         return this;
     }
 
-    public Batch setItems(final List<Item> items) {
+    public Batch withItems(final List<Item> items) {
         this.items = items;
         return this;
     }
@@ -57,15 +67,5 @@ public class Batch {
 
     public void setCompleted() {
         completedAt = LocalDateTime.now();
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("Batch{");
-        sb.append("path='").append(path).append('\'');
-        sb.append(", sevenZipFilename='").append(sevenZipFilename).append('\'');
-        sb.append(", items=").append(items);
-        sb.append('}');
-        return sb.toString();
     }
 }

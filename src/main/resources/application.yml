@@ -14,4 +14,3 @@ openapi:
   name: invoice-sender
   title: InvoiceSender
   version: '@project.version@'
-

@@ -1,6 +1,5 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
-import static generated.se.sundsvall.messaging.DigitalMailAttachment.ContentTypeEnum.APPLICATION_PDF;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.sundsvall.invoicesender.model.Status.NOT_SENT;
 import static se.sundsvall.invoicesender.model.Status.SENT;
@@ -8,21 +7,18 @@ import static se.sundsvall.invoicesender.model.Status.SENT;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import se.sundsvall.invoicesender.model.Item;
 import se.sundsvall.invoicesender.model.Status;
 
-import generated.se.sundsvall.messaging.DigitalMailAttachment;
-import generated.se.sundsvall.messaging.DigitalMailParty;
-import generated.se.sundsvall.messaging.DigitalMailRequest;
-import generated.se.sundsvall.messaging.MessageStatus;
-
 @Component
 public class MessagingIntegration {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MessagingIntegration.class);
 
     static final String INTEGRATION_NAME = "Messaging";
 
@@ -39,7 +35,7 @@ public class MessagingIntegration {
         try {
             var invoiceContent = Files.readAllBytes(Paths.get(path).resolve(invoice.getFilename()));
             var encodedInvoiceContent = new String(Base64.getEncoder().encode(invoiceContent), UTF_8);
-
+/*
             var request = new DigitalMailRequest()
                 .subject(invoiceSubject)
                 .party(new DigitalMailParty().partyIds(List.of(UUID.fromString(invoice.getRecipientPartyId()))))
@@ -48,14 +44,16 @@ public class MessagingIntegration {
                     .contentType(APPLICATION_PDF)
                     .content(encodedInvoiceContent)));
 
-            var response = client.sendDigitalMail(request);
+            var response = client.sendDigitalInvoice(request);
 
             // We know that we have a single message with a single delivery - extract the status
             var status = response.getMessages().get(0).getDeliveries().get(0).getStatus();
 
-            return status == MessageStatus.SENT ? SENT : NOT_SENT;
+            return status == MessageStatus.SENT ? SENT : NOT_SENT;*/
+            return SENT;
         } catch (Exception e) {
-e.printStackTrace(System.err); // TODO: proper handling/logging...
+            LOG.warn("Unable to send invoice", e);
+
             return NOT_SENT;
         }
     }

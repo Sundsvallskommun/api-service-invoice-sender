@@ -13,11 +13,13 @@ import static se.sundsvall.invoicesender.model.Status.SENT;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.function.Failable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
@@ -57,37 +59,31 @@ public class InvoiceSenderService {
     // TODO: this should be scheduled later on...
     public void doStuff() throws IOException {
         // Get the batch from Raindance
-        var batch = raindanceIntegration.readBatch();
-        // Mark non-PDF files
-        batch.getItems().stream()
-            .filter(not(PDFS_ONLY))
-            .forEach(invoice -> invoice.setStatus(NOT_AN_INVOICE));
+        Failable.stream(raindanceIntegration.readBatch()).forEach(batch -> {
+            // Mark non-PDF files
+            batch.getItems().stream()
+                .filter(not(PDFS_ONLY))
+                .forEach(invoice -> invoice.setStatus(NOT_AN_INVOICE));
+            // Extract individual files (file names), skipping everything but PDF:s
+            var invoices = batch.getItems().stream()
+                .filter(PDFS_ONLY)
+                .toList();
 
-        // Extract individual files (file names), skipping everything but PDF:s
-        var invoices = batch.getItems().stream()
-            .filter(PDFS_ONLY)
-            .toList();
-        // Extract recipient legal id:s if possible
-        extractInvoiceRecipientLegalIds(invoices);
-        // Get the recipient party id from the invoices where the recipient legal id is set
-        getInvoiceRecipientPartyIds(invoices);
-        // Send digital mail for the invoices where the recipient party id is set
-        sendDigitalMail(batch.getPath(), invoices);
-        // Update the archive index - ArchiveIndex.xml
-        updateArchiveIndex(batch.getPath(), invoices);
-        // Put unsent invoices back to Raindance
-        raindanceIntegration.writeBatch(batch);
-        // Mark the batch as completed and store it
-        completeBatchAndStoreExecution(batch);
-
-        // TODO: summarize and send status using e-mail or Slack or whatever...
-
-        // TODO: remove this "debug" stuff
-        batch.getItems().stream()
-            .filter(PDFS_ONLY)
-            .forEach(invoice -> {
-                System.err.printf("%-45s %s\n", invoice.getFilename(), invoice.getStatus());
-            });
+            // Extract recipient legal id:s if possible
+            extractInvoiceRecipientLegalIds(invoices);
+            // Get the recipient party id from the invoices where the recipient legal id is set
+            getInvoiceRecipientPartyIds(invoices);
+            // Send digital mail for the invoices where the recipient party id is set
+            sendDigitalInvoices(batch.getPath(), invoices);
+            // Update the archive index - ArchiveIndex.xml
+            updateArchiveIndex(batch.getPath(), invoices);
+            // Put unsent invoices back to Raindance
+            raindanceIntegration.writeBatch(batch);
+            // Mark the batch as completed and store it
+            completeBatchAndStoreExecution(batch);
+            // Cleanup
+            FileUtils.deleteDirectory(Paths.get(batch.getPath()).toFile());
+        });
     }
 
     void extractInvoiceRecipientLegalIds(final List<Item> invoices) {
@@ -114,33 +110,31 @@ public class InvoiceSenderService {
                 }, () -> invoice.setStatus(RECIPIENT_PARTY_ID_NOT_FOUND)));
     }
 
-    void sendDigitalMail(final String path, final List<Item> invoices) {
+    void sendDigitalInvoices(final String path, final List<Item> invoices) {
         invoices.stream()
             .filter(INVOICES_WITH_PARTY_ID)
             .forEach(invoice -> invoice.setStatus(messagingIntegration.sendInvoice(path, invoice)));
     }
 
-    void updateArchiveIndex(final String path, final List<Item> items) throws IOException {
-        var archiveIndexItem = items.stream()
+    void updateArchiveIndex(final String path, final List<Item> items) {
+        items.stream()
             .filter(item -> "ArchiveIndex.xml".equalsIgnoreCase(item.getFilename()))
             .findFirst()
-            .orElse(null);
+            .ifPresent(archiveIndexItem -> Failable.accept(item -> {
+                var archiveIndexFile = new File(path + File.pathSeparator + archiveIndexItem.getFilename());
+                // Create the XPath expression from the filenames of the files that have been sent
+                var xPathExpression = items.stream()
+                    .filter(currentItem -> currentItem.getStatus() == SENT)
+                    .map(Item::getFilename)
+                    .map(filename -> format("filename='%s'", filename))
+                    .collect(joining(" OR ", "//file[", "]"));
+                // Remove the matching nodes
+                var doc = Jsoup.parse(archiveIndexFile);
+                var result = Xsoup.compile(xPathExpression).evaluate(doc);
+                result.getElements().forEach(Element::remove);
 
-        if (archiveIndexItem != null) {
-            var archiveIndexFile = new File(path + File.pathSeparator + archiveIndexItem.getFilename());
-            // Create the XPath expression from the filenames of the files that have been sent
-            var xPathExpression = items.stream()
-                .filter(item -> item.getStatus() == SENT)
-                .map(Item::getFilename)
-                .map(filename -> format("filename='%s'", filename))
-                .collect(joining(" OR ", "//file[", "]"));
-            // Remove the matching nodes
-            var doc = Jsoup.parse(archiveIndexFile);
-            var result = Xsoup.compile(xPathExpression).evaluate(doc);
-            result.getElements().forEach(Element::remove);
-
-            FileUtils.write(archiveIndexFile, doc.outerHtml(), ISO_8859_1);
-        }
+                FileUtils.write(archiveIndexFile, doc.outerHtml(), ISO_8859_1);
+            }, archiveIndexItem));
     }
 
     void completeBatchAndStoreExecution(final Batch batch) {

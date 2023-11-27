@@ -1,5 +1,8 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
+import java.time.Duration;
+import java.util.Properties;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,35 +26,27 @@ record RaindanceIntegrationProperties(
         @NotBlank
         String share,
 
-        @Valid
-        @NotNull
-        Local local,
+        @DefaultValue("PT0.05S")
+        Duration connectTimeout,
+        @DefaultValue("PT0.05S")
+        Duration responseTimeout,
 
         @Valid
         @NotNull
-        Inbound inbound,
+        Local local) {
 
-        @Valid
-        @NotNull
-        Outbound outbound) {
+    Properties jcifsProperties() {
+        var jcifsProperties = new Properties();
+        jcifsProperties.setProperty("jcifs.smb.client.connTimeout", Long.toString(connectTimeout().toMillis()));
+        jcifsProperties.setProperty("jcifs.smb.client.responseTimeout", Long.toString(responseTimeout().toMillis()));
+        return jcifsProperties;
+    }
 
-    public record Local(
+    record Local(
 
         @NotBlank
         String workDirectory,
 
         @NotBlank
         String unzipWorkDirectory) { }
-
-    public record Inbound(
-
-        @NotBlank
-        String path,
-
-        boolean deleteFilesFromShare) { }
-
-    public record Outbound(
-
-        @NotBlank
-        String path) { }
 }
