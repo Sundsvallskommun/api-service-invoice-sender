@@ -1,20 +1,43 @@
 package se.sundsvall.invoicesender.model;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+
 public class Item {
 
-    private String zipFilename;
+    private Status status = Status.UNHANDLED;
+    private String filename;
+    private Metadata metadata;
     private String recipientLegalId;
     private String recipientPartyId;
-    private String filename;
-    private Status status = Status.UNHANDLED;
-    private Metadata metadata;
 
-    public String getZipFilename() {
-        return zipFilename;
+    public Item(final String filename) {
+        this.filename = filename;
     }
 
-    public Item setZipFilename(final String zipFilename) {
-        this.zipFilename = zipFilename;
+    public Status getStatus() {
+        return status;
+    }
+
+    public Item setStatus(final Status status) {
+        this.status = status;
+        return this;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public Item setFilename(final String filename) {
+        this.filename = filename;
+        return this;
+    }
+
+    public Metadata getMetadata() {
+        return metadata;
+    }
+
+    public Item setMetadata(final Metadata metadata) {
+        this.metadata = metadata;
         return this;
     }
 
@@ -36,39 +59,12 @@ public class Item {
         return this;
     }
 
-    public String getFilename() {
-        return filename;
-    }
-
-    public Item setFilename(final String filename) {
-        this.filename = filename;
-        return this;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public Item setStatus(final Status status) {
-        this.status = status;
-        return this;
-    }
-
-    public Metadata getMetadata() {
-        return metadata;
-    }
-
-    public Item setMetadata(final Metadata metadata) {
-        this.metadata = metadata;
-        return this;
-    }
-
     public static class Metadata {
 
         private String invoiceNumber;
         private String invoiceDate;
         private String dueDate;
-        private String paymentNumber;
+        private String accountNumber;
         private String paymentReference;
         private String totalAmount;
         private boolean reminder;
@@ -100,12 +96,12 @@ public class Item {
             return this;
         }
 
-        public String getPaymentNumber() {
-            return paymentNumber;
+        public String getAccountNumber() {
+            return accountNumber;
         }
 
-        public Metadata setPaymentNumber(final String paymentNumber) {
-            this.paymentNumber = paymentNumber;
+        public Metadata setAccountNumber(final String accountNumber) {
+            this.accountNumber = accountNumber;
             return this;
         }
 
@@ -134,6 +130,11 @@ public class Item {
         public Metadata setReminder(final boolean reminder) {
             this.reminder = reminder;
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return new ReflectionToStringBuilder(this).build();
         }
     }
 }

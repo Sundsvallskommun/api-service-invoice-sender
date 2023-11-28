@@ -1,10 +1,12 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Properties;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -25,6 +27,9 @@ record RaindanceIntegrationProperties(
         String password,
         @NotBlank
         String share,
+
+        @NotEmpty
+        List<String> filenamePrefixes,
 
         @DefaultValue("PT0.05S")
         Duration connectTimeout,

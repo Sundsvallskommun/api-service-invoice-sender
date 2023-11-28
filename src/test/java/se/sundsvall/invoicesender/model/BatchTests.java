@@ -11,11 +11,11 @@ class BatchTests {
     @Test
     void testGettersAndSetters() {
         var batch = new Batch()
-            .withSevenZipFilename("someSevenZipFilename")
+            .withBasename("someSevenZipFilename")
             .withPath("somePath")
-            .withItems(List.of(new Item(), new Item()));
+            .withItems(List.of(new Item("someItem"), new Item("someOtherItem")));
 
-        assertThat(batch.getSevenZipFilename()).isEqualTo("someSevenZipFilename");
+        assertThat(batch.getBasename()).isEqualTo("someSevenZipFilename");
         assertThat(batch.getPath()).isEqualTo("somePath");
         assertThat(batch.getItems()).hasSize(2);
         assertThat(batch.getStartedAt()).isNotNull();

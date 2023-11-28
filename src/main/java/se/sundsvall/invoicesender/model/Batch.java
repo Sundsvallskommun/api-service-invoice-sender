@@ -7,7 +7,7 @@ import java.util.List;
 public class Batch {
 
     private String path;
-    private String sevenZipFilename;
+    private String basename;
     private String remotePath;
     private List<Item> items;
     private final LocalDateTime startedAt = LocalDateTime.now();
@@ -22,12 +22,12 @@ public class Batch {
         return this;
     }
 
-    public String getSevenZipFilename() {
-        return sevenZipFilename;
+    public String getBasename() {
+        return basename;
     }
 
-    public Batch withSevenZipFilename(final String sevenZipFilename) {
-        this.sevenZipFilename = sevenZipFilename;
+    public Batch withBasename(final String basename) {
+        this.basename = basename;
         return this;
     }
 

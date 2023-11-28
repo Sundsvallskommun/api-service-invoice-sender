@@ -11,17 +11,16 @@ import static se.sundsvall.invoicesender.model.Status.RECIPIENT_PARTY_ID_FOUND;
 import static se.sundsvall.invoicesender.model.Status.RECIPIENT_PARTY_ID_NOT_FOUND;
 import static se.sundsvall.invoicesender.model.Status.SENT;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.function.Failable;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
@@ -30,11 +29,10 @@ import se.sundsvall.invoicesender.integration.party.PartyIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
 import se.sundsvall.invoicesender.model.Batch;
 import se.sundsvall.invoicesender.model.Item;
-
-import us.codecraft.xsoup.Xsoup;
+import se.sundsvall.invoicesender.service.util.XmlUtil;
 
 @Service
-public class InvoiceSenderService {
+public class InvoiceProcessor {
 
     private static final Pattern RECIPIENT_PATTERN = Pattern.compile("^.*aktura_\\d+_to_(\\d+)\\.pdf$");
 
@@ -47,7 +45,7 @@ public class InvoiceSenderService {
     private final MessagingIntegration messagingIntegration;
     private final DbIntegration dbIntegration;
 
-    public InvoiceSenderService(final RaindanceIntegration raindanceIntegration,
+    public InvoiceProcessor(final RaindanceIntegration raindanceIntegration,
             final PartyIntegration partyIntegration, final MessagingIntegration messagingIntegration,
             final DbIntegration dbIntegration) {
         this.raindanceIntegration = raindanceIntegration;
@@ -56,38 +54,63 @@ public class InvoiceSenderService {
         this.dbIntegration = dbIntegration;
     }
 
-    // TODO: this should be scheduled later on...
-    public void doStuff() throws IOException {
+    //@Scheduled(cron = "${invoice-processor.schedule}")
+    public void run() throws Exception {
+        var today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd"));
+
+        run(LocalDate.now());
+    }
+
+    public void run(final LocalDate date) throws Exception {
         // Get the batch from Raindance
-        Failable.stream(raindanceIntegration.readBatch()).forEach(batch -> {
+        for (var batch : raindanceIntegration.readBatch(date)) {
             // Mark non-PDF files
             batch.getItems().stream()
                 .filter(not(PDFS_ONLY))
                 .forEach(invoice -> invoice.setStatus(NOT_AN_INVOICE));
-            // Extract individual files (file names), skipping everything but PDF:s
-            var invoices = batch.getItems().stream()
-                .filter(PDFS_ONLY)
-                .toList();
-
+            // Extract the item metadata
+            extractItemMetadata(batch);
             // Extract recipient legal id:s if possible
-            extractInvoiceRecipientLegalIds(invoices);
+            extractInvoiceRecipientLegalIds(batch);
             // Get the recipient party id from the invoices where the recipient legal id is set
-            getInvoiceRecipientPartyIds(invoices);
+            getInvoiceRecipientPartyIds(batch);
             // Send digital mail for the invoices where the recipient party id is set
-            sendDigitalInvoices(batch.getPath(), invoices);
+            sendDigitalInvoices(batch);
             // Update the archive index - ArchiveIndex.xml
-            updateArchiveIndex(batch.getPath(), invoices);
+            updateArchiveIndex(batch);
             // Put unsent invoices back to Raindance
             raindanceIntegration.writeBatch(batch);
             // Mark the batch as completed and store it
             completeBatchAndStoreExecution(batch);
             // Cleanup
             FileUtils.deleteDirectory(Paths.get(batch.getPath()).toFile());
+        }
+    }
+
+    void extractItemMetadata(final Batch batch) throws IOException {
+        var path = Paths.get(batch.getPath()).resolve("ArchiveIndex.xml");
+        var xml = Files.readString(path, ISO_8859_1);
+
+        getInvoiceItems(batch).forEach(item -> {
+            // Create the XPath expression from the item filename
+            var xPathExpression = format("//file[filename='%s']", item.getFilename());
+            // Evaluate
+            var result = XmlUtil.find(xml, xPathExpression);
+            // Extract the item metadata
+            item.setMetadata(new Item.Metadata()
+                .setInvoiceNumber(result.select("InvoiceNo").text())
+                .setInvoiceDate(result.select("InvoiceDate").text())
+                .setDueDate(result.select("DueDate").text())
+                .setReminder("1".equals(result.select("Reminder").text()))
+                .setAccountNumber(result.select("PaymentNo").text())
+                .setPaymentReference(result.select("PaymentReference").text())
+                .setTotalAmount(result.select("TotalAmount").text())
+            );
         });
     }
 
-    void extractInvoiceRecipientLegalIds(final List<Item> invoices) {
-        invoices.forEach(invoice -> {
+    void extractInvoiceRecipientLegalIds(final Batch batch) {
+        getInvoiceItems(batch).forEach(invoice -> {
             // Try to extract the recipient's legal id from the invoice PDF filename and update
             // the invoice accordingly
             var matcher = RECIPIENT_PATTERN.matcher(invoice.getFilename());
@@ -100,8 +123,8 @@ public class InvoiceSenderService {
         });
     }
 
-    void getInvoiceRecipientPartyIds(final List<Item> invoices) {
-        invoices.stream()
+    void getInvoiceRecipientPartyIds(final Batch batch) {
+        getInvoiceItems(batch).stream()
             .filter(INVOICES_WITH_LEGAL_ID)
             .forEach(invoice -> partyIntegration.getPartyId(invoice.getRecipientLegalId())
                 .ifPresentOrElse(partyId -> {
@@ -110,31 +133,31 @@ public class InvoiceSenderService {
                 }, () -> invoice.setStatus(RECIPIENT_PARTY_ID_NOT_FOUND)));
     }
 
-    void sendDigitalInvoices(final String path, final List<Item> invoices) {
-        invoices.stream()
+    void sendDigitalInvoices(final Batch batch) {
+        getInvoiceItems(batch).stream()
             .filter(INVOICES_WITH_PARTY_ID)
-            .forEach(invoice -> invoice.setStatus(messagingIntegration.sendInvoice(path, invoice)));
+            .forEach(invoice -> invoice.setStatus(messagingIntegration.sendInvoice(batch.getPath(), invoice)));
     }
 
-    void updateArchiveIndex(final String path, final List<Item> items) {
-        items.stream()
-            .filter(item -> "ArchiveIndex.xml".equalsIgnoreCase(item.getFilename()))
-            .findFirst()
-            .ifPresent(archiveIndexItem -> Failable.accept(item -> {
-                var archiveIndexFile = new File(path + File.pathSeparator + archiveIndexItem.getFilename());
-                // Create the XPath expression from the filenames of the files that have been sent
-                var xPathExpression = items.stream()
-                    .filter(currentItem -> currentItem.getStatus() == SENT)
-                    .map(Item::getFilename)
-                    .map(filename -> format("filename='%s'", filename))
-                    .collect(joining(" OR ", "//file[", "]"));
-                // Remove the matching nodes
-                var doc = Jsoup.parse(archiveIndexFile);
-                var result = Xsoup.compile(xPathExpression).evaluate(doc);
-                result.getElements().forEach(Element::remove);
+    void updateArchiveIndex(final Batch batch) throws IOException {
+        var sentItems = batch.getItems().stream()
+            .filter(currentItem -> currentItem.getStatus() == SENT)
+            .toList();
 
-                FileUtils.write(archiveIndexFile, doc.outerHtml(), ISO_8859_1);
-            }, archiveIndexItem));
+        if (!sentItems.isEmpty()) {
+            var xPathExpression = sentItems.stream()
+                .map(Item::getFilename)
+                .map(filename -> format("filename='%s'", filename))
+                .collect(joining(" OR ", "//file[", "]"));
+
+            var path = Paths.get(batch.getPath()).resolve("ArchiveIndex.xml");
+            var xml = Files.readString(path, ISO_8859_1);
+
+            // Remove the matching nodes
+            xml = XmlUtil.remove(xml, xPathExpression);
+
+            Files.writeString(path, XmlUtil.XML_DECLARATION.concat("\n").concat(xml), ISO_8859_1);
+        }
     }
 
     void completeBatchAndStoreExecution(final Batch batch) {
@@ -142,5 +165,11 @@ public class InvoiceSenderService {
         batch.setCompleted();
         // Store the batch execution
         dbIntegration.storeBatchExecution(batch);
+    }
+
+    List<Item> getInvoiceItems(final Batch batch) {
+        return batch.getItems().stream()
+            .filter(PDFS_ONLY)
+            .toList();
     }
 }

@@ -9,14 +9,11 @@ class ItemTests {
 
     @Test
     void testGettersAndSetters() {
-        var item = new Item()
-            .setZipFilename("someZipFilename")
-            .setFilename("someFilename")
+        var item = new Item("someFilename")
             .setStatus(NOT_AN_INVOICE)
             .setRecipientLegalId("someLegalId")
             .setRecipientPartyId("somePartyId");
 
-        assertThat(item.getZipFilename()).isEqualTo("someZipFilename");
         assertThat(item.getFilename()).isEqualTo("someFilename");
         assertThat(item.getStatus()).isEqualTo(NOT_AN_INVOICE);
         assertThat(item.getRecipientLegalId()).isEqualTo("someLegalId");

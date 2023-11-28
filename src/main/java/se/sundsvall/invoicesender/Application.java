@@ -2,12 +2,13 @@ package se.sundsvall.invoicesender;
 
 import static org.springframework.boot.SpringApplication.run;
 
+import java.time.LocalDate;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 
 import se.sundsvall.dept44.ServiceApplication;
-import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
-import se.sundsvall.invoicesender.service.InvoiceSenderService;
+import se.sundsvall.invoicesender.service.InvoiceProcessor;
 
 @ServiceApplication
 public class Application {
@@ -16,19 +17,10 @@ public class Application {
 		run(Application.class, args);
 	}
 
-	//@Bean
-	CommandLineRunner doStuff2(final InvoiceSenderService service) {
-		return args -> {
-			service.doStuff();
-		};
-	}
-
 	@Bean
-	CommandLineRunner doStuff(final RaindanceIntegration raindanceIntegration) {
+	CommandLineRunner doStuff(final InvoiceProcessor processor) {
 		return args -> {
-			var batches = raindanceIntegration.readBatch();
-
-			raindanceIntegration.writeBatch(batches.get(0));
+			processor.run(LocalDate.of(2023,12,1));
 		};
 	}
 }

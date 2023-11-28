@@ -28,4 +28,7 @@ record MessagingIntegrationProperties(
     Oauth2 oauth2,
 
     @NotBlank
-    String invoiceSubject) { }
+    String invoiceSubject,
+
+    @DefaultValue("Faktura #")
+    String invoiceReferencePrefix) { }

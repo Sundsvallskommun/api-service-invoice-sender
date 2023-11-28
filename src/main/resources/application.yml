@@ -14,3 +14,7 @@ openapi:
   name: invoice-sender
   title: InvoiceSender
   version: '@project.version@'
+
+# Invoice processor schedule (Cron expression)
+invoice-processor:
+  schedule: 0 0 2 * * *

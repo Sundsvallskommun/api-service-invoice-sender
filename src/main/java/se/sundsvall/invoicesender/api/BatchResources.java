@@ -15,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +24,7 @@ import org.zalando.problem.Problem;
 import se.sundsvall.invoicesender.api.model.BatchesResponse;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.service.InvoiceProcessor;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,9 +45,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 class BatchResources {
 
     private final DbIntegration dbIntegration;
+    private final InvoiceProcessor invoiceProcessor;
 
-    BatchResources(final DbIntegration dbIntegration) {
+    BatchResources(final DbIntegration dbIntegration, final InvoiceProcessor invoiceProcessor) {
         this.dbIntegration = dbIntegration;
+        this.invoiceProcessor = invoiceProcessor;
+    }
+
+    @PostMapping("/trigger/{date}")
+    ResponseEntity<Void> triggerBatch() throws Exception {
+        invoiceProcessor.run();
+
+        return ResponseEntity.ok().build();
     }
 
     @Operation(
