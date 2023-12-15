@@ -165,7 +165,7 @@ public class InvoiceProcessor {
         // Mark the batch as completed
         batch.setCompleted();
         // Store the batch execution
-        return dbIntegration.storeBatchExecution(batch);
+        return dbIntegration.storeBatch(batch);
     }
 
     List<Item> getInvoiceItems(final Batch batch) {

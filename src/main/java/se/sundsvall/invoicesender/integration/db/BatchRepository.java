@@ -1,7 +1,6 @@
 package se.sundsvall.invoicesender.integration.db;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +17,8 @@ interface BatchRepository extends JpaRepository<BatchEntity, Integer> {
         (:from IS NULL OR b.completedAt >= :from) AND
         (:to IS NULL OR b.completedAt <= :to)
     """)
-    Page<BatchEntity> findAllByCompletedAtBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, Pageable pageRequest);
-
-    List<BatchEntity> findAllByIdIn(final List<Integer> ids);
+    Page<BatchEntity> findAllByCompletedAtBetween(
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to,
+        Pageable pageRequest);
 }

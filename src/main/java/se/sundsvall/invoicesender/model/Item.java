@@ -1,7 +1,5 @@
 package se.sundsvall.invoicesender.model;
 
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-
 public class Item {
 
     private Status status = Status.UNHANDLED;
@@ -9,6 +7,9 @@ public class Item {
     private Metadata metadata;
     private String recipientLegalId;
     private String recipientPartyId;
+
+    public Item() {
+    }
 
     public Item(final String filename) {
         this.filename = filename;
@@ -130,11 +131,6 @@ public class Item {
         public Metadata setReminder(final boolean reminder) {
             this.reminder = reminder;
             return this;
-        }
-
-        @Override
-        public String toString() {
-            return new ReflectionToStringBuilder(this).build();
         }
     }
 }

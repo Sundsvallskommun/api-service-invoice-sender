@@ -5,6 +5,7 @@ import static se.sundsvall.invoicesender.model.Status.NOT_AN_INVOICE;
 import static se.sundsvall.invoicesender.model.Status.SENT;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,38 +35,40 @@ public class DbIntegration {
         return new PageImpl<>(result.getContent().stream().map(this::mapToBatchDto).toList(), pageRequest, result.getTotalElements());
     }
 
-    public BatchDto storeBatchExecution(final Batch batch) {
+    public BatchDto storeBatch(final Batch batch) {
+        var items = ofNullable(batch.getItems()).orElse(List.of());
+
         var batchEntity = new BatchEntity()
             .withBasename(batch.getBasename())
             .withStartedAt(batch.getStartedAt())
             .withCompletedAt(batch.getCompletedAt())
-            .withItems(batch.getItems().stream()
+            .withItems(items.stream()
                 .filter(item -> item.getStatus() != NOT_AN_INVOICE)
                 .map(item -> new ItemEntity()
-                    .setFilename(item.getFilename())
-                    .setStatus(item.getStatus()))
+                    .withFilename(item.getFilename())
+                    .withStatus(item.getStatus()))
                 .toList())
-            .withTotalItems(batch.getItems().stream()
+            .withTotalItems(items.stream()
                 .filter(item -> item.getStatus() != NOT_AN_INVOICE)
                 .count())
-            .withSentItems(batch.getItems().stream()
+            .withSentItems(items.stream()
                 .filter(item -> item.getStatus() == SENT)
                 .count());
 
         return mapToBatchDto(batchRepository.save(batchEntity));
     }
 
-    BatchDto mapToBatchDto(final BatchEntity batch) {
-        if (batch == null) {
+    BatchDto mapToBatchDto(final BatchEntity batchEntity) {
+        if (batchEntity == null) {
             return null;
         }
 
         return new BatchDto(
-            batch.getId(),
-            batch.getBasename(),
-            batch.getStartedAt(),
-            batch.getCompletedAt(),
-            batch.getTotalItems(),
-            batch.getSentItems());
+            batchEntity.getId(),
+            batchEntity.getBasename(),
+            batchEntity.getStartedAt(),
+            batchEntity.getCompletedAt(),
+            batchEntity.getTotalItems(),
+            batchEntity.getSentItems());
     }
 }

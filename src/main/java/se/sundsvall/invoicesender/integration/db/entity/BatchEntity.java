@@ -4,7 +4,6 @@ import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.FetchType.EAGER;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.Column;
@@ -81,14 +80,6 @@ public class BatchEntity {
 
     public List<ItemEntity> getItems() {
         return items;
-    }
-
-    public BatchEntity addItem(final ItemEntity item) {
-        if (items == null) {
-            items = new ArrayList<>();
-        }
-        items.add(item);
-        return this;
     }
 
     public BatchEntity withItems(final List<ItemEntity> items) {

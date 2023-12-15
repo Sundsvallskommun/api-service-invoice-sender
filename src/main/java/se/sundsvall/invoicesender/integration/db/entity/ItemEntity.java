@@ -31,7 +31,7 @@ public class ItemEntity {
         return id;
     }
 
-    public ItemEntity setId(final Integer id) {
+    public ItemEntity withId(final Integer id) {
         this.id = id;
         return this;
     }
@@ -40,7 +40,7 @@ public class ItemEntity {
         return filename;
     }
 
-    public ItemEntity setFilename(final String filename) {
+    public ItemEntity withFilename(final String filename) {
         this.filename = filename;
         return this;
     }
@@ -49,7 +49,7 @@ public class ItemEntity {
         return status;
     }
 
-    public ItemEntity setStatus(final Status status) {
+    public ItemEntity withStatus(final Status status) {
         this.status = status;
         return this;
     }
