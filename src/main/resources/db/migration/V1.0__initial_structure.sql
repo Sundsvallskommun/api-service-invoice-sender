@@ -1,5 +1,6 @@
 CREATE TABLE `batch_executions` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
+    `basename` varchar(255) NOT NULL,
     `started_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `completed_at` datetime(6) NOT NULL,
     `total_invoices` bigint(20) NOT NULL,

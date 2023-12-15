@@ -6,7 +6,7 @@ spring:
     group: true
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     open-in-view: false
 
 # OpenAPI
@@ -14,7 +14,3 @@ openapi:
   name: invoice-sender
   title: InvoiceSender
   version: '@project.version@'
-
-# Invoice processor schedule (Cron expression)
-invoice-processor:
-  schedule: 0 0 2 * * *

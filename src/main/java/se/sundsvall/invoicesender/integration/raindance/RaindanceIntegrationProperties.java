@@ -4,10 +4,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -36,9 +34,8 @@ record RaindanceIntegrationProperties(
         @DefaultValue("PT0.05S")
         Duration responseTimeout,
 
-        @Valid
-        @NotNull
-        Local local) {
+        @NotBlank
+        String workDirectory) {
 
     Properties jcifsProperties() {
         var jcifsProperties = new Properties();
@@ -46,12 +43,4 @@ record RaindanceIntegrationProperties(
         jcifsProperties.setProperty("jcifs.smb.client.responseTimeout", Long.toString(responseTimeout().toMillis()));
         return jcifsProperties;
     }
-
-    record Local(
-
-        @NotBlank
-        String workDirectory,
-
-        @NotBlank
-        String unzipWorkDirectory) { }
 }

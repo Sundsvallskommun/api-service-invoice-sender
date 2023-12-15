@@ -18,7 +18,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.ITemplateEngine;
+import org.thymeleaf.context.Context;
 
+import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.model.Item;
 import se.sundsvall.invoicesender.model.Status;
 
@@ -26,6 +29,8 @@ import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
 import generated.se.sundsvall.messaging.DigitalInvoiceParty;
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
+import generated.se.sundsvall.messaging.EmailRequest;
+import generated.se.sundsvall.messaging.EmailSender;
 import generated.se.sundsvall.messaging.MessageStatus;
 
 @Component
@@ -36,14 +41,30 @@ public class MessagingIntegration {
     static final String INTEGRATION_NAME = "Messaging";
 
     private final MessagingClient client;
+    private final ITemplateEngine templateEngine;
     private final String invoiceSubject;
     private final String invoiceReferencePrefix;
 
-    MessagingIntegration(final MessagingClient client, final MessagingIntegrationProperties properties) {
-        this.client = client;
+    private final String statusReportSenderName;
+    private final String statusReportSenderEmailAddress;
+    private final String statusReportRecipientEmailAddress;
+    private String statusReportSubjectPrefix;
 
-        invoiceSubject = properties.invoiceSubject();
-        invoiceReferencePrefix = properties.invoiceReferencePrefix();
+    MessagingIntegration(final MessagingIntegrationProperties properties,
+            final MessagingClient client, final ITemplateEngine templateEngine) {
+        this.client = client;
+        this.templateEngine = templateEngine;
+
+        invoiceSubject = properties.invoice().subject();
+        invoiceReferencePrefix = properties.invoice().referencePrefix();
+
+        statusReportSenderName = properties.statusReport().senderName();
+        statusReportSenderEmailAddress = properties.statusReport().senderEmailAddress();
+        statusReportRecipientEmailAddress = properties.statusReport().recipientEmailAddress();
+        statusReportSubjectPrefix = properties.statusReport().subjectPrefix();
+        if (!statusReportSubjectPrefix.endsWith(" ")) {
+            statusReportSubjectPrefix += " ";
+        }
     }
 
     public Status sendInvoice(final String path, final Item invoice) {
@@ -79,5 +100,28 @@ public class MessagingIntegration {
 
             return NOT_SENT;
         }
+    }
+
+    public void sendStatusReport(final List<BatchDto> batches) {
+        try {
+            var request = new EmailRequest()
+                .sender(new EmailSender()
+                    .name(statusReportSenderName)
+                    .address(statusReportSenderEmailAddress))
+                .emailAddress(statusReportRecipientEmailAddress)
+                .subject(statusReportSubjectPrefix)
+                .htmlMessage(generateStatusReportMessage(batches));
+
+            client.sendEmail(request);
+        } catch (Exception e) {
+            LOG.warn("Unable to send status report", e);
+        }
+    }
+
+    String generateStatusReportMessage(final List<BatchDto> batches) {
+        var context = new Context();
+        context.setVariable("batches", batches);
+        var htmlMessage = templateEngine.process("status-report", context);
+        return Base64.getEncoder().encodeToString(htmlMessage.getBytes(UTF_8));
     }
 }

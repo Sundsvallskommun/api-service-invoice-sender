@@ -54,7 +54,7 @@ public class RaindanceIntegration {
     private final String shareUrl;
 
     RaindanceIntegration(final RaindanceIntegrationProperties properties) throws IOException {
-        workDirectory = Paths.get(properties.local().workDirectory());
+        workDirectory = Paths.get(properties.workDirectory());
         if (!Files.exists(workDirectory)) {
             Files.createDirectories(workDirectory);
         }
@@ -66,7 +66,7 @@ public class RaindanceIntegration {
         context = SingletonContext.getInstance()
             .withCredentials(new NtlmPasswordAuthenticator(
                 properties.domain(), properties.username(), properties.password()));
-        shareUrl = String.format("smb://%s/%s", properties.host(), properties.share());
+        shareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(), properties.share());
     }
 
     public List<Batch> readBatch(final LocalDate date) throws IOException {

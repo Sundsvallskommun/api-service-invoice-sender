@@ -15,15 +15,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
+import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
 import se.sundsvall.invoicesender.integration.party.PartyIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
@@ -34,11 +36,12 @@ import se.sundsvall.invoicesender.service.util.XmlUtil;
 @Service
 public class InvoiceProcessor {
 
-    private static final Pattern RECIPIENT_PATTERN = Pattern.compile("^.*aktura_\\d+_to_(\\d+)\\.pdf$");
+    private static final Pattern RECIPIENT_PATTERN = Pattern.compile("^Faktura_\\d+_to_(\\d+)\\.pdf$");
 
     private static final Predicate<Item> PDFS_ONLY = invoice -> invoice.getFilename().endsWith(".pdf");
     private static final Predicate<Item> INVOICES_WITH_LEGAL_ID = invoice -> invoice.getStatus() == RECIPIENT_LEGAL_ID_FOUND;
     private static final Predicate<Item> INVOICES_WITH_PARTY_ID = invoice -> invoice.getStatus() == RECIPIENT_PARTY_ID_FOUND;
+    private static final Predicate<Item> SENT_INVOICES = invoice -> invoice.getStatus() == SENT;
 
     private final RaindanceIntegration raindanceIntegration;
     private final PartyIntegration partyIntegration;
@@ -54,20 +57,19 @@ public class InvoiceProcessor {
         this.dbIntegration = dbIntegration;
     }
 
-    //@Scheduled(cron = "${invoice-processor.schedule}")
-    public void run() throws Exception {
-        var today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd"));
-
+    @Scheduled(cron = "${invoice-processor.schedule.cron-expression:-}")
+    void run() throws Exception {
         run(LocalDate.now());
     }
 
     public void run(final LocalDate date) throws Exception {
-        // Get the batch from Raindance
-        for (var batch : raindanceIntegration.readBatch(date)) {
-            // Mark non-PDF files
-            batch.getItems().stream()
-                .filter(not(PDFS_ONLY))
-                .forEach(invoice -> invoice.setStatus(NOT_AN_INVOICE));
+        // Get the batches from Raindance
+        var batches = raindanceIntegration.readBatch(date);
+
+        var processedBatches = new ArrayList<BatchDto>();
+        for (var batch : batches) {
+            // Mark non-invoice items (i.e. not PDF:s)
+            getNonInvoiceItems(batch).forEach(item -> item.setStatus(NOT_AN_INVOICE));
             // Extract the item metadata
             extractItemMetadata(batch);
             // Extract recipient legal id:s if possible
@@ -81,10 +83,13 @@ public class InvoiceProcessor {
             // Put unsent invoices back to Raindance
             raindanceIntegration.writeBatch(batch);
             // Mark the batch as completed and store it
-            completeBatchAndStoreExecution(batch);
-            // Cleanup
+            processedBatches.add(completeBatchAndStoreExecution(batch));
+            // Clean up
             FileUtils.deleteDirectory(Paths.get(batch.getPath()).toFile());
         }
+
+        // Send a status report
+        messagingIntegration.sendStatusReport(processedBatches);
     }
 
     void extractItemMetadata(final Batch batch) throws IOException {
@@ -124,9 +129,8 @@ public class InvoiceProcessor {
     }
 
     void getInvoiceRecipientPartyIds(final Batch batch) {
-        getInvoiceItems(batch).stream()
-            .filter(INVOICES_WITH_LEGAL_ID)
-            .forEach(invoice -> partyIntegration.getPartyId(invoice.getRecipientLegalId())
+        getInvoiceItemsWithLegalIdSet(batch).forEach(invoice ->
+            partyIntegration.getPartyId(invoice.getRecipientLegalId())
                 .ifPresentOrElse(partyId -> {
                     invoice.setRecipientPartyId(partyId);
                     invoice.setStatus(RECIPIENT_PARTY_ID_FOUND);
@@ -134,15 +138,12 @@ public class InvoiceProcessor {
     }
 
     void sendDigitalInvoices(final Batch batch) {
-        getInvoiceItems(batch).stream()
-            .filter(INVOICES_WITH_PARTY_ID)
-            .forEach(invoice -> invoice.setStatus(messagingIntegration.sendInvoice(batch.getPath(), invoice)));
+        getInvoiceItemsWithPartyIdSet(batch).forEach(invoice ->
+            invoice.setStatus(messagingIntegration.sendInvoice(batch.getPath(), invoice)));
     }
 
     void updateArchiveIndex(final Batch batch) throws IOException {
-        var sentItems = batch.getItems().stream()
-            .filter(currentItem -> currentItem.getStatus() == SENT)
-            .toList();
+        var sentItems = getSentInvoiceItems(batch);
 
         if (!sentItems.isEmpty()) {
             var xPathExpression = sentItems.stream()
@@ -160,16 +161,40 @@ public class InvoiceProcessor {
         }
     }
 
-    void completeBatchAndStoreExecution(final Batch batch) {
+    BatchDto completeBatchAndStoreExecution(final Batch batch) {
         // Mark the batch as completed
         batch.setCompleted();
         // Store the batch execution
-        dbIntegration.storeBatchExecution(batch);
+        return dbIntegration.storeBatchExecution(batch);
     }
 
     List<Item> getInvoiceItems(final Batch batch) {
         return batch.getItems().stream()
             .filter(PDFS_ONLY)
+            .toList();
+    }
+
+    List<Item> getNonInvoiceItems(final Batch batch) {
+        return batch.getItems().stream()
+            .filter(not(PDFS_ONLY))
+            .toList();
+    }
+
+    List<Item> getInvoiceItemsWithLegalIdSet(final Batch batch) {
+        return getInvoiceItems(batch).stream()
+            .filter(INVOICES_WITH_LEGAL_ID)
+            .toList();
+    }
+
+    List<Item> getInvoiceItemsWithPartyIdSet(final Batch batch) {
+        return getInvoiceItems(batch).stream()
+            .filter(INVOICES_WITH_PARTY_ID)
+            .toList();
+    }
+
+    List<Item> getSentInvoiceItems(final Batch batch) {
+        return getInvoiceItems(batch).stream()
+            .filter(SENT_INVOICES)
             .toList();
     }
 }

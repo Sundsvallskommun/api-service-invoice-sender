@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
+
 class BatchesResponseTests {
 
     @Test
@@ -15,19 +17,19 @@ class BatchesResponseTests {
 
         var batchesResponse = new BatchesResponse(
             List.of(
-                new BatchesResponse.Batch(123, now.minusMinutes(2), now.minusMinutes(1), 5, 3),
-                new BatchesResponse.Batch(456, now.minusMinutes(4), now.minusMinutes(3), 2, 1)
+                new BatchDto(123, "something", now.minusMinutes(2), now.minusMinutes(1), 5, 3),
+                new BatchDto(456, "something-else", now.minusMinutes(4), now.minusMinutes(3), 2, 1)
             ),
             new BatchesResponse.PaginationInfo(1, 20, 1, 2));
 
         assertThat(batchesResponse.batches()).isNotNull().hasSize(2).satisfies(batches -> {
-            assertThat(batches).extracting(BatchesResponse.Batch::id).containsExactlyInAnyOrder(123, 456);
-            assertThat(batches).extracting(BatchesResponse.Batch::startedAt)
+            assertThat(batches).extracting(BatchDto::id).containsExactlyInAnyOrder(123, 456);
+            assertThat(batches).extracting(BatchDto::startedAt)
                 .containsExactlyInAnyOrder(now.minusMinutes(2), now.minusMinutes(4));
-            assertThat(batches).extracting(BatchesResponse.Batch::completedAt)
+            assertThat(batches).extracting(BatchDto::completedAt)
                 .containsExactlyInAnyOrder(now.minusMinutes(1), now.minusMinutes(3));
-            assertThat(batches).extracting(BatchesResponse.Batch::totalItems).containsExactlyInAnyOrder(5L, 2L);
-            assertThat(batches).extracting(BatchesResponse.Batch::sentItems).containsExactlyInAnyOrder(3L, 1L);
+            assertThat(batches).extracting(BatchDto::totalItems).containsExactlyInAnyOrder(5L, 2L);
+            assertThat(batches).extracting(BatchDto::sentItems).containsExactlyInAnyOrder(3L, 1L);
         });
 
         assertThat(batchesResponse.paginationInfo()).isNotNull().satisfies(paginationInfo -> {

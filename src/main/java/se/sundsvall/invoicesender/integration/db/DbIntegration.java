@@ -7,9 +7,11 @@ import static se.sundsvall.invoicesender.model.Status.SENT;
 import java.time.LocalDate;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.model.Batch;
@@ -23,15 +25,18 @@ public class DbIntegration {
         this.batchRepository = batchRepository;
     }
 
-    public Page<BatchEntity> getAllBatches(final LocalDate from, final LocalDate to, final Pageable pageRequest) {
-        return batchRepository.findAllByCompletedAtBetween(
+    public Page<BatchDto> getBatches(final LocalDate from, final LocalDate to, final Pageable pageRequest) {
+        var result = batchRepository.findAllByCompletedAtBetween(
             ofNullable(from).map(LocalDate::atStartOfDay).orElse(null),
             ofNullable(to).map(LocalDate::atStartOfDay).map(t -> t.plusDays(1)).orElse(null),
             pageRequest);
+
+        return new PageImpl<>(result.getContent().stream().map(this::mapToBatchDto).toList(), pageRequest, result.getTotalElements());
     }
 
-    public BatchEntity storeBatchExecution(final Batch batch) {
+    public BatchDto storeBatchExecution(final Batch batch) {
         var batchEntity = new BatchEntity()
+            .withBasename(batch.getBasename())
             .withStartedAt(batch.getStartedAt())
             .withCompletedAt(batch.getCompletedAt())
             .withItems(batch.getItems().stream()
@@ -47,6 +52,20 @@ public class DbIntegration {
                 .filter(item -> item.getStatus() == SENT)
                 .count());
 
-        return batchRepository.save(batchEntity);
+        return mapToBatchDto(batchRepository.save(batchEntity));
+    }
+
+    BatchDto mapToBatchDto(final BatchEntity batch) {
+        if (batch == null) {
+            return null;
+        }
+
+        return new BatchDto(
+            batch.getId(),
+            batch.getBasename(),
+            batch.getStartedAt(),
+            batch.getCompletedAt(),
+            batch.getTotalItems(),
+            batch.getSentItems());
     }
 }

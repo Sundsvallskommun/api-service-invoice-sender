@@ -24,6 +24,9 @@ public class BatchEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "basename", nullable = false)
+    private String basename;
+
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt = LocalDateTime.now();
 
@@ -46,6 +49,15 @@ public class BatchEntity {
 
     public BatchEntity withId(final Integer id) {
         this.id = id;
+        return this;
+    }
+
+    public String getBasename() {
+        return basename;
+    }
+
+    public BatchEntity withBasename(final String basename) {
+        this.basename = basename;
         return this;
     }
 

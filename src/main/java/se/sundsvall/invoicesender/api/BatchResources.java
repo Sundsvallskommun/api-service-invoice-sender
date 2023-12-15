@@ -15,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +24,6 @@ import org.zalando.problem.Problem;
 
 import se.sundsvall.invoicesender.api.model.BatchesResponse;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
-import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.service.InvoiceProcessor;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,8 +53,8 @@ class BatchResources {
     }
 
     @PostMapping("/trigger/{date}")
-    ResponseEntity<Void> triggerBatch() throws Exception {
-        invoiceProcessor.run();
+    ResponseEntity<Void> triggerBatch(@PathVariable("date") final LocalDate date) throws Exception {
+        invoiceProcessor.run(date);
 
         return ResponseEntity.ok().build();
     }
@@ -91,30 +91,13 @@ class BatchResources {
             @Positive
             @RequestParam(defaultValue = "20")
             final int pageSize) {
-        var batches = dbIntegration.getAllBatches(from, to, PageRequest.of(page - 1, pageSize, Sort.by("completedAt").descending()));
+        var batches = dbIntegration.getBatches(from, to, PageRequest.of(page - 1, pageSize, Sort.by("completedAt").descending()));
 
         if (batches.isEmpty()) {
             return noContent().build();
         }
 
-        return ok(mapToResponse(batches));
-    }
-
-    BatchesResponse mapToResponse(final Page<BatchEntity> batchPage) {
-        return new BatchesResponse(
-            batchPage.stream()
-                .map(this::mapBatch)
-                .toList(),
-            mapPaginationInfo(batchPage));
-    }
-
-    BatchesResponse.Batch mapBatch(final BatchEntity batch) {
-        return new BatchesResponse.Batch(
-            batch.getId(),
-            batch.getStartedAt(),
-            batch.getCompletedAt(),
-            batch.getTotalItems(),
-            batch.getSentItems());
+        return ok(new BatchesResponse(batches.getContent(), mapPaginationInfo(batches)));
     }
 
     BatchesResponse.PaginationInfo mapPaginationInfo(final Page<?> batchPage) {

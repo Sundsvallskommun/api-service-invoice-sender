@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ import org.zalando.problem.violations.Violation;
 import se.sundsvall.invoicesender.Application;
 import se.sundsvall.invoicesender.api.model.BatchesResponse;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
-import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -60,7 +61,7 @@ class BatchResourceTests {
 
     @Test
     void getAllWhenNothingIsFound() {
-        when(mockDbIntegration.getAllBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class)))
+        when(mockDbIntegration.getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of()));
 
         webTestClient.get()
@@ -68,14 +69,16 @@ class BatchResourceTests {
             .exchange()
             .expectStatus().isNoContent();
 
-        verify(mockDbIntegration, times(1)).getAllBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class));
+        verify(mockDbIntegration, times(1)).getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class));
         verifyNoMoreInteractions(mockDbIntegration);
     }
 
     @Test
     void getAll() {
-        when(mockDbIntegration.getAllBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class)))
-            .thenReturn(new PageImpl<>(List.of(new BatchEntity(), new BatchEntity())));
+        when(mockDbIntegration.getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class)))
+            .thenReturn(new PageImpl<>(List.of(
+                new BatchDto(1, "something", LocalDateTime.now(), LocalDateTime.now(), 1, 2),
+                new BatchDto(2, "something-else", LocalDateTime.now(), LocalDateTime.now(), 3, 4))));
 
         var response = webTestClient.get()
             .uri("/batches")
@@ -88,7 +91,7 @@ class BatchResourceTests {
         assertThat(response).isNotNull();
         assertThat(response.batches()).isNotNull().hasSize(2);
 
-        verify(mockDbIntegration, times(1)).getAllBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class));
+        verify(mockDbIntegration, times(1)).getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class));
         verifyNoMoreInteractions(mockDbIntegration);
     }
 }
