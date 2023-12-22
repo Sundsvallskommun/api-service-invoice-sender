@@ -59,7 +59,7 @@ public class RaindanceIntegration {
             Files.createDirectories(workDirectory);
         }
 
-        this.filenamePrefixes = properties.filenamePrefixes();
+        filenamePrefixes = properties.filenamePrefixes();
 
         // Initialize the JCIFS context
         SingletonContext.init(properties.jcifsProperties());
@@ -70,7 +70,7 @@ public class RaindanceIntegration {
     }
 
     public List<Batch> readBatch(final LocalDate date) throws IOException {
-        LOG.info("Reading batch for {}", date);
+        LOG.info("Reading batch for {} with filename prefix(es): {}", date, filenamePrefixes);
 
         // Use a random sub-work-directory
         var currentWorkDirectory = workDirectory.resolve(UUID.randomUUID().toString());
@@ -79,6 +79,15 @@ public class RaindanceIntegration {
 
         try (var share = new SmbFile(shareUrl, context)) {
             var batches = new ArrayList<Batch>();
+
+            for (var file : share.listFiles((dir, name) -> {
+                LOG.info("filter accepting entry: {}", name);
+
+                return true;
+            })) {
+                // Do nothing
+            }
+
             for (var file : share.listFiles((dir, name) ->
                     // Does the filename start with any of the configured prefixes?
                     filenamePrefixes.stream().anyMatch(name::startsWith) &&
