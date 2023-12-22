@@ -2,6 +2,7 @@ package se.sundsvall.invoicesender.integration.party;
 
 import static generated.se.sundsvall.party.PartyType.PRIVATE;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -24,11 +25,30 @@ public class PartyIntegration {
     public Optional<String> getPartyId(final String legalId) {
         try {
             // Only handle "PRIVATE" legal id:s for now
-            return partyClient.getPartyId(PRIVATE, legalId);
+            var legalIdWithCenturyDigits = addCenturyDigitToLegalId(legalId);
+
+            return partyClient.getPartyId(PRIVATE, legalIdWithCenturyDigits);
         } catch (Exception e) {
             LOG.info("Unable to get party id for legal id {}: {}", legalId, e.getMessage());
 
             return Optional.empty();
         }
+    }
+
+    String addCenturyDigitToLegalId(final String legalId) {
+        // Make sure we have digits only
+        if (!legalId.matches("^\\d+$")) {
+            throw new IllegalArgumentException("Invalid legal id: " + legalId);
+        }
+        // Do nothing if we already have a legal id with century digits
+        if (legalId.startsWith("19") || legalId.startsWith("20")) {
+            return legalId;
+        }
+
+        // Naively validate
+        var thisYear = LocalDate.now().getYear() % 2000;
+        var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
+
+        return (legalIdYear <= thisYear ? "20" : "19") + legalId;
     }
 }

@@ -59,7 +59,7 @@ public class RaindanceIntegration {
             Files.createDirectories(workDirectory);
         }
 
-        this.filenamePrefixes = properties.filenamePrefixes();
+        filenamePrefixes = properties.filenamePrefixes();
 
         // Initialize the JCIFS context
         SingletonContext.init(properties.jcifsProperties());
@@ -70,7 +70,7 @@ public class RaindanceIntegration {
     }
 
     public List<Batch> readBatch(final LocalDate date) throws IOException {
-        LOG.info("Reading batch for {}", date);
+        LOG.info("Reading batch for {} with filename prefix(es): {}", date, filenamePrefixes);
 
         // Use a random sub-work-directory
         var currentWorkDirectory = workDirectory.resolve(UUID.randomUUID().toString());
