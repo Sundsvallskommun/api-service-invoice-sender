@@ -66,7 +66,8 @@ public class RaindanceIntegration {
         context = SingletonContext.getInstance()
             .withCredentials(new NtlmPasswordAuthenticator(
                 properties.domain(), properties.username(), properties.password()));
-        shareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(), properties.share());
+        shareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(),
+            properties.share().endsWith("/") ? properties.share() : properties.share() + "/");
     }
 
     public List<Batch> readBatch(final LocalDate date) throws IOException {
@@ -80,24 +81,18 @@ public class RaindanceIntegration {
         try (var share = new SmbFile(shareUrl, context)) {
             var batches = new ArrayList<Batch>();
 
-            for (var file : share.listFiles((dir, name) -> {
-                LOG.info("filter accepting entry: {}", name);
+            for (var file : share.listFiles()) {
+                var datePart = date.format(DATE_FORMATTER);
+                var filename = file.getName();
 
-                return true;
-            })) {
-                // Do nothing
-            }
+                // Filter manually
+                if (filenamePrefixes.stream().noneMatch(filename::startsWith) ||
+                        !filename.contains("-" + datePart + "_") ||
+                        !filename.toLowerCase().endsWith(".zip.7z")) {
+                    LOG.debug("Skipping file '{}'", filename);
 
-            for (var file : share.listFiles((dir, name) ->
-                    // Does the filename start with any of the configured prefixes?
-                    filenamePrefixes.stream().anyMatch(name::startsWith) &&
-                    // Does the filename contain the date?
-                    name.contains(date.format(DATE_FORMATTER)) &&
-                    // Does the filename end with ".zip.7z" ?
-                    name.toLowerCase().endsWith(".zip.7z"))) {
-                // Extract the filename from  the remote canonical UNC path
-                var filename = file.getCanonicalUncPath();
-                filename = filename.substring(filename.lastIndexOf('/') + 1);
+                    continue;
+                }
 
                 // Create a batch
                 var batch = new Batch()
@@ -125,7 +120,7 @@ public class RaindanceIntegration {
                 try (var zipFileInputStream = new FileInputStream(zipFile.toFile());
                      var zipArchiveInputStream = new ZipArchiveInputStream(zipFileInputStream)) {
 
-                    var zipEntry = zipArchiveInputStream.getNextZipEntry();
+                    var zipEntry = zipArchiveInputStream.getNextEntry();
                     while (zipEntry != null) {
                         LOG.info("  Found file '{}'", zipEntry.getName());
 
@@ -137,7 +132,7 @@ public class RaindanceIntegration {
 
                         // Add the item to the current batch
                         batch.addItem(new Item(zipEntry.getName()));
-                        zipEntry = zipArchiveInputStream.getNextZipEntry();
+                        zipEntry = zipArchiveInputStream.getNextEntry();
                     }
                 }
 

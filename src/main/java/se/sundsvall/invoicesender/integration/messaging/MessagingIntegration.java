@@ -92,7 +92,7 @@ public class MessagingIntegration {
             var response = client.sendDigitalInvoice(request);
 
             // We know that we have a single message with a single delivery - extract the status
-            var status = response.getMessages().get(0).getDeliveries().get(0).getStatus();
+            var status = response.getDeliveries().getFirst().getStatus();
 
             return status == MessageStatus.SENT ? SENT : NOT_SENT;
         } catch (Exception e) {

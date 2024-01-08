@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
-import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 
 @FeignClient(
@@ -19,7 +18,7 @@ import generated.se.sundsvall.messaging.MessageResult;
 interface MessagingClient {
 
     @PostMapping("/digital-invoice")
-    MessageBatchResult sendDigitalInvoice(@RequestBody DigitalInvoiceRequest request);
+    MessageResult sendDigitalInvoice(@RequestBody DigitalInvoiceRequest request);
 
     @PostMapping("/email")
     MessageResult sendEmail(@RequestBody EmailRequest request);
