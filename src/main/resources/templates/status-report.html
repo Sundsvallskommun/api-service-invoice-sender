@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="sv">
 <head>
+    <title>Status</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <style type="text/css">
         body { font-family: "Arial", sans-serif; }
@@ -15,7 +16,7 @@
 </p>
 
 <th:block th:unless="${#lists.isEmpty(batches)}">
-<table border="0">
+<table border="0" aria-label="Statusrapport">
     <th:block th:each="batch : ${batches}">
     <tr>
         <th colspan="2" th:text="${batch.basename}">[basename]</th>
