@@ -5,6 +5,7 @@ import static generated.se.sundsvall.messaging.Details.PaymentReferenceTypeEnum.
 import static generated.se.sundsvall.messaging.DigitalInvoiceFile.ContentTypeEnum.APPLICATION_PDF;
 import static generated.se.sundsvall.messaging.DigitalInvoiceRequest.TypeEnum.INVOICE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static se.sundsvall.invoicesender.model.Status.NOT_SENT;
 import static se.sundsvall.invoicesender.model.Status.SENT;
 
@@ -47,7 +48,7 @@ public class MessagingIntegration {
 
     private final String statusReportSenderName;
     private final String statusReportSenderEmailAddress;
-    private final String statusReportRecipientEmailAddress;
+    private final List<String> statusReportRecipientEmailAddresses;
     private String statusReportSubjectPrefix;
 
     MessagingIntegration(final MessagingIntegrationProperties properties,
@@ -60,7 +61,7 @@ public class MessagingIntegration {
 
         statusReportSenderName = properties.statusReport().senderName();
         statusReportSenderEmailAddress = properties.statusReport().senderEmailAddress();
-        statusReportRecipientEmailAddress = properties.statusReport().recipientEmailAddress();
+        statusReportRecipientEmailAddresses = properties.statusReport().recipientEmailAddresses();
         statusReportSubjectPrefix = properties.statusReport().subjectPrefix();
         if (!statusReportSubjectPrefix.endsWith(" ")) {
             statusReportSubjectPrefix += " ";
@@ -103,18 +104,21 @@ public class MessagingIntegration {
     }
 
     public void sendStatusReport(final List<BatchDto> batches) {
-        try {
-            var request = new EmailRequest()
-                .sender(new EmailSender()
-                    .name(statusReportSenderName)
-                    .address(statusReportSenderEmailAddress))
-                .emailAddress(statusReportRecipientEmailAddress)
-                .subject(statusReportSubjectPrefix)
-                .htmlMessage(generateStatusReportMessage(batches));
+        var request = new EmailRequest()
+            .sender(new EmailSender()
+                .name(statusReportSenderName)
+                .address(statusReportSenderEmailAddress))
+            .subject(statusReportSubjectPrefix + ISO_DATE.format(LocalDate.now()))
+            .htmlMessage(generateStatusReportMessage(batches));
 
-            client.sendEmail(request);
-        } catch (Exception e) {
-            LOG.warn("Unable to send status report", e);
+        for (var recipientEmailAddress : statusReportRecipientEmailAddresses) {
+            try {
+                request.setEmailAddress(recipientEmailAddress);
+
+                client.sendEmail(request);
+            } catch (Exception e) {
+                LOG.warn("Unable to send status report to " + recipientEmailAddress, e);
+            }
         }
     }
 

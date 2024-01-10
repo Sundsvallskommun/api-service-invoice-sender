@@ -60,7 +60,7 @@ class MessagingIntegrationTests {
 		when(mockInvoiceProperties.subject()).thenReturn("someSubject");
 		when(mockInvoiceProperties.referencePrefix()).thenReturn("somePrefix");
 
-		when(mockStatusReportProperties.recipientEmailAddress()).thenReturn("someRecipientEmailAddress");
+		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(List.of("someRecipientEmailAddress"));
 		when(mockStatusReportProperties.senderName()).thenReturn("someSenderName");
 		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someSenderEmailAddress");
 		when(mockStatusReportProperties.subjectPrefix()).thenReturn("somePrefix");

@@ -42,5 +42,6 @@ integration:
     status-report:
       sender-name: SomeSender
       sender-email-address: noreply@something.com
-      recipient: someoneelse@something.com
+      recipient-email-addresses:
+        - someone@something.com
       subject-prefix: somePrefix
