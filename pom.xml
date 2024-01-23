@@ -18,7 +18,7 @@
 		<commons-compress.version>1.25.0</commons-compress.version>
 		<commons-validator.version>1.8.0</commons-validator.version>
 		<xz.version>1.9</xz.version>
-		<jsoup.version>1.17.1</jsoup.version>
+		<jsoup.version>1.17.2</jsoup.version>
 
 		<!-- Pipeline properties -->
 		<docker.image.name>ms-invoicesender</docker.image.name>
