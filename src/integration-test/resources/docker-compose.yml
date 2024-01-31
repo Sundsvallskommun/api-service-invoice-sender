@@ -8,4 +8,4 @@ services:
       - /tmp
     volumes:
       - ./raindance-share:/share:rw
-    command: -s "share;/share/;yes;no;no;user;none;user;none" -u "user;p4ssw0rd" -w SOMEWORKGROUP -p
+    command: -s "share;/share/;yes;no;no;user;user;user;none" -u "user;p4ssw0rd" -w SOMEWORKGROUP -p
