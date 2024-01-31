@@ -11,9 +11,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.FileEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.model.Batch;
 
@@ -21,9 +23,11 @@ import se.sundsvall.invoicesender.model.Batch;
 public class DbIntegration {
 
     private final BatchRepository batchRepository;
+    private final FileRepository fileRepository;
 
-    DbIntegration(final BatchRepository batchRepository) {
+    DbIntegration(final BatchRepository batchRepository, final FileRepository fileRepository) {
         this.batchRepository = batchRepository;
+        this.fileRepository = fileRepository;
     }
 
     public Page<BatchDto> getBatches(final LocalDate from, final LocalDate to, final Pageable pageRequest) {
@@ -35,6 +39,7 @@ public class DbIntegration {
         return new PageImpl<>(result.getContent().stream().map(this::mapToBatchDto).toList(), pageRequest, result.getTotalElements());
     }
 
+    @Transactional
     public BatchDto storeBatch(final Batch batch) {
         var items = ofNullable(batch.getItems()).orElse(List.of());
 
@@ -55,7 +60,13 @@ public class DbIntegration {
                 .filter(item -> item.getStatus() == SENT)
                 .count());
 
-        return mapToBatchDto(batchRepository.save(batchEntity));
+        batchRepository.save(batchEntity);
+        fileRepository.save(new FileEntity()
+            .withBatch(batchEntity)
+            .withFilename(batch.getBasename() + ".zip.7z")
+            .withData(batch.getData()));
+
+        return mapToBatchDto(batchEntity);
     }
 
     BatchDto mapToBatchDto(final BatchEntity batchEntity) {

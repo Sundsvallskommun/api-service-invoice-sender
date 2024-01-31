@@ -36,6 +36,10 @@ public class ItemEntity {
         return this;
     }
 
+    public void setId(final Integer id) {
+        this.id = id;
+    }
+
     public String getFilename() {
         return filename;
     }
@@ -45,6 +49,10 @@ public class ItemEntity {
         return this;
     }
 
+    public void setFilename(final String filename) {
+        this.filename = filename;
+    }
+
     public Status getStatus() {
         return status;
     }
@@ -52,5 +60,9 @@ public class ItemEntity {
     public ItemEntity withStatus(final Status status) {
         this.status = status;
         return this;
+    }
+
+    public void setStatus(final Status status) {
+        this.status = status;
     }
 }

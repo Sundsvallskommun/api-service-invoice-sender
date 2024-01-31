@@ -4,6 +4,7 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static se.sundsvall.invoicesender.model.Status.SENT;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -100,10 +101,14 @@ public class RaindanceIntegration {
                     continue;
                 }
 
+                var baos = new ByteArrayOutputStream();
+                IOUtils.copy(file.getInputStream(), baos);
+
                 // Create a batch
                 var batch = new Batch()
                     .withPath(currentWorkDirectory.toString())
                     .withBasename(filename.replaceAll("\\.zip\\.7z$", ""))
+                    .withData(baos.toByteArray())
                     .withRemotePath(file.getCanonicalUncPath());
 
                 LOG.info("Processing 7z file '{}'", filename);
