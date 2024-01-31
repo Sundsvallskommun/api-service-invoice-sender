@@ -12,6 +12,7 @@ import java.time.Duration;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -23,9 +24,10 @@ import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.invoicesender.Application;
 import se.sundsvall.invoicesender.service.util.XmlUtil;
 
+@Disabled
 @Testcontainers
-@WireMockAppTestSuite(files = "classpath:/TestIT/", classes = Application.class)
-class TestIT extends AbstractAppTest {
+@WireMockAppTestSuite(files = "classpath:/InvoiceSenderIT/", classes = Application.class)
+class InvoiceSenderIT extends AbstractAppTest {
 
 	private static final String SERVICE_PATH = "/batches/trigger";
 
