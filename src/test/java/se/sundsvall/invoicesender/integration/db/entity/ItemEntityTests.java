@@ -9,11 +9,23 @@ import se.sundsvall.invoicesender.model.Status;
 class ItemEntityTests {
 
     @Test
-    void testGettersAndSetters() {
+    void testWithersAndGetters() {
+        var itemEntity = new ItemEntity()
+            .withId(12345)
+            .withFilename("someFilename")
+            .withStatus(Status.NOT_SENT);
+
+        assertThat(itemEntity.getId()).isEqualTo(12345);
+        assertThat(itemEntity.getFilename()).isEqualTo("someFilename");
+        assertThat(itemEntity.getStatus()).isEqualTo(Status.NOT_SENT);
+    }
+
+    @Test
+    void testSettersAndGetters() {
         var itemEntity = new ItemEntity();
-        itemEntity.withId(12345);
-        itemEntity.withFilename("someFilename");
-        itemEntity.withStatus(Status.NOT_SENT);
+        itemEntity.setId(12345);
+        itemEntity.setFilename("someFilename");
+        itemEntity.setStatus(Status.NOT_SENT);
 
         assertThat(itemEntity.getId()).isEqualTo(12345);
         assertThat(itemEntity.getFilename()).isEqualTo("someFilename");

@@ -51,6 +51,10 @@ public class BatchEntity {
         return this;
     }
 
+    public void setId(final Integer id) {
+        this.id = id;
+    }
+
     public String getBasename() {
         return basename;
     }
@@ -58,6 +62,10 @@ public class BatchEntity {
     public BatchEntity withBasename(final String basename) {
         this.basename = basename;
         return this;
+    }
+
+    public void setBasename(final String basename) {
+        this.basename = basename;
     }
 
     public LocalDateTime getStartedAt() {
@@ -69,6 +77,10 @@ public class BatchEntity {
         return this;
     }
 
+    public void setStartedAt(final LocalDateTime startedAt) {
+        this.startedAt = startedAt;
+    }
+
     public LocalDateTime getCompletedAt() {
         return completedAt;
     }
@@ -76,6 +88,10 @@ public class BatchEntity {
     public BatchEntity withCompletedAt(final LocalDateTime completedAt) {
         this.completedAt = completedAt;
         return this;
+    }
+
+    public void setCompletedAt(final LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 
     public List<ItemEntity> getItems() {
@@ -87,6 +103,10 @@ public class BatchEntity {
         return this;
     }
 
+    public void setItems(final List<ItemEntity> items) {
+        this.items = items;
+    }
+
     public long getTotalItems() {
         return totalItems;
     }
@@ -96,6 +116,10 @@ public class BatchEntity {
         return this;
     }
 
+    public void setTotalItems(final long totalItems) {
+        this.totalItems = totalItems;
+    }
+
     public long getSentItems() {
         return sentItems;
     }
@@ -103,5 +127,9 @@ public class BatchEntity {
     public BatchEntity withSentItems(final long sentItems) {
         this.sentItems = sentItems;
         return this;
+    }
+
+    public void setSentItems(final long sentItems) {
+        this.sentItems = sentItems;
     }
 }

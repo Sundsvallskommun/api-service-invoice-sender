@@ -8,6 +8,7 @@ public class Batch {
 
     private String path;
     private String basename;
+    private byte[] data;
     private String remotePath;
     private List<Item> items;
     private final LocalDateTime startedAt = LocalDateTime.now();
@@ -15,6 +16,10 @@ public class Batch {
 
     public String getPath() {
         return path;
+    }
+
+    public void setPath(final String path) {
+        this.path = path;
     }
 
     public Batch withPath(final String path) {
@@ -31,6 +36,23 @@ public class Batch {
         return this;
     }
 
+    public void setBasename(final String basename) {
+        this.basename = basename;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public Batch withData(final byte[] data) {
+        this.data = data;
+        return this;
+    }
+
+    public void setData(final byte[] data) {
+        this.data = data;
+    }
+
     public String getRemotePath() {
         return remotePath;
     }
@@ -38,6 +60,10 @@ public class Batch {
     public Batch withRemotePath(final String remotePath) {
         this.remotePath = remotePath;
         return this;
+    }
+
+    public void setRemotePath(final String remotePath) {
+        this.remotePath = remotePath;
     }
 
     public List<Item> getItems() {
@@ -55,6 +81,10 @@ public class Batch {
     public Batch withItems(final List<Item> items) {
         this.items = items;
         return this;
+    }
+
+    public void setItems(final List<Item> items) {
+        this.items = items;
     }
 
     public LocalDateTime getStartedAt() {
