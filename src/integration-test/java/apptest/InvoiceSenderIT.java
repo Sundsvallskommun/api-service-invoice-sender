@@ -10,13 +10,14 @@ import java.io.IOException;
 import java.time.Duration;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ClassPathResource;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import se.sundsvall.dept44.test.AbstractAppTest;
@@ -24,32 +25,58 @@ import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.invoicesender.Application;
 import se.sundsvall.invoicesender.service.util.XmlUtil;
 
-@Disabled
 @Testcontainers
 @WireMockAppTestSuite(files = "classpath:/InvoiceSenderIT/", classes = Application.class)
 class InvoiceSenderIT extends AbstractAppTest {
 
 	private static final String SERVICE_PATH = "/batches/trigger";
 
-	private static final String BASE_DIR = "src/integration-test/resources";
+	private static final String BASE_DIR = "/tmp/invoice-sender-integration-test";
 	private static final String INPUT_FILE = "Faktura-pdf-241222_120505.zip.7z";
 	private static final String SHARE_DIR = BASE_DIR + "/raindance-share";
 
 	private static final String ARCHIVE_INDEX_XML = "ArchiveIndex.xml";
 
-	@Container
-	static final DockerComposeContainer<?> sambaContainer =
-		new DockerComposeContainer<>(new File(BASE_DIR + "/docker-compose.yml"))
+	static DockerComposeContainer<?> samba;
+
+	/*
+	 * Start the Samba container manually instead of having Testcontainers manage its lifecycle,
+	 * since we need to load the docker-compose file from the classpath at the same time as we
+	 * access filesystem resources mounted as volumes in the container.
+	 */
+	@BeforeAll
+	static void beforeAll() throws IOException {
+		samba = new DockerComposeContainer<>(new ClassPathResource("docker-compose.yml").getFile())
 			.withExposedService("samba", 445, Wait.forListeningPort())
 			.withStartupTimeout(Duration.ofSeconds(60));
+		samba.start();
 
-	@BeforeEach
-	void setUp() throws IOException {
-		FileUtils.copyFileToDirectory(new File(BASE_DIR + File.separator + INPUT_FILE), new File(SHARE_DIR));
+		FileUtils.forceMkdir(new File(BASE_DIR));
 	}
 
+	/*
+	 * Stop the Samba container manually when all tests have executed.
+	 */
+	@AfterAll
+	static void afterAll() throws IOException {
+		samba.stop();
+
+		FileUtils.deleteDirectory(new File(BASE_DIR));
+	}
+
+	/*
+	 * Copy the fake invoice ZIP file to the share directory.
+	 */
+	@BeforeEach
+	void beforeEach() throws Exception {
+		FileUtils.copyFileToDirectory(new ClassPathResource(INPUT_FILE).getFile(), new File(SHARE_DIR));
+	}
+
+	/*
+	 * Remove everything in the share directory.
+	 */
 	@AfterEach
-	void cleanUp() throws IOException {
+	void afterEach() throws IOException {
 		FileUtils.cleanDirectory(new File(SHARE_DIR));
 	}
 
