@@ -34,6 +34,7 @@ import se.sundsvall.invoicesender.model.Batch;
 import se.sundsvall.invoicesender.model.Item;
 
 import jcifs.CIFSContext;
+import jcifs.CIFSException;
 import jcifs.context.SingletonContext;
 import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.SmbFile;
@@ -61,8 +62,13 @@ public class RaindanceIntegration {
 
         filenamePrefixes = properties.filenamePrefixes();
 
-        // Initialize the JCIFS context
-        SingletonContext.init(properties.jcifsProperties());
+        // Attempt to initialize the JCIFS context
+        try {
+            SingletonContext.init(properties.jcifsProperties());
+        } catch (CIFSException e) {
+            LOG.info("JCIFS context already initialized");
+        }
+
         context = SingletonContext.getInstance()
             .withCredentials(new NtlmPasswordAuthenticator(
                 properties.domain(), properties.username(), properties.password()));
@@ -151,8 +157,8 @@ public class RaindanceIntegration {
 
         recreateSevenZipFile(batch);
 
-        try (var file = new SmbFile(batch.getRemotePath() + ".NEW", context)) {
-            LOG.info("Storing file '{}'", batch.getRemotePath() + ".NEW");
+        try (var file = new SmbFile(batch.getRemotePath(), context)) {
+            LOG.info("Storing file '{}'", batch.getRemotePath());
 
             var batchSevenZipFile = batchSevenZipPath.toFile();
             try (var in = new FileInputStream(batchSevenZipFile)) {
