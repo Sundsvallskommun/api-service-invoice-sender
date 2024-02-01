@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Properties;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -26,16 +25,18 @@ record RaindanceIntegrationProperties(
         @NotBlank
         String share,
 
-        @NotEmpty
-        List<String> filenamePrefixes,
+        List<String> batchFilenamePrefixes,
 
-        @DefaultValue("PT0.05S")
+        @DefaultValue("PT30S")
         Duration connectTimeout,
-        @DefaultValue("PT0.05S")
+        @DefaultValue("PT30S")
         Duration responseTimeout,
 
         @NotBlank
-        String workDirectory) {
+        String workDirectory,
+
+        @DefaultValue("")
+        String outputFileExtraSuffix) {
 
     Properties jcifsProperties() {
         var jcifsProperties = new Properties();

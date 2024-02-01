@@ -10,7 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import se.sundsvall.invoicesender.model.Status;
+import se.sundsvall.invoicesender.model.ItemStatus;
 
 @Entity
 @Table(name = "batch_items")
@@ -25,7 +25,7 @@ public class ItemEntity {
 
     @Enumerated(STRING)
     @Column(name = "status", nullable = false)
-    private Status status;
+    private ItemStatus status;
 
     public Integer getId() {
         return id;
@@ -53,16 +53,16 @@ public class ItemEntity {
         this.filename = filename;
     }
 
-    public Status getStatus() {
+    public ItemStatus getStatus() {
         return status;
     }
 
-    public ItemEntity withStatus(final Status status) {
+    public ItemEntity withStatus(final ItemStatus status) {
         this.status = status;
         return this;
     }
 
-    public void setStatus(final Status status) {
+    public void setStatus(final ItemStatus status) {
         this.status = status;
     }
 }

@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import se.sundsvall.invoicesender.model.Status;
+import se.sundsvall.invoicesender.model.ItemStatus;
 
 class ItemEntityTests {
 
@@ -13,11 +13,11 @@ class ItemEntityTests {
         var itemEntity = new ItemEntity()
             .withId(12345)
             .withFilename("someFilename")
-            .withStatus(Status.NOT_SENT);
+            .withStatus(ItemStatus.NOT_SENT);
 
         assertThat(itemEntity.getId()).isEqualTo(12345);
         assertThat(itemEntity.getFilename()).isEqualTo("someFilename");
-        assertThat(itemEntity.getStatus()).isEqualTo(Status.NOT_SENT);
+        assertThat(itemEntity.getStatus()).isEqualTo(ItemStatus.NOT_SENT);
     }
 
     @Test
@@ -25,10 +25,10 @@ class ItemEntityTests {
         var itemEntity = new ItemEntity();
         itemEntity.setId(12345);
         itemEntity.setFilename("someFilename");
-        itemEntity.setStatus(Status.NOT_SENT);
+        itemEntity.setStatus(ItemStatus.NOT_SENT);
 
         assertThat(itemEntity.getId()).isEqualTo(12345);
         assertThat(itemEntity.getFilename()).isEqualTo("someFilename");
-        assertThat(itemEntity.getStatus()).isEqualTo(Status.NOT_SENT);
+        assertThat(itemEntity.getStatus()).isEqualTo(ItemStatus.NOT_SENT);
     }
 }

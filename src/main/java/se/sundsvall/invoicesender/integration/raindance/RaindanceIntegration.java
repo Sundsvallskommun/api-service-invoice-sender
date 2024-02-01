@@ -2,7 +2,8 @@ package se.sundsvall.invoicesender.integration.raindance;
 
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
-import static se.sundsvall.invoicesender.model.Status.SENT;
+import static java.util.Optional.ofNullable;
+import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -49,9 +50,11 @@ public class RaindanceIntegration {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
     private static final Predicate<Item> UNSENT_ITEMS = item -> item.getStatus() != SENT;
+    public static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
     private final Path workDirectory;
-    private final List<String> filenamePrefixes;
+    private final List<String> batchFilenamePrefixes;
+    private final String outputFileExtraSuffix;
     private final CIFSContext context;
     private final String shareUrl;
 
@@ -61,10 +64,14 @@ public class RaindanceIntegration {
             Files.createDirectories(workDirectory);
         }
 
-        filenamePrefixes = properties.filenamePrefixes();
+        batchFilenamePrefixes = ofNullable(properties.batchFilenamePrefixes()).orElse(List.of());
+        outputFileExtraSuffix = properties.outputFileExtraSuffix();
 
         // Attempt to initialize the JCIFS context
         try {
+            LOG.info("Raindance connection timeout set to {} ms and response timeout set to {} ms",
+                properties.connectTimeout().toMillis(), properties.responseTimeout().toMillis());
+
             SingletonContext.init(properties.jcifsProperties());
         } catch (CIFSException e) {
             LOG.info("JCIFS context already initialized");
@@ -78,7 +85,7 @@ public class RaindanceIntegration {
     }
 
     public List<Batch> readBatch(final LocalDate date) throws IOException {
-        LOG.info("Reading batch for {} with filename prefix(es): {}", date, filenamePrefixes);
+        LOG.info("Reading batch for {} with filename prefix(es): {}", date, batchFilenamePrefixes);
 
         // Use a random sub-work-directory
         var currentWorkDirectory = workDirectory.resolve(UUID.randomUUID().toString());
@@ -88,39 +95,39 @@ public class RaindanceIntegration {
         try (var share = new SmbFile(shareUrl, context)) {
             var batches = new ArrayList<Batch>();
 
-            for (var file : share.listFiles()) {
+            for (var batchFile : share.listFiles()) {
                 var datePart = date.format(DATE_FORMATTER);
-                var filename = file.getName();
+                var batchFilename = batchFile.getName();
 
                 // Filter manually
-                if (filenamePrefixes.stream().noneMatch(filename::startsWith) ||
-                        !filename.contains("-" + datePart + "_") ||
-                        !filename.toLowerCase().endsWith(".zip.7z")) {
-                    LOG.debug("Skipping file '{}'", filename);
+                if (batchFilenamePrefixes.stream().noneMatch(batchFilename::startsWith) ||
+                        !batchFilename.contains("-" + datePart + "_") ||
+                        !batchFilename.toLowerCase().endsWith(BATCH_FILE_SUFFIX)) {
+                    LOG.debug("Skipping file '{}'", batchFilename);
 
                     continue;
                 }
 
                 var baos = new ByteArrayOutputStream();
-                IOUtils.copy(file.getInputStream(), baos);
+                IOUtils.copy(batchFile.getInputStream(), baos);
 
                 // Create a batch
                 var batch = new Batch()
                     .withPath(currentWorkDirectory.toString())
-                    .withBasename(filename.replaceAll("\\.zip\\.7z$", ""))
+                    .withBasename(batchFilename.replaceAll("\\.zip\\.7z$", ""))
                     .withData(baos.toByteArray())
-                    .withRemotePath(file.getCanonicalUncPath());
+                    .withRemotePath(batchFile.getCanonicalUncPath());
 
-                LOG.info("Processing 7z file '{}'", filename);
+                LOG.info("Processing 7z file '{}'", batchFilename);
 
                 // Store the 7z file locally
-                var sevenZipFile = currentWorkDirectory.resolve(filename).toFile();
+                var sevenZipFile = currentWorkDirectory.resolve(batchFilename).toFile();
                 try (var out = new FileOutputStream(sevenZipFile)) {
-                    IOUtils.copy(file.getInputStream(), out);
+                    IOUtils.copy(batchFile.getInputStream(), out);
                 }
 
                 // Decompress the 7z (LZMA) file to a single ZIP file
-                var zipFilename = filename.replaceAll("\\.7z$", "");
+                var zipFilename = batchFilename.replaceAll("\\.7z$", "");
                 var zipFile = currentWorkDirectory.resolve(zipFilename);
                 try (var fileInputStream = new FileInputStream(sevenZipFile);
                      var lzmaInputStream = new LZMACompressorInputStream(fileInputStream)) {
@@ -158,11 +165,11 @@ public class RaindanceIntegration {
 
     public void writeBatch(final Batch batch) throws IOException {
         var batchPath = Paths.get(batch.getPath());
-        var batchSevenZipPath = batchPath.resolve(batch.getBasename().concat(".zip.7z"));
+        var batchSevenZipPath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
 
         recreateSevenZipFile(batch);
 
-        try (var file = new SmbFile(batch.getRemotePath(), context)) {
+        try (var file = new SmbFile(batch.getRemotePath() + outputFileExtraSuffix, context)) {
             LOG.info("Storing file '{}'", batch.getRemotePath());
 
             var batchSevenZipFile = batchSevenZipPath.toFile();
@@ -202,7 +209,7 @@ public class RaindanceIntegration {
         }
 
         // Compress the ZIP file to a 7z (LZMA) file
-        var batchSevenZipFilePath = batchPath.resolve(batch.getBasename().concat(".zip.7z"));
+        var batchSevenZipFilePath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
         LOG.info("Creating 7z file '{}'", batchSevenZipFilePath.getFileName());
         try (var fileInputStream = new FileOutputStream(batchSevenZipFilePath.toFile());
              var lzmaOutputStream = new LZMACompressorOutputStream(fileInputStream)) {

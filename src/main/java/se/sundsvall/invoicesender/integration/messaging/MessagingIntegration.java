@@ -6,8 +6,8 @@ import static generated.se.sundsvall.messaging.DigitalInvoiceFile.ContentTypeEnu
 import static generated.se.sundsvall.messaging.DigitalInvoiceRequest.TypeEnum.INVOICE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
-import static se.sundsvall.invoicesender.model.Status.NOT_SENT;
-import static se.sundsvall.invoicesender.model.Status.SENT;
+import static se.sundsvall.invoicesender.model.ItemStatus.NOT_SENT;
+import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,7 +24,7 @@ import org.thymeleaf.context.Context;
 
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.model.Item;
-import se.sundsvall.invoicesender.model.Status;
+import se.sundsvall.invoicesender.model.ItemStatus;
 
 import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
@@ -68,7 +68,7 @@ public class MessagingIntegration {
         }
     }
 
-    public Status sendInvoice(final String path, final Item invoice) {
+    public ItemStatus sendInvoice(final String path, final Item invoice) {
         try {
             var invoiceContent = Files.readAllBytes(Paths.get(path).resolve(invoice.getFilename()));
             var encodedInvoiceContent = new String(Base64.getEncoder().encode(invoiceContent), UTF_8);

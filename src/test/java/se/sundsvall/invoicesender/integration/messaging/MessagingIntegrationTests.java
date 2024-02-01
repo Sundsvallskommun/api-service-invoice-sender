@@ -24,7 +24,7 @@ import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
 
 import se.sundsvall.invoicesender.model.Item;
-import se.sundsvall.invoicesender.model.Status;
+import se.sundsvall.invoicesender.model.ItemStatus;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
@@ -81,7 +81,7 @@ class MessagingIntegrationTests {
 		final var invoice = createMockInvoiceItem();
 
 		final var result = messagingIntegration.sendInvoice(testFilePath, invoice);
-		assertThat(result).isEqualTo(Status.SENT);
+		assertThat(result).isEqualTo(ItemStatus.SENT);
 
 		verify(mockClient, times(1)).sendDigitalInvoice(any(DigitalInvoiceRequest.class));
 		verifyNoMoreInteractions(mockClient);
@@ -93,7 +93,7 @@ class MessagingIntegrationTests {
 			.thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		final var result = messagingIntegration.sendInvoice(testFilePath, createMockInvoiceItem());
-		assertThat(result).isEqualTo(Status.NOT_SENT);
+		assertThat(result).isEqualTo(ItemStatus.NOT_SENT);
 
 		verify(mockClient, times(1)).sendDigitalInvoice(any(DigitalInvoiceRequest.class));
 		verifyNoMoreInteractions(mockClient);
@@ -130,10 +130,10 @@ class MessagingIntegrationTests {
 
 	private static Item createMockInvoiceItem() {
 		return new Item()
-			.setFilename("test.file")
-			.setRecipientPartyId(UUID.randomUUID().toString())
-			.setMetadata(new Item.Metadata()
-				.setTotalAmount("12.34")
-				.setDueDate("1986-02-26"));
+			.withFilename("test.file")
+			.withRecipientPartyId(UUID.randomUUID().toString())
+			.withMetadata(new Item.Metadata()
+				.withTotalAmount("12.34")
+				.withDueDate("1986-02-26"));
 	}
 }

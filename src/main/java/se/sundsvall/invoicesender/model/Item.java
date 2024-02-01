@@ -1,8 +1,25 @@
 package se.sundsvall.invoicesender.model;
 
+import static se.sundsvall.invoicesender.model.ItemStatus.IGNORED;
+import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_FOUND;
+import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
+import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
+
+import java.util.function.Predicate;
+
 public class Item {
 
-    private Status status = Status.UNHANDLED;
+    public static final Predicate<Item> ITEM_IS_A_PDF = item -> item.getFilename().endsWith(".pdf");
+    public static final Predicate<Item> ITEM_IS_INVOICE = item -> item.getType() == INVOICE;
+    public static final Predicate<Item> ITEM_IS_PROCESSABLE = ITEM_IS_INVOICE.and(item -> item.getStatus() != IGNORED);
+    public static final Predicate<Item> ITEM_IS_IGNORED = ITEM_IS_INVOICE.and(item -> item.getStatus() == IGNORED);
+    public static final Predicate<Item> ITEM_HAS_LEGAL_ID = item -> item.getStatus() == RECIPIENT_LEGAL_ID_FOUND;
+    public static final Predicate<Item> ITEM_HAS_PARTY_ID = item -> item.getStatus() == RECIPIENT_PARTY_ID_FOUND;
+    public static final Predicate<Item> ITEM_IS_SENT = item -> item.getStatus() == SENT;
+
+    private ItemType type = ItemType.UNKNOWN;
+    private ItemStatus status = ItemStatus.UNHANDLED;
     private String filename;
     private Metadata metadata;
     private String recipientLegalId;
@@ -15,49 +32,82 @@ public class Item {
         this.filename = filename;
     }
 
-    public Status getStatus() {
+    public ItemType getType() {
+        return type;
+    }
+
+    public Item withType(final ItemType type) {
+        this.type = type;
+        return this;
+    }
+
+    public void setType(final ItemType type) {
+        this.type = type;
+    }
+
+    public ItemStatus getStatus() {
         return status;
     }
 
-    public Item setStatus(final Status status) {
+    public Item withStatus(final ItemStatus status) {
         this.status = status;
         return this;
+    }
+
+    public void setStatus(final ItemStatus status) {
+        this.status = status;
     }
 
     public String getFilename() {
         return filename;
     }
 
-    public Item setFilename(final String filename) {
+    public Item withFilename(final String filename) {
         this.filename = filename;
         return this;
+    }
+
+    public void setFilename(final String filename) {
+        this.filename = filename;
     }
 
     public Metadata getMetadata() {
         return metadata;
     }
 
-    public Item setMetadata(final Metadata metadata) {
+    public Item withMetadata(final Metadata metadata) {
         this.metadata = metadata;
         return this;
+    }
+
+    public void setMetadata(final Metadata metadata) {
+        this.metadata = metadata;
     }
 
     public String getRecipientLegalId() {
         return recipientLegalId;
     }
 
-    public Item setRecipientLegalId(final String recipientLegalId) {
+    public Item withRecipientLegalId(final String recipientLegalId) {
         this.recipientLegalId = recipientLegalId;
         return this;
+    }
+
+    public void setRecipientLegalId(final String recipientLegalId) {
+        this.recipientLegalId = recipientLegalId;
     }
 
     public String getRecipientPartyId() {
         return recipientPartyId;
     }
 
-    public Item setRecipientPartyId(final String recipientPartyId) {
+    public Item withRecipientPartyId(final String recipientPartyId) {
         this.recipientPartyId = recipientPartyId;
         return this;
+    }
+
+    public void setRecipientPartyId(final String recipientPartyId) {
+        this.recipientPartyId = recipientPartyId;
     }
 
     public static class Metadata {
@@ -74,63 +124,91 @@ public class Item {
             return invoiceNumber;
         }
 
-        public Metadata setInvoiceNumber(final String invoiceNumber) {
+        public Metadata withInvoiceNumber(final String invoiceNumber) {
             this.invoiceNumber = invoiceNumber;
             return this;
+        }
+
+        public void setInvoiceNumber(final String invoiceNumber) {
+            this.invoiceNumber = invoiceNumber;
         }
 
         public String getInvoiceDate() {
             return invoiceDate;
         }
 
-        public Metadata setInvoiceDate(final String invoiceDate) {
+        public Metadata withInvoiceDate(final String invoiceDate) {
             this.invoiceDate = invoiceDate;
             return this;
+        }
+
+        public void setInvoiceDate(final String invoiceDate) {
+            this.invoiceDate = invoiceDate;
         }
 
         public String getDueDate() {
             return dueDate;
         }
 
-        public Metadata setDueDate(final String dueDate) {
+        public Metadata withDueDate(final String dueDate) {
             this.dueDate = dueDate;
             return this;
+        }
+
+        public void setDueDate(final String dueDate) {
+            this.dueDate = dueDate;
         }
 
         public String getAccountNumber() {
             return accountNumber;
         }
 
-        public Metadata setAccountNumber(final String accountNumber) {
+        public Metadata withAccountNumber(final String accountNumber) {
             this.accountNumber = accountNumber;
             return this;
+        }
+
+        public void setAccountNumber(final String accountNumber) {
+            this.accountNumber = accountNumber;
         }
 
         public String getPaymentReference() {
             return paymentReference;
         }
 
-        public Metadata setPaymentReference(final String paymentReference) {
+        public Metadata withPaymentReference(final String paymentReference) {
             this.paymentReference = paymentReference;
             return this;
+        }
+
+        public void setPaymentReference(final String paymentReference) {
+            this.paymentReference = paymentReference;
         }
 
         public String getTotalAmount() {
             return totalAmount;
         }
 
-        public Metadata setTotalAmount(final String totalAmount) {
+        public Metadata withTotalAmount(final String totalAmount) {
             this.totalAmount = totalAmount;
             return this;
+        }
+
+        public void setTotalAmount(final String totalAmount) {
+            this.totalAmount = totalAmount;
         }
 
         public boolean isReminder() {
             return reminder;
         }
 
-        public Metadata setReminder(final boolean reminder) {
+        public Metadata withReminder(final boolean reminder) {
             this.reminder = reminder;
             return this;
+        }
+
+        public void setReminder(final boolean reminder) {
+            this.reminder = reminder;
         }
     }
 }
