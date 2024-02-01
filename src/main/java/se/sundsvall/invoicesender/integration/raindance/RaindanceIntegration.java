@@ -50,6 +50,7 @@ public class RaindanceIntegration {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
     private static final Predicate<Item> UNSENT_ITEMS = item -> item.getStatus() != SENT;
+    public static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
     private final Path workDirectory;
     private final List<String> batchFilenamePrefixes;
@@ -101,7 +102,7 @@ public class RaindanceIntegration {
                 // Filter manually
                 if (batchFilenamePrefixes.stream().noneMatch(batchFilename::startsWith) ||
                         !batchFilename.contains("-" + datePart + "_") ||
-                        !batchFilename.toLowerCase().endsWith(".zip.7z")) {
+                        !batchFilename.toLowerCase().endsWith(BATCH_FILE_SUFFIX)) {
                     LOG.debug("Skipping file '{}'", batchFilename);
 
                     continue;
@@ -164,7 +165,7 @@ public class RaindanceIntegration {
 
     public void writeBatch(final Batch batch) throws IOException {
         var batchPath = Paths.get(batch.getPath());
-        var batchSevenZipPath = batchPath.resolve(batch.getBasename().concat(".zip.7z"));
+        var batchSevenZipPath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
 
         recreateSevenZipFile(batch);
 
@@ -208,7 +209,7 @@ public class RaindanceIntegration {
         }
 
         // Compress the ZIP file to a 7z (LZMA) file
-        var batchSevenZipFilePath = batchPath.resolve(batch.getBasename().concat(".zip.7z"));
+        var batchSevenZipFilePath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
         LOG.info("Creating 7z file '{}'", batchSevenZipFilePath.getFileName());
         try (var fileInputStream = new FileOutputStream(batchSevenZipFilePath.toFile());
              var lzmaOutputStream = new LZMACompressorOutputStream(fileInputStream)) {
