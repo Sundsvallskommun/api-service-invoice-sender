@@ -39,6 +39,9 @@ public class BatchEntity {
     @Column(name = "total_invoices", nullable = false)
     private long totalItems;
 
+    @Column(name = "ignored_invoices", nullable = false)
+    private long ignoredItems;
+
     @Column(name = "sent_invoices", nullable = false)
     private long sentItems;
 
@@ -118,6 +121,19 @@ public class BatchEntity {
 
     public void setTotalItems(final long totalItems) {
         this.totalItems = totalItems;
+    }
+
+    public long getIgnoredItems() {
+        return ignoredItems;
+    }
+
+    public BatchEntity withIgnoredItems(final long ignoredItems) {
+        this.ignoredItems = ignoredItems;
+        return this;
+    }
+
+    public void setIgnoredItems(final long ignoredItems) {
+        this.ignoredItems = ignoredItems;
     }
 
     public long getSentItems() {

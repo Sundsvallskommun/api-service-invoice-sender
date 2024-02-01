@@ -1,8 +1,10 @@
 package se.sundsvall.invoicesender.integration.db;
 
 import static java.util.Optional.ofNullable;
-import static se.sundsvall.invoicesender.model.Status.NOT_AN_INVOICE;
-import static se.sundsvall.invoicesender.model.Status.SENT;
+import static se.sundsvall.invoicesender.model.Item.ITEM_IS_IGNORED;
+import static se.sundsvall.invoicesender.model.Item.ITEM_IS_INVOICE;
+import static se.sundsvall.invoicesender.model.Item.ITEM_IS_PROCESSABLE;
+import static se.sundsvall.invoicesender.model.Item.ITEM_IS_SENT;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -48,16 +50,20 @@ public class DbIntegration {
             .withStartedAt(batch.getStartedAt())
             .withCompletedAt(batch.getCompletedAt())
             .withItems(items.stream()
-                .filter(item -> item.getStatus() != NOT_AN_INVOICE)
+                .filter(ITEM_IS_INVOICE)
                 .map(item -> new ItemEntity()
-                    .withFilename(item.getFilename())
-                    .withStatus(item.getStatus()))
+                    .withStatus(item.getStatus())
+                    .withFilename(item.getFilename()))
                 .toList())
             .withTotalItems(items.stream()
-                .filter(item -> item.getStatus() != NOT_AN_INVOICE)
+                .filter(ITEM_IS_PROCESSABLE)
+                .count())
+            .withIgnoredItems(items.stream()
+                .filter(ITEM_IS_IGNORED)
                 .count())
             .withSentItems(items.stream()
-                .filter(item -> item.getStatus() == SENT)
+                .filter(ITEM_IS_PROCESSABLE)
+                .filter(ITEM_IS_SENT)
                 .count());
 
         batchRepository.save(batchEntity);

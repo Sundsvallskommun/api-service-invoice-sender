@@ -7,6 +7,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static se.sundsvall.invoicesender.model.ItemStatus.IGNORED;
+import static se.sundsvall.invoicesender.model.ItemStatus.NOT_SENT;
+import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.model.ItemStatus.UNHANDLED;
+import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
+import static se.sundsvall.invoicesender.model.ItemType.OTHER;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,7 +32,6 @@ import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.FileEntity;
 import se.sundsvall.invoicesender.model.Batch;
 import se.sundsvall.invoicesender.model.Item;
-import se.sundsvall.invoicesender.model.Status;
 
 @ExtendWith(MockitoExtension.class)
 class DbIntegrationTests {
@@ -66,12 +71,12 @@ class DbIntegrationTests {
         var batch = new Batch()
             .withBasename("someBasename")
             .withItems(List.of(
-                new Item("something.xml").setStatus(Status.NOT_AN_INVOICE),
-                new Item("file1").setStatus(Status.SENT),
-                new Item("file1").setStatus(Status.SENT),
-                new Item("file1").setStatus(Status.SENT),
-                new Item("file1").setStatus(Status.NOT_SENT),
-                new Item("file1").setStatus(Status.NOT_SENT)
+                new Item("something.xml").withType(OTHER).withStatus(UNHANDLED),
+                new Item("file1").withType(INVOICE).withStatus(SENT),
+                new Item("file2").withType(INVOICE).withStatus(SENT),
+                new Item("file3").withType(INVOICE).withStatus(IGNORED),
+                new Item("file4").withType(INVOICE).withStatus(NOT_SENT),
+                new Item("file5").withType(INVOICE).withStatus(NOT_SENT)
             ));
         batch.setCompleted();
 
@@ -86,8 +91,9 @@ class DbIntegrationTests {
         assertThat(batchEntity.getStartedAt()).isEqualTo(batch.getStartedAt());
         assertThat(batchEntity.getCompletedAt()).isEqualTo(batch.getCompletedAt());
         assertThat(batchEntity.getItems()).hasSize(5);
-        assertThat(batchEntity.getTotalItems()).isEqualTo(5L);
-        assertThat(batchEntity.getSentItems()).isEqualTo(3L);
+        assertThat(batchEntity.getTotalItems()).isEqualTo(4L);
+        assertThat(batchEntity.getIgnoredItems()).isEqualTo(1L);
+        assertThat(batchEntity.getSentItems()).isEqualTo(2L);
     }
 
     @Test

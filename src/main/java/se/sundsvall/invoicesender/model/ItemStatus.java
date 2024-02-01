@@ -1,10 +1,10 @@
 package se.sundsvall.invoicesender.model;
 
-public enum Status {
+public enum ItemStatus {
     /** Initial status */
     UNHANDLED,
-    /** Indication that an item is not an invoice */
-    NOT_AN_INVOICE,
+    /** Indicates that an invoice should be ignored */
+    IGNORED,
     /** Indicates that a valid legal id was found in the filename */
     RECIPIENT_LEGAL_ID_FOUND,
     /** Indicates that no valid legal id was found in the filename */
