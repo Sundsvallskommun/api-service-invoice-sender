@@ -140,16 +140,23 @@ public class RaindanceIntegration {
 
                     var zipEntry = zipArchiveInputStream.getNextEntry();
                     while (zipEntry != null) {
-                        LOG.info("  Found file '{}'", zipEntry.getName());
+                        var zipEntryName = zipEntry.getName();
+                        if (zipEntryName.startsWith("..")) {
+                            LOG.info("  Skipping file '{}'", zipEntryName);
+
+                            continue;
+                        }
+
+                        LOG.info("  Found file '{}'", zipEntryName);
 
                         // Store the file locally
-                        var zipEntryOutFile = batchWorkDirectory.resolve(zipEntry.getName()).toFile();
+                        var zipEntryOutFile = batchWorkDirectory.resolve(zipEntryName).toFile();
                         try (var zipEntryOutputStream = new FileOutputStream(zipEntryOutFile)) {
                             IOUtils.copy(zipArchiveInputStream, zipEntryOutputStream);
                         }
 
                         // Add the item to the current batch
-                        batch.addItem(new Item(zipEntry.getName()));
+                        batch.addItem(new Item(zipEntryName));
                         zipEntry = zipArchiveInputStream.getNextEntry();
                     }
                 }
