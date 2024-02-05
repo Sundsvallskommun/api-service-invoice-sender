@@ -87,11 +87,6 @@ public class RaindanceIntegration {
     public List<Batch> readBatch(final LocalDate date) throws IOException {
         LOG.info("Reading batch for {} with filename prefix(es): {}", date, batchFilenamePrefixes);
 
-        // Use a random sub-work-directory
-        var currentWorkDirectory = workDirectory.resolve(UUID.randomUUID().toString());
-        // Create it
-        Files.createDirectories(currentWorkDirectory);
-
         try (var share = new SmbFile(shareUrl, context)) {
             var batches = new ArrayList<Batch>();
 
@@ -108,27 +103,32 @@ public class RaindanceIntegration {
                     continue;
                 }
 
+                // Use a random sub-work-directory for the batch
+                var batchWorkDirectory = workDirectory.resolve(UUID.randomUUID().toString());
+                // Create it
+                Files.createDirectories(batchWorkDirectory);
+
                 var baos = new ByteArrayOutputStream();
                 IOUtils.copy(batchFile.getInputStream(), baos);
 
                 // Create a batch
                 var batch = new Batch()
-                    .withPath(currentWorkDirectory.toString())
+                    .withPath(batchWorkDirectory.toString())
                     .withBasename(batchFilename.replaceAll("\\.zip\\.7z$", ""))
                     .withData(baos.toByteArray())
                     .withRemotePath(batchFile.getCanonicalUncPath());
 
-                LOG.info("Processing 7z file '{}'", batchFilename);
+                LOG.info("Processing 7z file '{}' using work directory '{}'", batchFilename, batchWorkDirectory.toAbsolutePath());
 
                 // Store the 7z file locally
-                var sevenZipFile = currentWorkDirectory.resolve(batchFilename).toFile();
+                var sevenZipFile = batchWorkDirectory.resolve(batchFilename).toFile();
                 try (var out = new FileOutputStream(sevenZipFile)) {
                     IOUtils.copy(batchFile.getInputStream(), out);
                 }
 
                 // Decompress the 7z (LZMA) file to a single ZIP file
                 var zipFilename = batchFilename.replaceAll("\\.7z$", "");
-                var zipFile = currentWorkDirectory.resolve(zipFilename);
+                var zipFile = batchWorkDirectory.resolve(zipFilename);
                 try (var fileInputStream = new FileInputStream(sevenZipFile);
                      var lzmaInputStream = new LZMACompressorInputStream(fileInputStream)) {
                     Files.copy(lzmaInputStream, zipFile, StandardCopyOption.REPLACE_EXISTING);
@@ -143,7 +143,7 @@ public class RaindanceIntegration {
                         LOG.info("  Found file '{}'", zipEntry.getName());
 
                         // Store the file locally
-                        var zipEntryOutFile = currentWorkDirectory.resolve(zipEntry.getName()).toFile();
+                        var zipEntryOutFile = batchWorkDirectory.resolve(zipEntry.getName()).toFile();
                         try (var zipEntryOutputStream = new FileOutputStream(zipEntryOutFile)) {
                             IOUtils.copy(zipArchiveInputStream, zipEntryOutputStream);
                         }
