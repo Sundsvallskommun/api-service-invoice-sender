@@ -3,7 +3,6 @@ package se.sundsvall.invoicesender.service;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.joining;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_LEGAL_ID;
 import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_PARTY_ID;
@@ -211,18 +210,15 @@ public class InvoiceProcessor {
         var sentItems = getSentInvoiceItems(batch);
 
         if (!sentItems.isEmpty()) {
-            var xPathExpression = sentItems.stream()
-                .map(Item::getFilename)
-                .map(filename -> format("filename='%s'", filename))
-                .collect(joining(" OR ", "//file[", "]"));
-
             var path = Paths.get(batch.getPath()).resolve("ArchiveIndex.xml");
             var xml = Files.readString(path, ISO_8859_1);
 
-            // Remove the matching nodes
-            xml = XmlUtil.remove(xml, xPathExpression);
+            for (var sentItem : sentItems) {
+                var xPathExpression = String.format("//file[filename='%s']", sentItem.getFilename());
 
-            LOG.info("Removed invoices {} from metadata", sentItems.stream().map(Item::getFilename).toList());
+                // Remove the matching nodes
+                xml = XmlUtil.remove(xml, xPathExpression);
+            }
 
             Files.writeString(path, XmlUtil.XML_DECLARATION.concat("\n").concat(xml), ISO_8859_1);
         }
