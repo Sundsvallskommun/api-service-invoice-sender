@@ -141,7 +141,9 @@ public class RaindanceIntegration {
                     var zipEntry = zipArchiveInputStream.getNextEntry();
                     while (zipEntry != null) {
                         var zipEntryName = zipEntry.getName();
-                        if (zipEntryName.startsWith("..")) {
+
+                        // Mitigate potential "zip-slip"
+                        if (batchWorkDirectory.resolve(zipEntryName).normalize().startsWith("..")) {
                             LOG.info("  Skipping file '{}'", zipEntryName);
 
                             continue;
