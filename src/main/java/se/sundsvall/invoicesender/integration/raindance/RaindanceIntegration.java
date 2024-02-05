@@ -171,8 +171,12 @@ public class RaindanceIntegration {
             return batches;
         }
     }
-
     public void writeBatch(final Batch batch) throws IOException {
+        // Do nothing
+        LOG.info("NOT actually writing batch");
+    }
+
+    public void writeBatch_OLD(final Batch batch) throws IOException {
         var batchPath = Paths.get(batch.getPath());
         var batchSevenZipPath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
 

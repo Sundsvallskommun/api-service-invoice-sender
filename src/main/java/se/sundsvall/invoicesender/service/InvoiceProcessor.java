@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -100,7 +99,7 @@ public class InvoiceProcessor {
             // Mark the batch as completed and store it
             processedBatches.add(completeBatchAndStoreExecution(batch));
             // Clean up
-            FileUtils.deleteDirectory(Paths.get(batch.getPath()).toFile());
+            //FileUtils.deleteDirectory(Paths.get(batch.getPath()).toFile());
         }
 
         // Send a status report
@@ -219,8 +218,12 @@ public class InvoiceProcessor {
             var path = Paths.get(batch.getPath()).resolve("ArchiveIndex.xml");
             var xml = Files.readString(path, ISO_8859_1);
 
+LOG.info("ArchiveIndex.xml BEFORE update: {}", xml);
+
             // Remove the matching nodes
             xml = XmlUtil.remove(xml, xPathExpression);
+
+LOG.info("ArchiveIndex.xml AFTER update: {}", xml);
 
             LOG.info("Removed invoices {} from metadata", sentItems.stream().map(Item::getFilename).toList());
 

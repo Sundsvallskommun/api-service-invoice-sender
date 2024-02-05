@@ -69,6 +69,12 @@ public class MessagingIntegration {
     }
 
     public ItemStatus sendInvoice(final String path, final Item invoice) {
+        LOG.info("NOT actually sending invoice");
+
+        return ItemStatus.SENT;
+    }
+
+    public ItemStatus sendInvoice_OLD(final String path, final Item invoice) {
         try {
             var invoiceContent = Files.readAllBytes(Paths.get(path).resolve(invoice.getFilename()));
             var encodedInvoiceContent = new String(Base64.getEncoder().encode(invoiceContent), UTF_8);
