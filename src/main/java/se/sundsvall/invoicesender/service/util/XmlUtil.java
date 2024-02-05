@@ -10,6 +10,8 @@ public final class XmlUtil {
 
     public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>";
 
+    private static final String EMPTY_OR_BLANK_LINE = "(?m)^[ \t]*\r?\n";
+
     private static final Parser CASE_SENSITIVE_PARSER = Parser.htmlParser()
         .settings(new ParseSettings(true, true));
 
@@ -21,7 +23,7 @@ public final class XmlUtil {
 
         doc.body().selectXpath(xpathExpression).forEach(Node::remove);
 
-        return doc.body().html();
+        return doc.body().html().replaceAll(EMPTY_OR_BLANK_LINE, "");
     }
 
     public static Elements find(final String xml, final String xpathExpression) {
