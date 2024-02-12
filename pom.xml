@@ -20,8 +20,9 @@
 		<jcifs-ng.version>2.1.10</jcifs-ng.version>
 		<commons-compress.version>1.25.0</commons-compress.version>
 		<commons-validator.version>1.8.0</commons-validator.version>
-		<xz.version>1.9</xz.version>
 		<jsoup.version>1.17.2</jsoup.version>
+		<xz.version>1.9</xz.version>
+		<cron-expression-descriptor.version>1.2.8</cron-expression-descriptor.version>
 
 		<!-- Pipeline properties -->
 		<docker.image.name>ms-invoicesender</docker.image.name>
@@ -115,6 +116,11 @@
 			<version>${xz.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>it.burning</groupId>
+			<artifactId>cron-expression-descriptor</artifactId>
+			<version>${cron-expression-descriptor.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -183,6 +189,8 @@
 						<exclude>**/se/sundsvall/invoicesender/integration/**/**IntegrationProperties**</exclude>
 						<!-- Exclude Invoice processor -->
 						<exclude>**/se/sundsvall/invoicesender/service/InvoiceProcessor**</exclude>
+						<exclude>**/se/sundsvall/invoicesender/service/ScheduledRestart**</exclude>
+						<exclude>**/se/sundsvall/invoicesender/service/util/CronUtil**</exclude>
 						<!-- Exclude Raindance integration (SMB/JCIFS) -->
 						<exclude>**/se/sundsvall/invoicesender/integration/raindance/RaindanceIntegration**</exclude>
 						<!-- Exclude generated code -->

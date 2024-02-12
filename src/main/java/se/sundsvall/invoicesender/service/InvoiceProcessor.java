@@ -16,6 +16,7 @@ import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_FOU
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
 import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.model.ItemType.OTHER;
+import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,12 +61,19 @@ public class InvoiceProcessor {
             final PartyIntegration partyIntegration,
             final MessagingIntegration messagingIntegration,
             final DbIntegration dbIntegration,
-            @Value("${invoice-processor.invoice-filename-prefixes:}") final List<String> invoiceFilenamePrefixes) {
+            @Value("${invoice-processor.invoice-filename-prefixes:}") final List<String> invoiceFilenamePrefixes,
+            @Value("${invoice-processor.schedule.cron-expression:-}") final String cronExpression) {
         this.raindanceIntegration = raindanceIntegration;
         this.partyIntegration = partyIntegration;
         this.messagingIntegration = messagingIntegration;
         this.dbIntegration = dbIntegration;
         this.invoiceFilenamePrefixes = invoiceFilenamePrefixes;
+
+        if (!"-".equals(cronExpression)) {
+            LOG.info("Invoice processor is ENABLED to run {}", parseCronExpression(cronExpression));
+        } else {
+            LOG.info("Invoice processor scheduling is DISABLED");
+        }
     }
 
     @Scheduled(cron = "${invoice-processor.schedule.cron-expression:-}")
