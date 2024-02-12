@@ -55,7 +55,7 @@ class InvoiceProcessorTests {
     @BeforeEach
     void setUp() {
         invoiceProcessor = new InvoiceProcessor(mockRaindanceIntegration, mockPartyIntegration,
-            mockMessagingIntegration, mockDbIntegration, List.of("Faktura"));
+            mockMessagingIntegration, mockDbIntegration, List.of("Faktura"), "-");
     }
 
     @Test
