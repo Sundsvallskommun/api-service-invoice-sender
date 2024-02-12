@@ -42,6 +42,8 @@ record RaindanceIntegrationProperties(
         var jcifsProperties = new Properties();
         jcifsProperties.setProperty("jcifs.smb.client.connTimeout", Long.toString(connectTimeout().toMillis()));
         jcifsProperties.setProperty("jcifs.smb.client.responseTimeout", Long.toString(responseTimeout().toMillis()));
+        jcifsProperties.setProperty("jcifs.smb.client.minVersion", "SMB300");
+        jcifsProperties.setProperty("jcifs.smb.client.maxVersion", "SMB311");
         return jcifsProperties;
     }
 }

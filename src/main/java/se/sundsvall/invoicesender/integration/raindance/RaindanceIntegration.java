@@ -5,6 +5,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Optional.ofNullable;
 import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -80,6 +81,7 @@ public class RaindanceIntegration {
         context = SingletonContext.getInstance()
             .withCredentials(new NtlmPasswordAuthenticator(
                 properties.domain(), properties.username(), properties.password()));
+
         shareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(),
             properties.share().endsWith("/") ? properties.share() : properties.share() + "/");
     }
@@ -100,6 +102,8 @@ public class RaindanceIntegration {
                         !batchFilename.toLowerCase().endsWith(BATCH_FILE_SUFFIX)) {
                     LOG.debug("Skipping file '{}'", batchFilename);
 
+                    batchFile.close();
+
                     continue;
                 }
 
@@ -108,23 +112,27 @@ public class RaindanceIntegration {
                 // Create it
                 Files.createDirectories(batchWorkDirectory);
 
-                var baos = new ByteArrayOutputStream();
-                IOUtils.copy(batchFile.getInputStream(), baos);
-
                 // Create a batch
                 var batch = new Batch()
                     .withPath(batchWorkDirectory.toString())
                     .withBasename(batchFilename.replaceAll("\\.zip\\.7z$", ""))
-                    .withData(baos.toByteArray())
                     .withRemotePath(batchFile.getCanonicalUncPath());
+                // Read/copy the file data
+                try (var baos = new ByteArrayOutputStream()) {
+                    IOUtils.copy(batchFile.getInputStream(), baos);
 
-                LOG.info("Processing 7z file '{}' using work directory '{}'", batchFilename, batchWorkDirectory.toAbsolutePath());
+                    batch.setData(baos.toByteArray());
+                }
 
                 // Store the 7z file locally
                 var sevenZipFile = batchWorkDirectory.resolve(batchFilename).toFile();
                 try (var out = new FileOutputStream(sevenZipFile)) {
-                    IOUtils.copy(batchFile.getInputStream(), out);
+                    IOUtils.copy(new ByteArrayInputStream(batch.getData()), out);
                 }
+
+                batchFile.close();
+
+                LOG.info("Processing 7z file '{}' using work directory '{}'", batchFilename, batchWorkDirectory.toAbsolutePath());
 
                 // Decompress the 7z (LZMA) file to a single ZIP file
                 var zipFilename = batchFilename.replaceAll("\\.7z$", "");
