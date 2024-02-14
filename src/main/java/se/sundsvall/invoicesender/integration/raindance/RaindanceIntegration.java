@@ -118,19 +118,18 @@ public class RaindanceIntegration {
                     .withBasename(batchFilename.replaceAll("\\.zip\\.7z$", ""))
                     .withRemotePath(batchFile.getCanonicalUncPath());
                 // Read/copy the file data
-                try (var baos = new ByteArrayOutputStream()) {
-                    IOUtils.copy(batchFile.getInputStream(), baos);
+                try (var in = batchFile.getInputStream(); var baos = new ByteArrayOutputStream()) {
+                    IOUtils.copy(in, baos);
 
                     batch.setData(baos.toByteArray());
                 }
+                batchFile.close();
 
                 // Store the 7z file locally
                 var sevenZipFile = batchWorkDirectory.resolve(batchFilename).toFile();
                 try (var out = new FileOutputStream(sevenZipFile)) {
                     IOUtils.copy(new ByteArrayInputStream(batch.getData()), out);
                 }
-
-                batchFile.close();
 
                 LOG.info("Processing 7z file '{}' using work directory '{}'", batchFilename, batchWorkDirectory.toAbsolutePath());
 
@@ -190,8 +189,8 @@ public class RaindanceIntegration {
             LOG.info("Storing file '{}'", batch.getRemotePath());
 
             var batchSevenZipFile = batchSevenZipPath.toFile();
-            try (var in = new FileInputStream(batchSevenZipFile)) {
-                IOUtils.copy(in, file.getOutputStream());
+            try (var out = file.getOutputStream(); var in = new FileInputStream(batchSevenZipFile)) {
+                IOUtils.copy(in, out);
             }
         }
     }
