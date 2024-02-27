@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static se.sundsvall.invoicesender.model.ItemStatus.IGNORED;
@@ -29,7 +28,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
-import se.sundsvall.invoicesender.integration.db.entity.FileEntity;
 import se.sundsvall.invoicesender.model.Batch;
 import se.sundsvall.invoicesender.model.Item;
 
@@ -38,8 +36,6 @@ class DbIntegrationTests {
 
     @Mock
     private BatchRepository mockBatchRepository;
-    @Mock
-    private FileRepository mockFileRepository;
     @InjectMocks
     private DbIntegration dbIntegration;
 
@@ -61,7 +57,6 @@ class DbIntegrationTests {
         verify(mockBatchRepository, times(1)).findAllByCompletedAtBetween(
             any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class));
         verifyNoMoreInteractions(mockBatchRepository);
-        verifyNoInteractions(mockFileRepository);
     }
 
     @Test
@@ -83,8 +78,6 @@ class DbIntegrationTests {
         dbIntegration.storeBatch(batch);
 
         verify(mockBatchRepository).save(batchEntityCaptor.capture());
-        verify(mockFileRepository).save(any(FileEntity.class));
-        verifyNoMoreInteractions(mockBatchRepository, mockFileRepository);
 
         var batchEntity = batchEntityCaptor.getValue();
         assertThat(batchEntity.getBasename()).isEqualTo(batch.getBasename());

@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
-import se.sundsvall.invoicesender.integration.db.entity.FileEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.model.Batch;
 
@@ -25,11 +24,9 @@ import se.sundsvall.invoicesender.model.Batch;
 public class DbIntegration {
 
     private final BatchRepository batchRepository;
-    private final FileRepository fileRepository;
 
-    DbIntegration(final BatchRepository batchRepository, final FileRepository fileRepository) {
+    DbIntegration(final BatchRepository batchRepository) {
         this.batchRepository = batchRepository;
-        this.fileRepository = fileRepository;
     }
 
     public Page<BatchDto> getBatches(final LocalDate from, final LocalDate to, final Pageable pageRequest) {
@@ -67,10 +64,6 @@ public class DbIntegration {
                 .count());
 
         batchRepository.save(batchEntity);
-        fileRepository.save(new FileEntity()
-            .withBatch(batchEntity)
-            .withFilename(batch.getBasename() + ".zip.7z")
-            .withData(batch.getData()));
 
         return mapToBatchDto(batchEntity);
     }

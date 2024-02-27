@@ -27,7 +27,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
 import org.apache.commons.compress.compressors.lzma.LZMACompressorOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -49,15 +49,15 @@ public class RaindanceIntegration {
     private static final Logger LOG = LoggerFactory.getLogger(RaindanceIntegration.class);
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
-
     private static final Predicate<Item> UNSENT_ITEMS = item -> item.getStatus() != SENT;
-    public static final String BATCH_FILE_SUFFIX = ".zip.7z";
+    private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
     private final Path workDirectory;
     private final List<String> batchFilenamePrefixes;
     private final String outputFileExtraSuffix;
     private final CIFSContext context;
-    private final String shareUrl;
+    private final String incomingShareUrl;
+    private final String outgoingShareUrl;
 
     RaindanceIntegration(final RaindanceIntegrationProperties properties) throws IOException {
         workDirectory = Paths.get(properties.workDirectory());
@@ -82,14 +82,19 @@ public class RaindanceIntegration {
             .withCredentials(new NtlmPasswordAuthenticator(
                 properties.domain(), properties.username(), properties.password()));
 
-        shareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(),
-            properties.share().endsWith("/") ? properties.share() : properties.share() + "/");
+        incomingShareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(),
+            properties.share().incoming().endsWith("/") ? properties.share().incoming() : properties.share().incoming() + "/");
+        outgoingShareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(),
+            properties.share().outgoing().endsWith("/") ? properties.share().outgoing() : properties.share().outgoing() + "/");
+
+        LOG.info("Raindance will be reading from {}", incomingShareUrl);
+        LOG.info("Raindance will be writing from {}", outgoingShareUrl);
     }
 
     public List<Batch> readBatch(final LocalDate date) throws IOException {
         LOG.info("Reading batch for {} with filename prefix(es): {}", date, batchFilenamePrefixes);
 
-        try (var share = new SmbFile(shareUrl, context)) {
+        try (var share = new SmbFile(incomingShareUrl, context)) {
             var batches = new ArrayList<Batch>();
 
             for (var batchFile : share.listFiles()) {
@@ -115,8 +120,7 @@ public class RaindanceIntegration {
                 // Create a batch
                 var batch = new Batch()
                     .withPath(batchWorkDirectory.toString())
-                    .withBasename(batchFilename.replaceAll("\\.zip\\.7z$", ""))
-                    .withRemotePath(batchFile.getCanonicalUncPath());
+                    .withBasename(batchFilename.replaceAll("\\.zip\\.7z$", ""));
                 // Read/copy the file data
                 try (var in = batchFile.getInputStream(); var baos = new ByteArrayOutputStream()) {
                     IOUtils.copy(in, baos);
@@ -185,8 +189,9 @@ public class RaindanceIntegration {
 
         recreateSevenZipFile(batch);
 
-        try (var file = new SmbFile(batch.getRemotePath() + outputFileExtraSuffix, context)) {
-            LOG.info("Storing file '{}'", batch.getRemotePath());
+        var targetPath = outgoingShareUrl + batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix;
+        try (var file = new SmbFile(targetPath, context)) {
+            LOG.info("Storing file '{}'", targetPath);
 
             var batchSevenZipFile = batchSevenZipPath.toFile();
             try (var out = file.getOutputStream(); var in = new FileInputStream(batchSevenZipFile)) {
@@ -227,9 +232,10 @@ public class RaindanceIntegration {
         // Compress the ZIP file to a 7z (LZMA) file
         var batchSevenZipFilePath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
         LOG.info("Creating 7z file '{}'", batchSevenZipFilePath.getFileName());
-        try (var fileInputStream = new FileOutputStream(batchSevenZipFilePath.toFile());
-             var lzmaOutputStream = new LZMACompressorOutputStream(fileInputStream)) {
-            IOUtils.copy(batchZipFilePath.toFile(), lzmaOutputStream);
+        try (var zipFileInputStream = new FileInputStream(batchZipFilePath.toFile());
+             var sevenZipFileOutputStream = new FileOutputStream(batchSevenZipFilePath.toFile());
+             var lzmaOutputStream = new LZMACompressorOutputStream(sevenZipFileOutputStream)) {
+            IOUtils.copy(zipFileInputStream, lzmaOutputStream);
         }
     }
 }

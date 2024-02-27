@@ -4,7 +4,9 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -22,8 +24,9 @@ record RaindanceIntegrationProperties(
         String username,
         @NotBlank
         String password,
-        @NotBlank
-        String share,
+        @Valid
+        @NotNull
+        Share share,
 
         List<String> batchFilenamePrefixes,
 
@@ -37,6 +40,8 @@ record RaindanceIntegrationProperties(
 
         @DefaultValue("")
         String outputFileExtraSuffix) {
+
+    record Share(@NotBlank String incoming, @NotBlank String outgoing) { }
 
     Properties jcifsProperties() {
         var jcifsProperties = new Properties();
