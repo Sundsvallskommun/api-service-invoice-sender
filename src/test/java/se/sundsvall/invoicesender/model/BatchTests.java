@@ -14,13 +14,11 @@ class BatchTests {
             .withBasename("someSevenZipFilename")
             .withData("data".getBytes())
             .withPath("somePath")
-            .withRemotePath("someRemotePath")
             .withItems(List.of(new Item("someItem"), new Item("someOtherItem")));
 
         assertThat(batch.getBasename()).isEqualTo("someSevenZipFilename");
         assertThat(batch.getData()).hasSize(4);
         assertThat(batch.getPath()).isEqualTo("somePath");
-        assertThat(batch.getRemotePath()).isEqualTo("someRemotePath");
         assertThat(batch.getItems()).hasSize(2);
         assertThat(batch.getStartedAt()).isNotNull();
         assertThat(batch.getCompletedAt()).isNull();
@@ -32,13 +30,11 @@ class BatchTests {
         batch.setBasename("someSevenZipFilename");
         batch.setData("data".getBytes());
         batch.setPath("somePath");
-        batch.withRemotePath("someRemotePath");
         batch.setItems(List.of(new Item("someItem"), new Item("someOtherItem")));
 
         assertThat(batch.getBasename()).isEqualTo("someSevenZipFilename");
         assertThat(batch.getData()).hasSize(4);
         assertThat(batch.getPath()).isEqualTo("somePath");
-        assertThat(batch.getRemotePath()).isEqualTo("someRemotePath");
         assertThat(batch.getItems()).hasSize(2);
         assertThat(batch.getStartedAt()).isNotNull();
         assertThat(batch.getCompletedAt()).isNull();

@@ -9,7 +9,6 @@ public class Batch {
     private String path;
     private String basename;
     private byte[] data;
-    private String remotePath;
     private List<Item> items;
     private final LocalDateTime startedAt = LocalDateTime.now();
     private LocalDateTime completedAt;
@@ -51,19 +50,6 @@ public class Batch {
 
     public void setData(final byte[] data) {
         this.data = data;
-    }
-
-    public String getRemotePath() {
-        return remotePath;
-    }
-
-    public Batch withRemotePath(final String remotePath) {
-        this.remotePath = remotePath;
-        return this;
-    }
-
-    public void setRemotePath(final String remotePath) {
-        this.remotePath = remotePath;
     }
 
     public List<Item> getItems() {
