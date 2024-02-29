@@ -169,7 +169,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<inputSpec>${project.basedir}/src/main/resources/integrations/messaging-api-3.3.yml</inputSpec>
+							<inputSpec>${project.basedir}/src/main/resources/integrations/messaging-api-4.2.yml</inputSpec>
 							<configOptions>
 								<modelPackage>generated.se.sundsvall.messaging</modelPackage>
 							</configOptions>

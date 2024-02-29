@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "3.3"
+  version: "4.2"
 servers:
 - url: http://localhost:8080
   description: Generated server url
@@ -45,6 +45,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -56,77 +65,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-  /snail-mail:
-    post:
-      tags:
-      - Sending Resources
-      summary: Send a single snail mail
-      operationId: sendSnailMail
-      parameters:
-      - name: async
-        in: query
-        description: Whether to send the message asynchronously
-        required: false
-        schema:
-          type: boolean
-          default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SnailmailRequest'
-        required: true
-      responses:
-        "201":
-          description: Successful Operation
-          headers:
-            Location:
-              style: simple
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResult'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/MessageResult'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "502":
-          description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -169,6 +107,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -180,15 +127,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -231,6 +169,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -242,15 +189,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -293,6 +231,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageBatchResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -304,15 +251,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -355,6 +293,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageBatchResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -366,15 +313,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -417,6 +355,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -428,15 +375,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -479,6 +417,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageBatchResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -490,15 +437,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -541,6 +479,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/MessageResult'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         "500":
           description: Internal Server Error
           content:
@@ -552,15 +499,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         "502":
           description: Bad Gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        "400":
-          description: Bad Request
           content:
             application/json:
               schema:
@@ -937,20 +875,20 @@ components:
           type: object
           additionalProperties:
             type: object
-        status:
-          $ref: '#/components/schemas/StatusType'
         title:
           type: string
         detail:
           type: string
+        status:
+          $ref: '#/components/schemas/StatusType'
     StatusType:
       type: object
       properties:
-        reasonPhrase:
-          type: string
         statusCode:
           type: integer
           format: int32
+        reasonPhrase:
+          type: string
     DeliveryResult:
       type: object
       properties:
@@ -1000,58 +938,6 @@ components:
       - SNAIL_MAIL
       - LETTER
       - SLACK
-    SnailmailAttachment:
-      required:
-      - content
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          description: The attachment filename
-          example: test.txt
-        contentType:
-          type: string
-          description: The attachment content type
-          example: text/plain
-        content:
-          type: string
-          description: The attachment (file) content as a BASE64-encoded string
-          example: aGVsbG8gd29ybGQK
-      description: Attachment
-    SnailmailParty:
-      type: object
-      properties:
-        partyId:
-          type: string
-          description: The message party id
-          example: f427952b-247c-4d3b-b081-675a467b3619
-        externalReferences:
-          type: array
-          description: External references
-          items:
-            $ref: '#/components/schemas/ExternalReference'
-      description: Party
-    SnailmailRequest:
-      required:
-      - department
-      type: object
-      properties:
-        party:
-          $ref: '#/components/schemas/SnailmailParty'
-        department:
-          type: string
-          description: Department and unit that should be billed
-          example: "SBK(Gatuavdelningen, Trafiksektionen)"
-        deviation:
-          type: string
-          description: If the letter to send deviates from the standard
-          example: A3 Ritning
-        attachments:
-          minItems: 1
-          type: array
-          items:
-            $ref: '#/components/schemas/SnailmailAttachment'
     SmsRequest:
       required:
       - message
@@ -1363,6 +1249,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EmailAttachment'
+        headers:
+          type: object
+          additionalProperties:
+            type: array
+            description: Headers
+            items:
+              type: string
+              description: Headers
+          description: Headers
     EmailRequestParty:
       type: object
       properties:
@@ -1581,6 +1476,10 @@ components:
           type: string
           description: Invoice reference
           example: "Faktura #12345"
+        payable:
+          type: boolean
+          description: Whether the invoice is payable
+          default: true
         details:
           $ref: '#/components/schemas/Details'
         files:

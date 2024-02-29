@@ -118,6 +118,7 @@ public class Item {
         private String accountNumber;
         private String paymentReference;
         private String totalAmount;
+        private boolean payable;
         private boolean reminder;
 
         public String getInvoiceNumber() {
@@ -196,6 +197,19 @@ public class Item {
 
         public void setTotalAmount(final String totalAmount) {
             this.totalAmount = totalAmount;
+        }
+
+        public boolean isPayable() {
+            return payable;
+        }
+
+        public Metadata withPayable(final boolean payable) {
+            this.payable = payable;
+            return this;
+        }
+
+        public void setPayable(final boolean payable) {
+            this.payable = payable;
         }
 
         public boolean isReminder() {

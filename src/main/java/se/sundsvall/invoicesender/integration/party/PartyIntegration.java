@@ -23,13 +23,13 @@ public class PartyIntegration {
     }
 
     public Optional<String> getPartyId(final String legalId) {
-        try {
-            // Only handle "PRIVATE" legal id:s for now
-            var legalIdWithCenturyDigits = addCenturyDigitToLegalId(legalId);
+        // Only handle "PRIVATE" legal id:s for now
+        var legalIdWithCenturyDigits = addCenturyDigitToLegalId(legalId);
 
+        try {
             return partyClient.getPartyId(PRIVATE, legalIdWithCenturyDigits);
         } catch (Exception e) {
-            LOG.info("Unable to get party id for legal id {}: {}", legalId, e.getMessage());
+            LOG.info("Unable to get party id for legal id {}: {}", legalIdWithCenturyDigits, e.getMessage());
 
             return Optional.empty();
         }

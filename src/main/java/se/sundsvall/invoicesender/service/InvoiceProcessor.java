@@ -164,6 +164,7 @@ public class InvoiceProcessor {
                 .withInvoiceNumber(result.select("InvoiceNo").text())
                 .withInvoiceDate(result.select("InvoiceDate").text())
                 .withDueDate(result.select("DueDate").text())
+                .withPayable(!"01".equals(result.select("AGF").text().trim()))
                 .withReminder("1".equals(result.select("Reminder").text()))
                 .withAccountNumber(result.select("PaymentNo").text())
                 .withPaymentReference(result.select("PaymentReference").text())
