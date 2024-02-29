@@ -78,6 +78,7 @@ public class MessagingIntegration {
                 .subject(invoiceSubject)
                 .party(new DigitalInvoiceParty().partyId(UUID.fromString(invoice.getRecipientPartyId())))
                 .reference(invoiceReferencePrefix + invoice.getMetadata().getInvoiceNumber())
+                .payable(invoice.getMetadata().isPayable())
                 .details(new Details()
                     .amount(Float.valueOf(invoice.getMetadata().getTotalAmount()))
                     .dueDate(LocalDate.parse(invoice.getMetadata().getDueDate()))
