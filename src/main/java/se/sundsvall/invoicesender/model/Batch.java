@@ -6,24 +6,66 @@ import java.util.List;
 
 public class Batch {
 
-    private String path;
+    private String localPath;
+    private String targetPath;
+    private boolean processingEnabled;
+    private String archivePath;
     private String basename;
     private byte[] data;
     private List<Item> items;
     private final LocalDateTime startedAt = LocalDateTime.now();
     private LocalDateTime completedAt;
 
-    public String getPath() {
-        return path;
+    public String getLocalPath() {
+        return localPath;
     }
 
-    public void setPath(final String path) {
-        this.path = path;
-    }
-
-    public Batch withPath(final String path) {
-        this.path = path;
+    public Batch withLocalPath(final String localPath) {
+        this.localPath = localPath;
         return this;
+    }
+
+    public void setLocalPath(final String localPath) {
+        this.localPath = localPath;
+    }
+
+    public String getTargetPath() {
+        return targetPath;
+    }
+
+    public Batch withTargetPath(final String targetPath) {
+        this.targetPath = targetPath;
+        return this;
+    }
+
+    public void setTargetPath(final String targetPath) {
+        this.targetPath = targetPath;
+    }
+
+    public boolean isProcessingEnabled() {
+        return processingEnabled;
+    }
+
+    public Batch withProcess(final boolean processingEnabled) {
+        this.processingEnabled = processingEnabled;
+        return this;
+    }
+
+    public void setProcessingEnabled(final boolean processingEnabled) {
+        this.processingEnabled = processingEnabled;
+    }
+
+    public String getArchivePath() {
+        return archivePath;
+    }
+
+    public Batch withArchivePath(final String archivePath) {
+        this.archivePath = archivePath;
+        return this;
+    }
+
+    public void setArchivePath(final String archivePath) {
+        this.archivePath = archivePath;
     }
 
     public String getBasename() {

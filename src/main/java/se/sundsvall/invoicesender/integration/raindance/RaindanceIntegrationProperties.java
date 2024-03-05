@@ -1,12 +1,11 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -24,11 +23,12 @@ record RaindanceIntegrationProperties(
         String username,
         @NotBlank
         String password,
-        @Valid
-        @NotNull
-        Share share,
 
-        List<String> batchFilenamePrefixes,
+        @NotBlank
+        String share,
+
+        @NotEmpty
+        Map<String, BatchSetup> batchSetup,
 
         @DefaultValue("PT30S")
         Duration connectTimeout,
@@ -36,12 +36,12 @@ record RaindanceIntegrationProperties(
         Duration responseTimeout,
 
         @NotBlank
-        String workDirectory,
+        String localWorkDirectory,
 
         @DefaultValue("")
         String outputFileExtraSuffix) {
 
-    record Share(@NotBlank String incoming, @NotBlank String outgoing) { }
+    record BatchSetup(@NotBlank String targetPath, String archivePath, boolean process) { }
 
     Properties jcifsProperties() {
         var jcifsProperties = new Properties();

@@ -2,7 +2,6 @@ package se.sundsvall.invoicesender.integration.raindance;
 
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
-import static java.util.Optional.ofNullable;
 import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 
 import java.io.ByteArrayInputStream;
@@ -18,6 +17,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.zip.Deflater;
@@ -52,20 +52,25 @@ public class RaindanceIntegration {
     private static final Predicate<Item> UNSENT_ITEMS = item -> item.getStatus() != SENT;
     private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
-    private final Path workDirectory;
-    private final List<String> batchFilenamePrefixes;
+    private final String host;
+    private final int port;
+
+    private final Path localWorkDirectory;
+    private final Map<String, RaindanceIntegrationProperties.BatchSetup> batchFileSetup;
     private final String outputFileExtraSuffix;
     private final CIFSContext context;
     private final String incomingShareUrl;
-    private final String outgoingShareUrl;
 
     RaindanceIntegration(final RaindanceIntegrationProperties properties) throws IOException {
-        workDirectory = Paths.get(properties.workDirectory());
-        if (!Files.exists(workDirectory)) {
-            Files.createDirectories(workDirectory);
+        host = properties.host();
+        port = properties.port();
+
+        localWorkDirectory = Paths.get(properties.localWorkDirectory());
+        if (!Files.exists(localWorkDirectory)) {
+            Files.createDirectories(localWorkDirectory);
         }
 
-        batchFilenamePrefixes = ofNullable(properties.batchFilenamePrefixes()).orElse(List.of());
+        batchFileSetup = properties.batchSetup();
         outputFileExtraSuffix = properties.outputFileExtraSuffix();
 
         // Attempt to initialize the JCIFS context
@@ -82,64 +87,68 @@ public class RaindanceIntegration {
             .withCredentials(new NtlmPasswordAuthenticator(
                 properties.domain(), properties.username(), properties.password()));
 
-        incomingShareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(),
-            properties.share().incoming().endsWith("/") ? properties.share().incoming() : properties.share().incoming() + "/");
-        outgoingShareUrl = String.format("smb://%s:%d/%s", properties.host(), properties.port(),
-            properties.share().outgoing().endsWith("/") ? properties.share().outgoing() : properties.share().outgoing() + "/");
+        incomingShareUrl = String.format("smb://%s:%d/%s", host, port, appendTrailingSlashIfMissing(properties.share()));
 
         LOG.info("Raindance will be reading from {}", incomingShareUrl);
-        LOG.info("Raindance will be writing from {}", outgoingShareUrl);
     }
 
-    public List<Batch> readBatch(final LocalDate date) throws IOException {
-        LOG.info("Reading batch for {} with filename prefix(es): {}", date, batchFilenamePrefixes);
+    public List<Batch> readBatches(final LocalDate date) throws IOException {
+        LOG.info("Reading batch(es) for {}", date);
 
+        var datePart = date.format(DATE_FORMATTER);
         try (var share = new SmbFile(incomingShareUrl, context)) {
             var batches = new ArrayList<Batch>();
 
-            for (var batchFile : share.listFiles()) {
-                var datePart = date.format(DATE_FORMATTER);
-                var batchFilename = batchFile.getName();
+            for (var file : share.listFiles()) {
+                var filename = file.getName();
 
                 // Filter manually
-                if (batchFilenamePrefixes.stream().noneMatch(batchFilename::startsWith) ||
-                        !batchFilename.contains("-" + datePart + "_") ||
-                        !batchFilename.toLowerCase().endsWith(BATCH_FILE_SUFFIX)) {
-                    LOG.debug("Skipping file '{}'", batchFilename);
+                var matchingBatchSetup = batchFileSetup.entrySet().stream()
+                    .filter(entry -> filename.startsWith(entry.getKey()) &&
+                        filename.contains("-" + datePart + "_") &&
+                        filename.toLowerCase().endsWith(BATCH_FILE_SUFFIX))
+                    .findFirst()
+                    .map(Map.Entry::getValue)
+                    .orElse(null);
 
-                    batchFile.close();
+                if (matchingBatchSetup == null) {
+                    LOG.info("Skipping file '{}'", filename);
+
+                    file.close();
 
                     continue;
                 }
 
                 // Use a random sub-work-directory for the batch
-                var batchWorkDirectory = workDirectory.resolve(UUID.randomUUID().toString());
-                // Create it
-                Files.createDirectories(batchWorkDirectory);
+                var localBatchWorkDirectory = localWorkDirectory.resolve(UUID.randomUUID().toString());
+                Files.createDirectories(localBatchWorkDirectory);
 
                 // Create a batch
                 var batch = new Batch()
-                    .withPath(batchWorkDirectory.toString())
-                    .withBasename(batchFilename.replaceAll("\\.zip\\.7z$", ""));
+                    .withLocalPath(localBatchWorkDirectory.toString())
+                    .withBasename(filename.replaceAll("\\.zip\\.7z$", ""))
+                    .withTargetPath(matchingBatchSetup.targetPath())
+                    .withArchivePath(matchingBatchSetup.archivePath())
+                    .withProcess(matchingBatchSetup.process());
                 // Read/copy the file data
-                try (var in = batchFile.getInputStream(); var baos = new ByteArrayOutputStream()) {
+                try (var in = file.getInputStream(); var baos = new ByteArrayOutputStream()) {
                     IOUtils.copy(in, baos);
 
                     batch.setData(baos.toByteArray());
                 }
-                batchFile.close();
+                file.close();
 
                 // Store the 7z file locally
-                var sevenZipFile = batchWorkDirectory.resolve(batchFilename).toFile();
+                var sevenZipFile = localBatchWorkDirectory.resolve(filename).toFile();
                 try (var out = new FileOutputStream(sevenZipFile)) {
                     IOUtils.copy(new ByteArrayInputStream(batch.getData()), out);
                 }
 
-                LOG.info("Processing 7z file '{}' using work directory '{}'", batchFilename, batchWorkDirectory.toAbsolutePath());
+                LOG.info("Processing 7z file '{}' using work directory '{}'", filename, localBatchWorkDirectory.toAbsolutePath());
 
                 // Decompress the 7z (LZMA) file to a single ZIP file
-                var zipFilename = batchFilename.replaceAll("\\.7z$", "");
-                var zipFile = batchWorkDirectory.resolve(zipFilename);
+                var zipFilename = filename.replaceAll("\\.7z$", "");
+                var zipFile = localBatchWorkDirectory.resolve(zipFilename);
                 try (var fileInputStream = new FileInputStream(sevenZipFile);
                      var lzmaInputStream = new LZMACompressorInputStream(fileInputStream)) {
                     Files.copy(lzmaInputStream, zipFile, StandardCopyOption.REPLACE_EXISTING);
@@ -154,7 +163,7 @@ public class RaindanceIntegration {
                         var zipEntryName = zipEntry.getName();
 
                         // Mitigate potential "zip-slip"
-                        if (batchWorkDirectory.resolve(zipEntryName).normalize().startsWith("..")) {
+                        if (localBatchWorkDirectory.resolve(zipEntryName).normalize().startsWith("..")) {
                             LOG.info("  Skipping file '{}'", zipEntryName);
 
                             continue;
@@ -163,7 +172,7 @@ public class RaindanceIntegration {
                         LOG.info("  Found file '{}'", zipEntryName);
 
                         // Store the file locally
-                        var zipEntryOutFile = batchWorkDirectory.resolve(zipEntryName).toFile();
+                        var zipEntryOutFile = localBatchWorkDirectory.resolve(zipEntryName).toFile();
                         try (var zipEntryOutputStream = new FileOutputStream(zipEntryOutFile)) {
                             IOUtils.copy(zipArchiveInputStream, zipEntryOutputStream);
                         }
@@ -177,31 +186,63 @@ public class RaindanceIntegration {
                 batches.add(batch);
             }
 
-            LOG.info("Batch read with {} file(s)", batches.size());
+            LOG.info("Read {} batch(es)", batches.size());
 
             return batches;
         }
     }
 
     public void writeBatch(final Batch batch) throws IOException {
-        var batchPath = Paths.get(batch.getPath());
-        var batchSevenZipPath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
+        var targetPath = String.format("smb://%s:%d/%s%s", host, port,
+            appendTrailingSlashIfMissing(batch.getTargetPath()),
+            batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix);
 
-        recreateSevenZipFile(batch);
+        LOG.info("Storing batch '{}'", targetPath);
 
-        var targetPath = outgoingShareUrl + batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix;
-        try (var file = new SmbFile(targetPath, context)) {
-            LOG.info("Storing file '{}'", targetPath);
+        if (batch.isProcessingEnabled()) {
+            var batchPath = Paths.get(batch.getLocalPath());
+            var batchSevenZipPath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
 
-            var batchSevenZipFile = batchSevenZipPath.toFile();
-            try (var out = file.getOutputStream(); var in = new FileInputStream(batchSevenZipFile)) {
-                IOUtils.copy(in, out);
+            recreateSevenZipFile(batch);
+
+            try (var file = new SmbFile(targetPath, context)) {
+                var batchSevenZipFile = batchSevenZipPath.toFile();
+                try (var out = file.getOutputStream(); var in = new FileInputStream(batchSevenZipFile)) {
+                    IOUtils.copy(in, out);
+                }
+            }
+        } else {
+            try (var file = new SmbFile(targetPath, context)) {
+                try (var out = file.getOutputStream(); var in = new ByteArrayInputStream(batch.getData())) {
+                    IOUtils.copy(in, out);
+                }
             }
         }
     }
 
+    public void archiveOriginalBatch(final Batch batch) throws IOException {
+        var sourcePath = incomingShareUrl + batch.getBasename() + BATCH_FILE_SUFFIX;
+        var targetPath = String.format("smb://%s:%d/%s%s", host, port,
+            appendTrailingSlashIfMissing(batch.getArchivePath()),
+            batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix);
+
+        try (var archiveFile = new SmbFile(targetPath, context)) {
+            LOG.info("Archiving batch '{}' to '{}", sourcePath, targetPath);
+
+            try (var out = archiveFile.getOutputStream(); var in = new ByteArrayInputStream(batch.getData())) {
+                IOUtils.copy(in, out);
+            }
+        }
+
+        try (var sourceFile = new SmbFile(sourcePath, context)) {
+            sourceFile.delete();
+        } catch (Exception e) {
+            LOG.warn("Unable to delete source file", e);
+        }
+    }
+
     private void recreateSevenZipFile(final Batch batch) throws IOException {
-        var batchPath = Paths.get(batch.getPath());
+        var batchPath = Paths.get(batch.getLocalPath());
 
         // We're only interested in putting back unsent items
         var unsentItems = batch.getItems().stream()
@@ -237,5 +278,9 @@ public class RaindanceIntegration {
              var lzmaOutputStream = new LZMACompressorOutputStream(sevenZipFileOutputStream)) {
             IOUtils.copy(zipFileInputStream, lzmaOutputStream);
         }
+    }
+
+    String appendTrailingSlashIfMissing(final String s) {
+        return s.endsWith("/") ? s : s + "/";
     }
 }

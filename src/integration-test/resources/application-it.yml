@@ -17,13 +17,16 @@ integration:
     domain: SOMEWORKGROUP
     username: user
     password: p4ssw0rd
-    share:
-      incoming: incoming
-      outgoing: outgoing
-    work-directory: /tmp/raindance/incoming
-    filename-prefixes:
-      - Faktura-pdf
-  
+    batch-setup:
+      "Faktura-pdf":
+        target-path: mnt/PN/
+        archive-path: mnt/Kivra/Arkiv/
+        process: true
+      "Betalningspaminnelse-pdf":
+        target-path: mnt/PN/
+        process: false
+    local-work-directory: /tmp/raindance/incoming
+
   # Party
   party:
     url: http://localhost:${wiremock.server.port}/party

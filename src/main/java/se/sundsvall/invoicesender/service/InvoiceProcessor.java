@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.util.function.Predicate.not;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_LEGAL_ID;
 import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_PARTY_ID;
 import static se.sundsvall.invoicesender.model.Item.ITEM_IS_A_PDF;
@@ -49,6 +50,7 @@ public class InvoiceProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
 
     private static final Pattern RECIPIENT_PATTERN = Pattern.compile("\\w+_\\d+_to_(\\d+)\\.pdf$");
+    private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
     private final RaindanceIntegration raindanceIntegration;
     private final PartyIntegration partyIntegration;
@@ -83,31 +85,46 @@ public class InvoiceProcessor {
 
     public void run(final LocalDate date) throws Exception {
         // Get the batches from Raindance
-        var batches = raindanceIntegration.readBatch(date);
+        var batches = raindanceIntegration.readBatches(date);
 
         var processedBatches = new ArrayList<BatchDto>();
         for (var batch : batches) {
-            // Mark non-invoice items (i.e. not PDF:s)
-            markNonPdfItemsAsOther(batch);
-            // Mark invoice items
-            markInvoiceItems(batch);
+            if (batch.isProcessingEnabled()) {
+                LOG.info("Processing batch {}", batch.getBasename() + BATCH_FILE_SUFFIX);
 
-            // Extract the item metadata
-            extractItemMetadata(batch);
-            // Extract recipient legal id:s if possible
-            extractInvoiceRecipientLegalIds(batch);
-            // Get the recipient party id from the invoices where the recipient legal id is set
-            fetchInvoiceRecipientPartyIds(batch);
-            // Send digital mail for the invoices where the recipient party id is set
-            sendDigitalInvoices(batch);
-            // Update the archive index - ArchiveIndex.xml
-            updateArchiveIndex(batch);
-            // Put unsent invoices back to Raindance
+                // Mark non-invoice items (i.e. not PDF:s)
+                markNonPdfItemsAsOther(batch);
+                // Mark invoice items
+                markInvoiceItems(batch);
+
+                // Extract the item metadata
+                extractItemMetadata(batch);
+                // Extract recipient legal id:s if possible
+                extractInvoiceRecipientLegalIds(batch);
+                // Get the recipient party id from the invoices where the recipient legal id is set
+                fetchInvoiceRecipientPartyIds(batch);
+                // Send digital mail for the invoices where the recipient party id is set
+                sendDigitalInvoices(batch);
+                // Update the archive index - ArchiveIndex.xml
+                updateArchiveIndex(batch);
+            } else {
+                LOG.info("Batch processing is disabled for {}", batch.getBasename() + BATCH_FILE_SUFFIX);
+            }
+
+            // Write the batch back to Raindance
             raindanceIntegration.writeBatch(batch);
             // Mark the batch as completed and store it
             processedBatches.add(completeBatchAndStoreExecution(batch));
+
+            // Archive the batch
+            if (isNotBlank(batch.getArchivePath())) {
+                LOG.info("Archiving batch {}", batch.getBasename() + BATCH_FILE_SUFFIX);
+
+                raindanceIntegration.archiveOriginalBatch(batch);
+            }
+
             // Clean up
-            FileUtils.deleteDirectory(Paths.get(batch.getPath()).toFile());
+            FileUtils.deleteDirectory(Paths.get(batch.getLocalPath()).toFile());
         }
 
         // Send a status report
@@ -149,7 +166,7 @@ public class InvoiceProcessor {
     }
 
     void extractItemMetadata(final Batch batch) throws IOException {
-        var path = Paths.get(batch.getPath()).resolve("ArchiveIndex.xml");
+        var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
         var xml = Files.readString(path, ISO_8859_1);
 
         getProcessableInvoiceItems(batch).forEach(item -> {
@@ -208,7 +225,7 @@ public class InvoiceProcessor {
 
     void sendDigitalInvoices(final Batch batch) {
         getInvoiceItemsWithPartyIdSet(batch).forEach(item -> {
-                item.setStatus(messagingIntegration.sendInvoice(batch.getPath(), item));
+                item.setStatus(messagingIntegration.sendInvoice(batch.getLocalPath(), item));
 
                 LOG.info("Sent invoice {}", item.getFilename());
             }
@@ -219,7 +236,7 @@ public class InvoiceProcessor {
         var sentItems = getSentInvoiceItems(batch);
 
         if (!sentItems.isEmpty()) {
-            var path = Paths.get(batch.getPath()).resolve("ArchiveIndex.xml");
+            var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
             var xml = Files.readString(path, ISO_8859_1);
 
             for (var sentItem : sentItems) {

@@ -13,12 +13,18 @@ class BatchTests {
         var batch = new Batch()
             .withBasename("someSevenZipFilename")
             .withData("data".getBytes())
-            .withPath("somePath")
+            .withLocalPath("somePath")
+            .withArchivePath("someArchivePath")
+            .withTargetPath("someTargetPath")
+            .withProcess(true)
             .withItems(List.of(new Item("someItem"), new Item("someOtherItem")));
 
         assertThat(batch.getBasename()).isEqualTo("someSevenZipFilename");
         assertThat(batch.getData()).hasSize(4);
-        assertThat(batch.getPath()).isEqualTo("somePath");
+        assertThat(batch.getLocalPath()).isEqualTo("somePath");
+        assertThat(batch.getArchivePath()).isEqualTo("someArchivePath");
+        assertThat(batch.getTargetPath()).isEqualTo("someTargetPath");
+        assertThat(batch.isProcessingEnabled()).isTrue();
         assertThat(batch.getItems()).hasSize(2);
         assertThat(batch.getStartedAt()).isNotNull();
         assertThat(batch.getCompletedAt()).isNull();
@@ -29,12 +35,18 @@ class BatchTests {
         var batch = new Batch();
         batch.setBasename("someSevenZipFilename");
         batch.setData("data".getBytes());
-        batch.setPath("somePath");
+        batch.setLocalPath("somePath");
+        batch.setArchivePath("someArchivePath");
+        batch.setTargetPath("someTargetPath");
+        batch.setProcessingEnabled(true);
         batch.setItems(List.of(new Item("someItem"), new Item("someOtherItem")));
 
         assertThat(batch.getBasename()).isEqualTo("someSevenZipFilename");
         assertThat(batch.getData()).hasSize(4);
-        assertThat(batch.getPath()).isEqualTo("somePath");
+        assertThat(batch.getLocalPath()).isEqualTo("somePath");
+        assertThat(batch.getArchivePath()).isEqualTo("someArchivePath");
+        assertThat(batch.getTargetPath()).isEqualTo("someTargetPath");
+        assertThat(batch.isProcessingEnabled()).isTrue();
         assertThat(batch.getItems()).hasSize(2);
         assertThat(batch.getStartedAt()).isNotNull();
         assertThat(batch.getCompletedAt()).isNull();
