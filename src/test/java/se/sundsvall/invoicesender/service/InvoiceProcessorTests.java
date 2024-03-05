@@ -120,7 +120,7 @@ class InvoiceProcessorTests {
     @Test
     void fetchInvoiceRecipientPartyIds() {
         var batch = new Batch()
-            .withPath("somePath")
+            .withLocalPath("somePath")
             .withItems(List.of(
                 new Item("file1.pdf")
                     .withType(INVOICE)
@@ -158,7 +158,7 @@ class InvoiceProcessorTests {
     @Test
     void sendDigitalInvoices() {
         var batch = new Batch()
-            .withPath("somePath")
+            .withLocalPath("somePath")
             .withItems(List.of(
                 new Item("file1.pdf")
                     .withType(INVOICE)
