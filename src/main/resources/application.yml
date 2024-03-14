@@ -14,3 +14,10 @@ openapi:
   name: invoice-sender
   title: InvoiceSender
   version: '@project.version@'
+
+logbook:
+  body-filters:
+    # Exclude BASE64-encoded content from requests.
+    jsonPath:
+      - key: '$.files[*].content'
+        value : '[base64]'
