@@ -16,11 +16,14 @@
 </p>
 
 <th:block th:unless="${#lists.isEmpty(batches)}">
-<table border="0" aria-label="Statusrapport">
+<table aria-label="Statusrapport">
     <th:block th:each="batch : ${batches}">
     <tr>
         <th colspan="2" th:text="${batch.basename}">[basename]</th>
     </tr>
+
+    <!--/* Processed batches */-->
+    <th:block th:if="${batch.processingEnabled}">
     <tr>
         <td>Totalt antal fakturor:</td>
         <td th:text="${batch.totalItems}">[total items]</td>
@@ -34,7 +37,14 @@
         <td th:text="${batch.totalItems - batch.sentItems}">[unsent items]</td>
     </tr>
     <tr><td colspan="2" class="spacer"></td></tr>
-</th:block>
+    </th:block>
+
+    <!--/* Unprocessed batches */-->
+    <th:block th:unless="${batch.processingEnabled}">
+        <td colspan="2">(Endast flytt - inga fakturor har behandlats)</td>
+    </th:block>
+
+    </th:block>
 </table>
 </th:block>
 </body>

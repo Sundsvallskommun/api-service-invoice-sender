@@ -17,8 +17,8 @@ class BatchesResponseTests {
 
         var batchesResponse = new BatchesResponse(
             List.of(
-                new BatchDto(123, "something", now.minusMinutes(2), now.minusMinutes(1), 5, 3),
-                new BatchDto(456, "something-else", now.minusMinutes(4), now.minusMinutes(3), 2, 1)
+                new BatchDto(123, "something", now.minusMinutes(2), now.minusMinutes(1), 5, 3, false),
+                new BatchDto(456, "something-else", now.minusMinutes(4), now.minusMinutes(3), 2, 1, false)
             ),
             new BatchesResponse.PaginationInfo(1, 20, 1, 2));
 

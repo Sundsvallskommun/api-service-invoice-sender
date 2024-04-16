@@ -35,7 +35,7 @@ public class DbIntegration {
             ofNullable(to).map(LocalDate::atStartOfDay).map(t -> t.plusDays(1)).orElse(null),
             pageRequest);
 
-        return new PageImpl<>(result.getContent().stream().map(this::mapToBatchDto).toList(), pageRequest, result.getTotalElements());
+        return new PageImpl<>(result.getContent().stream().map(batchEntity -> mapToBatchDto(batchEntity, false)).toList(), pageRequest, result.getTotalElements());
     }
 
     @Transactional
@@ -65,10 +65,10 @@ public class DbIntegration {
 
         batchRepository.save(batchEntity);
 
-        return mapToBatchDto(batchEntity);
+        return mapToBatchDto(batchEntity, batch.isProcessingEnabled());
     }
 
-    BatchDto mapToBatchDto(final BatchEntity batchEntity) {
+    BatchDto mapToBatchDto(final BatchEntity batchEntity, final boolean processingEnabled) {
         if (batchEntity == null) {
             return null;
         }
@@ -79,6 +79,7 @@ public class DbIntegration {
             batchEntity.getStartedAt(),
             batchEntity.getCompletedAt(),
             batchEntity.getTotalItems(),
-            batchEntity.getSentItems());
+            batchEntity.getSentItems(),
+            processingEnabled);
     }
 }
