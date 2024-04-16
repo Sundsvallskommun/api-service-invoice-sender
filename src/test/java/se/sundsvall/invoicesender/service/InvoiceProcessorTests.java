@@ -190,7 +190,7 @@ class InvoiceProcessorTests {
         var batchCaptor = ArgumentCaptor.forClass(Batch.class);
 
         when(mockDbIntegration.storeBatch(any(Batch.class)))
-            .thenReturn(new BatchDto(123, "basename", LocalDateTime.now(), LocalDateTime.now(), 5, 3));
+            .thenReturn(new BatchDto(123, "basename", LocalDateTime.now(), LocalDateTime.now(), 5, 3, false));
 
         var result = invoiceProcessor.completeBatchAndStoreExecution(new Batch());
 

@@ -113,8 +113,8 @@ class BatchResourceTests {
     void getAll() {
         when(mockDbIntegration.getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(
-                new BatchDto(1, "something", LocalDateTime.now(), LocalDateTime.now(), 1, 2),
-                new BatchDto(2, "something-else", LocalDateTime.now(), LocalDateTime.now(), 3, 4))));
+                new BatchDto(1, "something", LocalDateTime.now(), LocalDateTime.now(), 1, 2, false),
+                new BatchDto(2, "something-else", LocalDateTime.now(), LocalDateTime.now(), 3, 4, false))));
 
         var response = webTestClient.get()
             .uri("/batches")

@@ -1,5 +1,6 @@
 package se.sundsvall.invoicesender.integration.db;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -99,7 +100,7 @@ class DbIntegrationTests {
             .withTotalItems(234L)
             .withSentItems(123L);
 
-        var batchDto = dbIntegration.mapToBatchDto(batchEntity);
+        var batchDto = dbIntegration.mapToBatchDto(batchEntity, true);
 
         assertThat(batchDto.id()).isEqualTo(batchEntity.getId());
         assertThat(batchDto.basename()).isEqualTo(batchEntity.getBasename());
@@ -107,10 +108,11 @@ class DbIntegrationTests {
         assertThat(batchDto.completedAt()).isEqualTo(batchEntity.getCompletedAt());
         assertThat(batchDto.totalItems()).isEqualTo(batchEntity.getTotalItems());
         assertThat(batchDto.sentItems()).isEqualTo(batchEntity.getSentItems());
+        assertThat(batchDto.processingEnabled()).isTrue();
     }
 
     @Test
     void testMapToBatchDtoWithNullInput() {
-        assertThat(dbIntegration.mapToBatchDto(null)).isNull();
+        assertThat(dbIntegration.mapToBatchDto(null, false)).isNull();
     }
 }
