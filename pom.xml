@@ -24,11 +24,7 @@
 		<xz.version>1.9</xz.version>
 		<cron-expression-descriptor.version>1.2.10</cron-expression-descriptor.version>
 
-		<!-- Pipeline properties -->
-		<docker.image.name>ms-invoicesender</docker.image.name>
 		<exposed.app.port>8080</exposed.app.port>
-		<published.container.port.test>8338</published.container.port.test>
-		<published.container.port.production>8338</published.container.port.production>
 
 		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
 		<generated-sources-java-path>src/main/java</generated-sources-java-path>
