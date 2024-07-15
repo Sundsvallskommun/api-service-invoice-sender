@@ -20,7 +20,7 @@
 		<jcifs-ng.version>2.1.10</jcifs-ng.version>
 		<commons-compress.version>1.26.2</commons-compress.version>
 		<commons-validator.version>1.9.0</commons-validator.version>
-		<jsoup.version>1.17.2</jsoup.version>
+		<jsoup.version>1.18.1</jsoup.version>
 		<xz.version>1.9</xz.version>
 		<cron-expression-descriptor.version>1.2.10</cron-expression-descriptor.version>
 
