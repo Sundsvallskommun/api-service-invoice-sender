@@ -79,7 +79,8 @@ public class InvoiceProcessor {
 		this.invoiceFilenamePrefixes = invoiceFilenamePrefixes;
 
 		if (!"-".equals(cronExpression)) {
-			LOG.info("Invoice processor is ENABLED to run {}", parseCronExpression(cronExpression));
+			final var parsedCronExpression = parseCronExpression(cronExpression);
+			LOG.info("Invoice processor is ENABLED to run {}", parsedCronExpression);
 		} else {
 			LOG.info("Invoice processor scheduling is DISABLED");
 		}
@@ -97,7 +98,7 @@ public class InvoiceProcessor {
 		});
 	}
 
-	public void run(final LocalDate date, final String municipalityId) throws Exception {
+	public void run(final LocalDate date, final String municipalityId) throws IOException {
 		// Get the batches from Raindance
 		final var batches = raindanceIntegration.readBatches(date);
 
