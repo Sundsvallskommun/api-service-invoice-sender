@@ -79,7 +79,8 @@ public class InvoiceProcessor {
 		this.invoiceFilenamePrefixes = invoiceFilenamePrefixes;
 
 		if (!"-".equals(cronExpression)) {
-			LOG.info("Invoice processor is ENABLED to run {}", parseCronExpression(cronExpression));
+			final var parsedCronExpression = parseCronExpression(cronExpression);
+			LOG.info("Invoice processor is ENABLED to run {}", parsedCronExpression);
 		} else {
 			LOG.info("Invoice processor scheduling is DISABLED");
 		}
@@ -97,7 +98,7 @@ public class InvoiceProcessor {
 		});
 	}
 
-	public void run(final LocalDate date, final String municipalityId) throws Exception {
+	public void run(final LocalDate date, final String municipalityId) throws IOException {
 		// Get the batches from Raindance
 		final var batches = raindanceIntegration.readBatches(date);
 
@@ -128,7 +129,7 @@ public class InvoiceProcessor {
 			// Write the batch back to Raindance
 			raindanceIntegration.writeBatch(batch);
 			// Mark the batch as completed and store it
-			processedBatches.add(completeBatchAndStoreExecution(batch));
+			processedBatches.add(completeBatchAndStoreExecution(batch, municipalityId));
 
 			// Archive the batch
 			if (isNotBlank(batch.getArchivePath())) {
@@ -264,11 +265,11 @@ public class InvoiceProcessor {
 		}
 	}
 
-	BatchDto completeBatchAndStoreExecution(final Batch batch) {
+	BatchDto completeBatchAndStoreExecution(final Batch batch, final String municipalityId) {
 		// Mark the batch as completed
 		batch.setCompleted();
 		// Store the batch execution
-		return dbIntegration.storeBatch(batch);
+		return dbIntegration.storeBatch(batch, municipalityId);
 	}
 
 	List<Item> getInvoiceItemsWithLegalIdSet(final Batch batch) {

@@ -1,6 +1,5 @@
 package se.sundsvall.invoicesender.integration.db;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -35,84 +34,89 @@ import se.sundsvall.invoicesender.model.Item;
 @ExtendWith(MockitoExtension.class)
 class DbIntegrationTests {
 
-    @Mock
-    private BatchRepository mockBatchRepository;
-    @InjectMocks
-    private DbIntegration dbIntegration;
+	@Mock
+	private BatchRepository mockBatchRepository;
 
-    @Test
-    void testGetBatches() {
-        var batchEntities = List.of(new BatchEntity(), new BatchEntity(), new BatchEntity());
-        when(mockBatchRepository.findAllByCompletedAtBetween(
-                any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class)))
-            .thenReturn(new PageImpl<>(batchEntities));
+	@InjectMocks
+	private DbIntegration dbIntegration;
 
-        var result = dbIntegration.getBatches(LocalDate.now(), LocalDate.now(), PageRequest.of(0, 2));
+	@Test
+	void testGetBatches() {
+		final var batchEntities = List.of(new BatchEntity(), new BatchEntity(), new BatchEntity());
+		when(mockBatchRepository.findAllByCompletedAtBetweenAndMunicipalityId(
+			any(LocalDateTime.class), any(LocalDateTime.class), any(String.class), any(Pageable.class)))
+			.thenReturn(new PageImpl<>(batchEntities));
 
-        assertThat(result).isNotNull();
-        assertThat(result.getTotalElements()).isEqualTo(3L);
-        assertThat(result.getSize()).isEqualTo(2);
-        assertThat(result.getNumber()).isZero();
-        assertThat(result.getTotalPages()).isEqualTo(2);
+		final var result = dbIntegration.getBatches(LocalDate.now(), LocalDate.now(), PageRequest.of(0, 2), "2281");
 
-        verify(mockBatchRepository, times(1)).findAllByCompletedAtBetween(
-            any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class));
-        verifyNoMoreInteractions(mockBatchRepository);
-    }
+		assertThat(result).isNotNull();
+		assertThat(result.getTotalElements()).isEqualTo(3L);
+		assertThat(result.getSize()).isEqualTo(2);
+		assertThat(result.getNumber()).isZero();
+		assertThat(result.getTotalPages()).isEqualTo(2);
 
-    @Test
-    void testStoreBatch() {
-        var batchEntityCaptor = ArgumentCaptor.forClass(BatchEntity.class);
+		verify(mockBatchRepository, times(1)).findAllByCompletedAtBetweenAndMunicipalityId(
+			any(LocalDateTime.class), any(LocalDateTime.class), any(String.class), any(Pageable.class));
+		verifyNoMoreInteractions(mockBatchRepository);
+	}
 
-        var batch = new Batch()
-            .withBasename("someBasename")
-            .withItems(List.of(
-                new Item("something.xml").withType(OTHER).withStatus(UNHANDLED),
-                new Item("file1").withType(INVOICE).withStatus(SENT),
-                new Item("file2").withType(INVOICE).withStatus(SENT),
-                new Item("file3").withType(INVOICE).withStatus(IGNORED),
-                new Item("file4").withType(INVOICE).withStatus(NOT_SENT),
-                new Item("file5").withType(INVOICE).withStatus(NOT_SENT)
-            ));
-        batch.setCompleted();
+	@Test
+	void testStoreBatch() {
+		final var batchEntityCaptor = ArgumentCaptor.forClass(BatchEntity.class);
+    
+		final var municipalityId = "2281";
+		final var batch = new Batch()
+			.withBasename("someBasename")
+			.withItems(List.of(
+				new Item("something.xml").withType(OTHER).withStatus(UNHANDLED),
+				new Item("file1").withType(INVOICE).withStatus(SENT),
+				new Item("file2").withType(INVOICE).withStatus(SENT),
+				new Item("file3").withType(INVOICE).withStatus(IGNORED),
+				new Item("file4").withType(INVOICE).withStatus(NOT_SENT),
+				new Item("file5").withType(INVOICE).withStatus(NOT_SENT)
+			));
+		batch.setCompleted();
 
-        dbIntegration.storeBatch(batch);
 
-        verify(mockBatchRepository).save(batchEntityCaptor.capture());
+		dbIntegration.storeBatch(batch, municipalityId);
 
-        var batchEntity = batchEntityCaptor.getValue();
-        assertThat(batchEntity.getBasename()).isEqualTo(batch.getBasename());
-        assertThat(batchEntity.getStartedAt()).isEqualTo(batch.getStartedAt());
-        assertThat(batchEntity.getCompletedAt()).isEqualTo(batch.getCompletedAt());
-        assertThat(batchEntity.getItems()).hasSize(5);
-        assertThat(batchEntity.getTotalItems()).isEqualTo(4L);
-        assertThat(batchEntity.getIgnoredItems()).isEqualTo(1L);
-        assertThat(batchEntity.getSentItems()).isEqualTo(2L);
-    }
+		verify(mockBatchRepository).save(batchEntityCaptor.capture());
 
-    @Test
-    void testMapToBatchDto() {
-        var batchEntity = new BatchEntity()
-            .withId(334455)
-            .withBasename("someBasename")
-            .withStartedAt(LocalDateTime.now())
-            .withCompletedAt(LocalDateTime.now())
-            .withTotalItems(234L)
-            .withSentItems(123L);
+		final var batchEntity = batchEntityCaptor.getValue();
+		assertThat(batchEntity.getBasename()).isEqualTo(batch.getBasename());
+		assertThat(batchEntity.getStartedAt()).isEqualTo(batch.getStartedAt());
+		assertThat(batchEntity.getCompletedAt()).isEqualTo(batch.getCompletedAt());
+		assertThat(batchEntity.getItems()).hasSize(5);
+		assertThat(batchEntity.getTotalItems()).isEqualTo(4L);
+		assertThat(batchEntity.getIgnoredItems()).isEqualTo(1L);
+		assertThat(batchEntity.getSentItems()).isEqualTo(2L);
+		assertThat(batchEntity.getMunicipalityId()).isEqualTo(municipalityId);
+	}
 
-        var batchDto = dbIntegration.mapToBatchDto(batchEntity, true);
+	@Test
+	void testMapToBatchDto() {
+		final var batchEntity = new BatchEntity()
+			.withId(334455)
+			.withBasename("someBasename")
+			.withStartedAt(LocalDateTime.now())
+			.withCompletedAt(LocalDateTime.now())
+			.withTotalItems(234L)
+			.withSentItems(123L);
 
-        assertThat(batchDto.id()).isEqualTo(batchEntity.getId());
-        assertThat(batchDto.basename()).isEqualTo(batchEntity.getBasename());
-        assertThat(batchDto.startedAt()).isEqualTo(batchEntity.getStartedAt());
-        assertThat(batchDto.completedAt()).isEqualTo(batchEntity.getCompletedAt());
-        assertThat(batchDto.totalItems()).isEqualTo(batchEntity.getTotalItems());
-        assertThat(batchDto.sentItems()).isEqualTo(batchEntity.getSentItems());
-        assertThat(batchDto.processingEnabled()).isTrue();
-    }
+		final var batchDto = dbIntegration.mapToBatchDto(batchEntity, true);
 
-    @Test
-    void testMapToBatchDtoWithNullInput() {
-        assertThat(dbIntegration.mapToBatchDto(null, false)).isNull();
-    }
+		assertThat(batchDto.id()).isEqualTo(batchEntity.getId());
+		assertThat(batchDto.basename()).isEqualTo(batchEntity.getBasename());
+		assertThat(batchDto.startedAt()).isEqualTo(batchEntity.getStartedAt());
+		assertThat(batchDto.completedAt()).isEqualTo(batchEntity.getCompletedAt());
+		assertThat(batchDto.totalItems()).isEqualTo(batchEntity.getTotalItems());
+		assertThat(batchDto.sentItems()).isEqualTo(batchEntity.getSentItems());
+		assertThat(batchDto.processingEnabled()).isTrue();
+	}
+
+	@Test
+	void testMapToBatchDtoWithNullInput() {
+		assertThat(dbIntegration.mapToBatchDto(null, false)).isNull();
+	}
+
 }

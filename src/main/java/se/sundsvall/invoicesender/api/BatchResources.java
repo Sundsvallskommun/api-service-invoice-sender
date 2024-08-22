@@ -101,7 +101,7 @@ class BatchResources {
 		@Parameter(description = "Page size (default: 20)")
 		@Positive
 		@RequestParam(defaultValue = "20") final int pageSize) {
-		final var batches = dbIntegration.getBatches(from, to, PageRequest.of(page - 1, pageSize, Sort.by("completedAt").descending()));
+		final var batches = dbIntegration.getBatches(from, to, PageRequest.of(page - 1, pageSize, Sort.by("completedAt").descending()), municipalityId);
 
 		if (batches.isEmpty()) {
 			return noContent().build();

@@ -100,7 +100,7 @@ class BatchResourceTests {
 
 	@Test
 	void getAllWhenNothingIsFound() {
-		when(mockDbIntegration.getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class)))
+		when(mockDbIntegration.getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class), any(String.class)))
 			.thenReturn(new PageImpl<>(List.of()));
 
 		webTestClient.get()
@@ -108,13 +108,13 @@ class BatchResourceTests {
 			.exchange()
 			.expectStatus().isNoContent();
 
-		verify(mockDbIntegration, times(1)).getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class));
+		verify(mockDbIntegration, times(1)).getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class), any(String.class));
 		verifyNoMoreInteractions(mockDbIntegration);
 	}
 
 	@Test
 	void getAll() {
-		when(mockDbIntegration.getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class)))
+		when(mockDbIntegration.getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class), any(String.class)))
 			.thenReturn(new PageImpl<>(List.of(
 				new BatchDto(1, "something", LocalDateTime.now(), LocalDateTime.now(), 1, 2, false),
 				new BatchDto(2, "something-else", LocalDateTime.now(), LocalDateTime.now(), 3, 4, false))));
@@ -130,7 +130,7 @@ class BatchResourceTests {
 		assertThat(response).isNotNull();
 		assertThat(response.batches()).isNotNull().hasSize(2);
 
-		verify(mockDbIntegration, times(1)).getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class));
+		verify(mockDbIntegration, times(1)).getBatches(nullable(LocalDate.class), nullable(LocalDate.class), any(PageRequest.class), any(String.class));
 		verifyNoMoreInteractions(mockDbIntegration);
 	}
 

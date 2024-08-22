@@ -193,13 +193,13 @@ class InvoiceProcessorTests {
 	void completeBatchAndStoreExecution() {
 		final var batchCaptor = ArgumentCaptor.forClass(Batch.class);
 
-		when(mockDbIntegration.storeBatch(any(Batch.class)))
+		when(mockDbIntegration.storeBatch(any(Batch.class), any(String.class)))
 			.thenReturn(new BatchDto(123, "basename", LocalDateTime.now(), LocalDateTime.now(), 5, 3, false));
 
-		final var result = invoiceProcessor.completeBatchAndStoreExecution(new Batch());
+		final var result = invoiceProcessor.completeBatchAndStoreExecution(new Batch(), "2281");
 
 		assertThat(result).isNotNull();
-		verify(mockDbIntegration).storeBatch(batchCaptor.capture());
+		verify(mockDbIntegration).storeBatch(batchCaptor.capture(), any(String.class));
 		verifyNoMoreInteractions(mockDbIntegration);
 		verifyNoInteractions(mockRaindanceIntegration, mockPartyIntegration, mockMessagingIntegration);
 

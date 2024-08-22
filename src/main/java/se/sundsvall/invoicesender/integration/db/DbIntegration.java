@@ -23,63 +23,65 @@ import se.sundsvall.invoicesender.model.Batch;
 @Component
 public class DbIntegration {
 
-    private final BatchRepository batchRepository;
+	private final BatchRepository batchRepository;
 
-    DbIntegration(final BatchRepository batchRepository) {
-        this.batchRepository = batchRepository;
-    }
+	DbIntegration(final BatchRepository batchRepository) {
+		this.batchRepository = batchRepository;
+	}
 
-    public Page<BatchDto> getBatches(final LocalDate from, final LocalDate to, final Pageable pageRequest) {
-        var result = batchRepository.findAllByCompletedAtBetween(
-            ofNullable(from).map(LocalDate::atStartOfDay).orElse(null),
-            ofNullable(to).map(LocalDate::atStartOfDay).map(t -> t.plusDays(1)).orElse(null),
-            pageRequest);
+	public Page<BatchDto> getBatches(final LocalDate from, final LocalDate to, final Pageable pageRequest, final String municipalityId) {
+		final var result = batchRepository.findAllByCompletedAtBetweenAndMunicipalityId(
+			ofNullable(from).map(LocalDate::atStartOfDay).orElse(null),
+			ofNullable(to).map(LocalDate::atStartOfDay).map(t -> t.plusDays(1)).orElse(null),
+			municipalityId, pageRequest);
 
-        return new PageImpl<>(result.getContent().stream().map(batchEntity -> mapToBatchDto(batchEntity, false)).toList(), pageRequest, result.getTotalElements());
-    }
+		return new PageImpl<>(result.getContent().stream().map(batchEntity -> mapToBatchDto(batchEntity, false)).toList(), pageRequest, result.getTotalElements());
+	}
 
-    @Transactional
-    public BatchDto storeBatch(final Batch batch) {
-        var items = ofNullable(batch.getItems()).orElse(List.of());
+	@Transactional
+	public BatchDto storeBatch(final Batch batch, final String municipalityId) {
+		final var items = ofNullable(batch.getItems()).orElse(List.of());
 
-        var batchEntity = new BatchEntity()
-            .withBasename(batch.getBasename())
-            .withStartedAt(batch.getStartedAt())
-            .withCompletedAt(batch.getCompletedAt())
-            .withItems(items.stream()
-                .filter(ITEM_IS_INVOICE)
-                .map(item -> new ItemEntity()
-                    .withStatus(item.getStatus())
-                    .withFilename(item.getFilename()))
-                .toList())
-            .withTotalItems(items.stream()
-                .filter(ITEM_IS_PROCESSABLE)
-                .count())
-            .withIgnoredItems(items.stream()
-                .filter(ITEM_IS_IGNORED)
-                .count())
-            .withSentItems(items.stream()
-                .filter(ITEM_IS_PROCESSABLE)
-                .filter(ITEM_IS_SENT)
-                .count());
+		final var batchEntity = new BatchEntity()
+			.withBasename(batch.getBasename())
+			.withMunicipalityId(municipalityId)
+			.withStartedAt(batch.getStartedAt())
+			.withCompletedAt(batch.getCompletedAt())
+			.withItems(items.stream()
+				.filter(ITEM_IS_INVOICE)
+				.map(item -> new ItemEntity()
+					.withStatus(item.getStatus())
+					.withFilename(item.getFilename()))
+				.toList())
+			.withTotalItems(items.stream()
+				.filter(ITEM_IS_PROCESSABLE)
+				.count())
+			.withIgnoredItems(items.stream()
+				.filter(ITEM_IS_IGNORED)
+				.count())
+			.withSentItems(items.stream()
+				.filter(ITEM_IS_PROCESSABLE)
+				.filter(ITEM_IS_SENT)
+				.count());
 
-        batchRepository.save(batchEntity);
+		batchRepository.save(batchEntity);
 
-        return mapToBatchDto(batchEntity, batch.isProcessingEnabled());
-    }
+		return mapToBatchDto(batchEntity, batch.isProcessingEnabled());
+	}
 
-    BatchDto mapToBatchDto(final BatchEntity batchEntity, final boolean processingEnabled) {
-        if (batchEntity == null) {
-            return null;
-        }
+	BatchDto mapToBatchDto(final BatchEntity batchEntity, final boolean processingEnabled) {
+		if (batchEntity == null) {
+			return null;
+		}
 
-        return new BatchDto(
-            batchEntity.getId(),
-            batchEntity.getBasename(),
-            batchEntity.getStartedAt(),
-            batchEntity.getCompletedAt(),
-            batchEntity.getTotalItems(),
-            batchEntity.getSentItems(),
-            processingEnabled);
-    }
+		return new BatchDto(
+			batchEntity.getId(),
+			batchEntity.getBasename(),
+			batchEntity.getStartedAt(),
+			batchEntity.getCompletedAt(),
+			batchEntity.getTotalItems(),
+			batchEntity.getSentItems(),
+			processingEnabled);
+	}
+
 }
