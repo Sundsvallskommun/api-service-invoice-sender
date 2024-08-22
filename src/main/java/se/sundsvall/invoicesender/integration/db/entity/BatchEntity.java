@@ -11,141 +11,162 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "batch_executions")
+@Table(name = "batch_executions",
+	indexes = {
+		@Index(name = "idx_batch_executions_municipality_id", columnList = "municipality_id")
+	})
 public class BatchEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
 
-    @Column(name = "basename", nullable = false)
-    private String basename;
+	@Column(name = "basename", nullable = false)
+	private String basename;
 
-    @Column(name = "started_at", nullable = false)
-    private LocalDateTime startedAt = LocalDateTime.now();
+	@Column(name = "municipality_id")
+	private String municipalityId;
 
-    @Column(name = "completed_at", nullable = false)
-    private LocalDateTime completedAt;
+	@Column(name = "started_at", nullable = false)
+	private LocalDateTime startedAt = LocalDateTime.now();
 
-    @OneToMany(fetch = EAGER, cascade = PERSIST)
-    @JoinColumn(name = "batch_id", nullable = false)
-    private List<ItemEntity> items;
+	@Column(name = "completed_at", nullable = false)
+	private LocalDateTime completedAt;
 
-    @Column(name = "total_invoices", nullable = false)
-    private long totalItems;
+	@OneToMany(fetch = EAGER, cascade = PERSIST)
+	@JoinColumn(name = "batch_id", nullable = false)
+	private List<ItemEntity> items;
 
-    @Column(name = "ignored_invoices", nullable = false)
-    private long ignoredItems;
+	@Column(name = "total_invoices", nullable = false)
+	private long totalItems;
 
-    @Column(name = "sent_invoices", nullable = false)
-    private long sentItems;
+	@Column(name = "ignored_invoices", nullable = false)
+	private long ignoredItems;
 
-    public Integer getId() {
-        return id;
-    }
+	@Column(name = "sent_invoices", nullable = false)
+	private long sentItems;
 
-    public BatchEntity withId(final Integer id) {
-        this.id = id;
-        return this;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(final Integer id) {
-        this.id = id;
-    }
+	public void setId(final Integer id) {
+		this.id = id;
+	}
 
-    public String getBasename() {
-        return basename;
-    }
+	public BatchEntity withId(final Integer id) {
+		this.id = id;
+		return this;
+	}
 
-    public BatchEntity withBasename(final String basename) {
-        this.basename = basename;
-        return this;
-    }
+	public String getBasename() {
+		return basename;
+	}
 
-    public void setBasename(final String basename) {
-        this.basename = basename;
-    }
+	public void setBasename(final String basename) {
+		this.basename = basename;
+	}
 
-    public LocalDateTime getStartedAt() {
-        return startedAt;
-    }
+	public BatchEntity withBasename(final String basename) {
+		this.basename = basename;
+		return this;
+	}
 
-    public BatchEntity withStartedAt(final LocalDateTime startedAt) {
-        this.startedAt = startedAt;
-        return this;
-    }
+	public String getMunicipalityId() {
+		return municipalityId;
+	}
 
-    public void setStartedAt(final LocalDateTime startedAt) {
-        this.startedAt = startedAt;
-    }
+	public void setMunicipalityId(final String municipalityId) {
+		this.municipalityId = municipalityId;
+	}
 
-    public LocalDateTime getCompletedAt() {
-        return completedAt;
-    }
+	public BatchEntity withMunicipalityId(final String municipalityId) {
+		this.municipalityId = municipalityId;
+		return this;
+	}
 
-    public BatchEntity withCompletedAt(final LocalDateTime completedAt) {
-        this.completedAt = completedAt;
-        return this;
-    }
+	public LocalDateTime getStartedAt() {
+		return startedAt;
+	}
 
-    public void setCompletedAt(final LocalDateTime completedAt) {
-        this.completedAt = completedAt;
-    }
+	public void setStartedAt(final LocalDateTime startedAt) {
+		this.startedAt = startedAt;
+	}
 
-    public List<ItemEntity> getItems() {
-        return items;
-    }
+	public BatchEntity withStartedAt(final LocalDateTime startedAt) {
+		this.startedAt = startedAt;
+		return this;
+	}
 
-    public BatchEntity withItems(final List<ItemEntity> items) {
-        this.items = items;
-        return this;
-    }
+	public LocalDateTime getCompletedAt() {
+		return completedAt;
+	}
 
-    public void setItems(final List<ItemEntity> items) {
-        this.items = items;
-    }
+	public void setCompletedAt(final LocalDateTime completedAt) {
+		this.completedAt = completedAt;
+	}
 
-    public long getTotalItems() {
-        return totalItems;
-    }
+	public BatchEntity withCompletedAt(final LocalDateTime completedAt) {
+		this.completedAt = completedAt;
+		return this;
+	}
 
-    public BatchEntity withTotalItems(final long totalItems) {
-        this.totalItems = totalItems;
-        return this;
-    }
+	public List<ItemEntity> getItems() {
+		return items;
+	}
 
-    public void setTotalItems(final long totalItems) {
-        this.totalItems = totalItems;
-    }
+	public void setItems(final List<ItemEntity> items) {
+		this.items = items;
+	}
 
-    public long getIgnoredItems() {
-        return ignoredItems;
-    }
+	public BatchEntity withItems(final List<ItemEntity> items) {
+		this.items = items;
+		return this;
+	}
 
-    public BatchEntity withIgnoredItems(final long ignoredItems) {
-        this.ignoredItems = ignoredItems;
-        return this;
-    }
+	public long getTotalItems() {
+		return totalItems;
+	}
 
-    public void setIgnoredItems(final long ignoredItems) {
-        this.ignoredItems = ignoredItems;
-    }
+	public void setTotalItems(final long totalItems) {
+		this.totalItems = totalItems;
+	}
 
-    public long getSentItems() {
-        return sentItems;
-    }
+	public BatchEntity withTotalItems(final long totalItems) {
+		this.totalItems = totalItems;
+		return this;
+	}
 
-    public BatchEntity withSentItems(final long sentItems) {
-        this.sentItems = sentItems;
-        return this;
-    }
+	public long getIgnoredItems() {
+		return ignoredItems;
+	}
 
-    public void setSentItems(final long sentItems) {
-        this.sentItems = sentItems;
-    }
+	public void setIgnoredItems(final long ignoredItems) {
+		this.ignoredItems = ignoredItems;
+	}
+
+	public BatchEntity withIgnoredItems(final long ignoredItems) {
+		this.ignoredItems = ignoredItems;
+		return this;
+	}
+
+	public long getSentItems() {
+		return sentItems;
+	}
+
+	public void setSentItems(final long sentItems) {
+		this.sentItems = sentItems;
+	}
+
+	public BatchEntity withSentItems(final long sentItems) {
+		this.sentItems = sentItems;
+		return this;
+	}
+
 }

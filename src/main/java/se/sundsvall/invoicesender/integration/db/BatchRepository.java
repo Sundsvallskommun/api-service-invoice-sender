@@ -12,13 +12,16 @@ import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 
 interface BatchRepository extends JpaRepository<BatchEntity, Integer> {
 
-    @Query("""
-        SELECT b FROM BatchEntity b WHERE
-        (:from IS NULL OR b.completedAt >= :from) AND
-        (:to IS NULL OR b.completedAt <= :to)
-    """)
-    Page<BatchEntity> findAllByCompletedAtBetween(
-        @Param("from") LocalDateTime from,
-        @Param("to") LocalDateTime to,
-        Pageable pageRequest);
+	@Query("""
+		    SELECT b FROM BatchEntity b WHERE
+		    (:from IS NULL OR b.completedAt >= :from) AND
+		    (:to IS NULL OR b.completedAt <= :to) AND
+		    (:municipalityId IS NULL OR b.municipalityId = :municipalityId)
+		""")
+	Page<BatchEntity> findAllByCompletedAtBetweenAndMunicipalityId(
+		@Param("from") LocalDateTime from,
+		@Param("to") LocalDateTime to,
+		@Param("municipalityId") String municipalityId,
+		Pageable pageRequest);
+
 }

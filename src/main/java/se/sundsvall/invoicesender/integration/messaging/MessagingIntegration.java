@@ -37,96 +37,103 @@ import generated.se.sundsvall.messaging.MessageStatus;
 @Component
 public class MessagingIntegration {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MessagingIntegration.class);
+	static final String INTEGRATION_NAME = "Messaging";
 
-    static final String INTEGRATION_NAME = "Messaging";
+	private static final Logger LOG = LoggerFactory.getLogger(MessagingIntegration.class);
 
-    private final MessagingClient client;
-    private final ITemplateEngine templateEngine;
-    private final String invoiceSubject;
-    private final String invoiceReferencePrefix;
+	private final MessagingClient client;
 
-    private final String statusReportSenderName;
-    private final String statusReportSenderEmailAddress;
-    private final List<String> statusReportRecipientEmailAddresses;
-    private String statusReportSubjectPrefix;
+	private final ITemplateEngine templateEngine;
 
-    MessagingIntegration(final MessagingIntegrationProperties properties,
-            final MessagingClient client, final ITemplateEngine templateEngine) {
-        this.client = client;
-        this.templateEngine = templateEngine;
+	private final String invoiceSubject;
 
-        invoiceSubject = properties.invoice().subject();
-        invoiceReferencePrefix = properties.invoice().referencePrefix();
+	private final String invoiceReferencePrefix;
 
-        statusReportSenderName = properties.statusReport().senderName();
-        statusReportSenderEmailAddress = properties.statusReport().senderEmailAddress();
-        statusReportRecipientEmailAddresses = properties.statusReport().recipientEmailAddresses();
-        statusReportSubjectPrefix = properties.statusReport().subjectPrefix();
-        if (!statusReportSubjectPrefix.endsWith(" ")) {
-            statusReportSubjectPrefix += " ";
-        }
-    }
+	private final String statusReportSenderName;
 
-    public ItemStatus sendInvoice(final String path, final Item invoice) {
-        try {
-            var invoiceContent = Files.readAllBytes(Paths.get(path).resolve(invoice.getFilename()));
-            var encodedInvoiceContent = new String(Base64.getEncoder().encode(invoiceContent), UTF_8);
+	private final String statusReportSenderEmailAddress;
 
-            var request = new DigitalInvoiceRequest()
-                .type(INVOICE)
-                .subject(invoiceSubject)
-                .party(new DigitalInvoiceParty().partyId(UUID.fromString(invoice.getRecipientPartyId())))
-                .reference(invoiceReferencePrefix + invoice.getMetadata().getInvoiceNumber())
-                .payable(invoice.getMetadata().isPayable())
-                .details(new Details()
-                    .amount(Float.valueOf(invoice.getMetadata().getTotalAmount()))
-                    .dueDate(LocalDate.parse(invoice.getMetadata().getDueDate()))
-                    .paymentReferenceType(SE_OCR)
-                    .paymentReference(invoice.getMetadata().getPaymentReference())
-                    .accountType(BANKGIRO)
-                    .accountNumber(invoice.getMetadata().getAccountNumber()))
-                .files(List.of(new DigitalInvoiceFile()
-                    .filename(invoice.getFilename())
-                    .contentType(APPLICATION_PDF)
-                    .content(encodedInvoiceContent)));
+	private final List<String> statusReportRecipientEmailAddresses;
 
-            var response = client.sendDigitalInvoice(request);
+	private String statusReportSubjectPrefix;
 
-            // We know that we have a single message with a single delivery - extract the status
-            var status = response.getDeliveries().getFirst().getStatus();
+	MessagingIntegration(final MessagingIntegrationProperties properties,
+		final MessagingClient client, final ITemplateEngine templateEngine) {
+		this.client = client;
+		this.templateEngine = templateEngine;
 
-            return status == MessageStatus.SENT ? SENT : NOT_SENT;
-        } catch (Exception e) {
-            LOG.warn("Unable to send invoice", e);
+		invoiceSubject = properties.invoice().subject();
+		invoiceReferencePrefix = properties.invoice().referencePrefix();
 
-            return NOT_SENT;
-        }
-    }
+		statusReportSenderName = properties.statusReport().senderName();
+		statusReportSenderEmailAddress = properties.statusReport().senderEmailAddress();
+		statusReportRecipientEmailAddresses = properties.statusReport().recipientEmailAddresses();
+		statusReportSubjectPrefix = properties.statusReport().subjectPrefix();
+		if (!statusReportSubjectPrefix.endsWith(" ")) {
+			statusReportSubjectPrefix += " ";
+		}
+	}
 
-    public void sendStatusReport(final List<BatchDto> batches) {
-        var request = new EmailRequest()
-            .sender(new EmailSender()
-                .name(statusReportSenderName)
-                .address(statusReportSenderEmailAddress))
-            .subject(statusReportSubjectPrefix + ISO_DATE.format(LocalDate.now()))
-            .htmlMessage(generateStatusReportMessage(batches));
+	public ItemStatus sendInvoice(final String path, final Item invoice, final String municipalityId) {
+		try {
+			final var invoiceContent = Files.readAllBytes(Paths.get(path).resolve(invoice.getFilename()));
+			final var encodedInvoiceContent = new String(Base64.getEncoder().encode(invoiceContent), UTF_8);
 
-        for (var recipientEmailAddress : statusReportRecipientEmailAddresses) {
-            try {
-                request.setEmailAddress(recipientEmailAddress);
+			final var request = new DigitalInvoiceRequest()
+				.type(INVOICE)
+				.subject(invoiceSubject)
+				.party(new DigitalInvoiceParty().partyId(UUID.fromString(invoice.getRecipientPartyId())))
+				.reference(invoiceReferencePrefix + invoice.getMetadata().getInvoiceNumber())
+				.payable(invoice.getMetadata().isPayable())
+				.details(new Details()
+					.amount(Float.valueOf(invoice.getMetadata().getTotalAmount()))
+					.dueDate(LocalDate.parse(invoice.getMetadata().getDueDate()))
+					.paymentReferenceType(SE_OCR)
+					.paymentReference(invoice.getMetadata().getPaymentReference())
+					.accountType(BANKGIRO)
+					.accountNumber(invoice.getMetadata().getAccountNumber()))
+				.files(List.of(new DigitalInvoiceFile()
+					.filename(invoice.getFilename())
+					.contentType(APPLICATION_PDF)
+					.content(encodedInvoiceContent)));
 
-                client.sendEmail(request);
-            } catch (Exception e) {
-                LOG.warn("Unable to send status report to " + recipientEmailAddress, e);
-            }
-        }
-    }
+			final var response = client.sendDigitalInvoice(municipalityId, request);
 
-    String generateStatusReportMessage(final List<BatchDto> batches) {
-        var context = new Context();
-        context.setVariable("batches", batches);
-        var htmlMessage = templateEngine.process("status-report", context);
-        return Base64.getEncoder().encodeToString(htmlMessage.getBytes(UTF_8));
-    }
+			// We know that we have a single message with a single delivery - extract the status
+			final var status = response.getDeliveries().getFirst().getStatus();
+
+			return status == MessageStatus.SENT ? SENT : NOT_SENT;
+		} catch (final Exception e) {
+			LOG.warn("Unable to send invoice", e);
+
+			return NOT_SENT;
+		}
+	}
+
+	public void sendStatusReport(final List<BatchDto> batches, final String municipalityId) {
+		final var request = new EmailRequest()
+			.sender(new EmailSender()
+				.name(statusReportSenderName)
+				.address(statusReportSenderEmailAddress))
+			.subject(statusReportSubjectPrefix + ISO_DATE.format(LocalDate.now()))
+			.htmlMessage(generateStatusReportMessage(batches));
+
+		for (final var recipientEmailAddress : statusReportRecipientEmailAddresses) {
+			try {
+				request.setEmailAddress(recipientEmailAddress);
+
+				client.sendEmail(municipalityId, request);
+			} catch (final Exception e) {
+				LOG.warn("Unable to send status report to " + recipientEmailAddress, e);
+			}
+		}
+	}
+
+	String generateStatusReportMessage(final List<BatchDto> batches) {
+		final var context = new Context();
+		context.setVariable("batches", batches);
+		final var htmlMessage = templateEngine.process("status-report", context);
+		return Base64.getEncoder().encodeToString(htmlMessage.getBytes(UTF_8));
+	}
+
 }
