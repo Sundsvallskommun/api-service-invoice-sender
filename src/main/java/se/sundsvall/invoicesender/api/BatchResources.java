@@ -4,6 +4,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.noContent;
 import static org.springframework.http.ResponseEntity.ok;
 
+import java.io.IOException;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Positive;
@@ -65,7 +66,7 @@ class BatchResources {
 	@PostMapping("/trigger/{date}")
 	ResponseEntity<Void> triggerBatch(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable("date") final LocalDate date) throws Exception {
+		@PathVariable("date") final LocalDate date) throws IOException {
 		invoiceProcessor.run(date, municipalityId);
 
 		return ResponseEntity.ok().build();
