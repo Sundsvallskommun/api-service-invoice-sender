@@ -26,71 +26,73 @@ import generated.se.sundsvall.party.PartyType;
 @ExtendWith(MockitoExtension.class)
 class PartyIntegrationTests {
 
-    @Mock
-    private PartyClient mockPartyClient;
-    @InjectMocks
-    private PartyIntegration partyIntegration;
+	@Mock
+	private PartyClient mockPartyClient;
 
-    @Test
-    void testGetPartyId() {
-        when(mockPartyClient.getPartyId(eq(PartyType.PRIVATE), any(String.class)))
-            .thenReturn(Optional.of("somePartyId"));
+	@InjectMocks
+	private PartyIntegration partyIntegration;
 
-        var partyId = partyIntegration.getPartyId("5505158888");
+	@Test
+	void testGetPartyId() {
+		when(mockPartyClient.getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class)))
+			.thenReturn(Optional.of("somePartyId"));
 
-        assertThat(partyId).hasValue("somePartyId");
+		final var partyId = partyIntegration.getPartyId("5505158888", "2281");
 
-        verify(mockPartyClient, times(1)).getPartyId(eq(PartyType.PRIVATE), any(String.class));
-        verifyNoMoreInteractions(mockPartyClient);
-    }
+		assertThat(partyId).hasValue("somePartyId");
 
-    @Test
-    void testGetPartyIdWhenNothingIsFound() {
-        when(mockPartyClient.getPartyId(eq(PartyType.PRIVATE), any(String.class)))
-            .thenReturn(Optional.empty());
+		verify(mockPartyClient, times(1)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
+		verifyNoMoreInteractions(mockPartyClient);
+	}
 
-        var partyId = partyIntegration.getPartyId("5505158888");
+	@Test
+	void testGetPartyIdWhenNothingIsFound() {
+		when(mockPartyClient.getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class)))
+			.thenReturn(Optional.empty());
 
-        assertThat(partyId).isEmpty();
+		final var partyId = partyIntegration.getPartyId("5505158888", "2281");
 
-        verify(mockPartyClient, times(1)).getPartyId(eq(PartyType.PRIVATE), any(String.class));
-        verifyNoMoreInteractions(mockPartyClient);
-    }
+		assertThat(partyId).isEmpty();
 
-    @Test
-    void testGetPartyIdWhenExceptionIsThrown() {
-        when(mockPartyClient.getPartyId(eq(PartyType.PRIVATE), any(String.class)))
-            .thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+		verify(mockPartyClient, times(1)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
+		verifyNoMoreInteractions(mockPartyClient);
+	}
 
-        var partyId = partyIntegration.getPartyId("5505158888");
+	@Test
+	void testGetPartyIdWhenExceptionIsThrown() {
+		when(mockPartyClient.getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class)))
+			.thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
 
-        assertThat(partyId).isEmpty();
+		final var partyId = partyIntegration.getPartyId("5505158888", "2281");
 
-        verify(mockPartyClient, times(1)).getPartyId(eq(PartyType.PRIVATE), any(String.class));
-        verifyNoMoreInteractions(mockPartyClient);
-    }
+		assertThat(partyId).isEmpty();
 
-    @Test
-    void testAddCenturyToLegalIdForInvalidLegalId() {
-        assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> partyIntegration.addCenturyDigitToLegalId("invalid"));
-    }
+		verify(mockPartyClient, times(1)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
+		verifyNoMoreInteractions(mockPartyClient);
+	}
 
-    @ParameterizedTest
-    @ValueSource(strings = {"195505158888", "200506071234"})
-    void testAddCenturyToLegalIdWithCenturyDigitsAlreadyPresent(final String legalId) {
-        assertThat(partyIntegration.addCenturyDigitToLegalId(legalId)).isEqualTo(legalId);
-    }
+	@Test
+	void testAddCenturyToLegalIdForInvalidLegalId() {
+		assertThatExceptionOfType(IllegalArgumentException.class)
+			.isThrownBy(() -> partyIntegration.addCenturyDigitToLegalId("invalid"));
+	}
 
-    @ParameterizedTest
-    @ValueSource(strings = {"5505158888", "0506071234"})
-    void testAddCenturyToLegalIdWithCenturyDigitsMissing(final String legalId) {
-        var result = partyIntegration.addCenturyDigitToLegalId(legalId);
+	@ParameterizedTest
+	@ValueSource(strings = {"195505158888", "200506071234"})
+	void testAddCenturyToLegalIdWithCenturyDigitsAlreadyPresent(final String legalId) {
+		assertThat(partyIntegration.addCenturyDigitToLegalId(legalId)).isEqualTo(legalId);
+	}
 
-        if ("5505158888".equals(legalId)) {
-            assertThat(result).isEqualTo("195505158888");
-        } else {
-            assertThat(result).isEqualTo("200506071234");
-        }
-    }
+	@ParameterizedTest
+	@ValueSource(strings = {"5505158888", "0506071234"})
+	void testAddCenturyToLegalIdWithCenturyDigitsMissing(final String legalId) {
+		final var result = partyIntegration.addCenturyDigitToLegalId(legalId);
+
+		if ("5505158888".equals(legalId)) {
+			assertThat(result).isEqualTo("195505158888");
+		} else {
+			assertThat(result).isEqualTo("200506071234");
+		}
+	}
+
 }

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 
+import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.invoicesender.api.model.BatchesResponse;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.service.InvoiceProcessor;
@@ -36,83 +37,85 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Batch Resources")
 @RestController
 @Validated
-@RequestMapping("/batches")
+@RequestMapping("/{municipalityId}/batches")
 @ApiResponse(
-    responseCode = "500",
-    description = "Internal server error",
-    content = @Content(schema = @Schema(implementation = Problem.class))
+	responseCode = "500",
+	description = "Internal server error",
+	content = @Content(schema = @Schema(implementation = Problem.class))
 )
 class BatchResources {
 
-    private final DbIntegration dbIntegration;
-    private final InvoiceProcessor invoiceProcessor;
+	private final DbIntegration dbIntegration;
 
-    BatchResources(final DbIntegration dbIntegration, final InvoiceProcessor invoiceProcessor) {
-        this.dbIntegration = dbIntegration;
-        this.invoiceProcessor = invoiceProcessor;
-    }
+	private final InvoiceProcessor invoiceProcessor;
 
-    @Operation(
-        summary = "Triggers batches for a given date",
-        responses = {
-            @ApiResponse(
-                responseCode = "200", description = "Successful operation", useReturnTypeSchema = true
-            )
-        }
-    )
-    @PostMapping("/trigger/{date}")
-    ResponseEntity<Void> triggerBatch(@PathVariable("date") final LocalDate date) throws Exception {
-        invoiceProcessor.run(date);
+	BatchResources(final DbIntegration dbIntegration, final InvoiceProcessor invoiceProcessor) {
+		this.dbIntegration = dbIntegration;
+		this.invoiceProcessor = invoiceProcessor;
+	}
 
-        return ResponseEntity.ok().build();
-    }
+	@Operation(
+		summary = "Triggers batches for a given date",
+		responses = {
+			@ApiResponse(
+				responseCode = "200", description = "Successful operation", useReturnTypeSchema = true
+			)
+		}
+	)
+	@PostMapping("/trigger/{date}")
+	ResponseEntity<Void> triggerBatch(
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@PathVariable("date") final LocalDate date) throws Exception {
+		invoiceProcessor.run(date, municipalityId);
 
-    @Operation(
-        summary = "Returns all batches matching the given filters",
-        responses = {
-            @ApiResponse(
-                responseCode = "200", description = "Successful operation", useReturnTypeSchema = true
-            ),
-            @ApiResponse(
-                responseCode = "204", description = "No content"
-            )
-        }
-    )
-    @GetMapping(produces = APPLICATION_JSON_VALUE)
-    ResponseEntity<BatchesResponse> getAll(
-            @Parameter(description = "Completed from-date (inclusive). Format: yyyy-MM-dd")
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            @RequestParam(required = false)
-            final LocalDate from,
+		return ResponseEntity.ok().build();
+	}
 
-            @Parameter(description = "Completed to-date (inclusive). Format: yyyy-MM-dd")
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            @RequestParam(required = false)
-            final LocalDate to,
+	@Operation(
+		summary = "Returns all batches matching the given filters",
+		responses = {
+			@ApiResponse(
+				responseCode = "200", description = "Successful operation", useReturnTypeSchema = true
+			),
+			@ApiResponse(
+				responseCode = "204", description = "No content"
+			)
+		}
+	)
+	@GetMapping(produces = APPLICATION_JSON_VALUE)
+	ResponseEntity<BatchesResponse> getAll(
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 
-            @Parameter(description = "Page (1-based)")
-            @Positive
-            @RequestParam(defaultValue = "1")
-            final int page,
+		@Parameter(description = "Completed from-date (inclusive). Format: yyyy-MM-dd")
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+		@RequestParam(required = false) final LocalDate from,
 
-            @Parameter(description = "Page size (default: 20)")
-            @Positive
-            @RequestParam(defaultValue = "20")
-            final int pageSize) {
-        var batches = dbIntegration.getBatches(from, to, PageRequest.of(page - 1, pageSize, Sort.by("completedAt").descending()));
+		@Parameter(description = "Completed to-date (inclusive). Format: yyyy-MM-dd")
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+		@RequestParam(required = false) final LocalDate to,
 
-        if (batches.isEmpty()) {
-            return noContent().build();
-        }
+		@Parameter(description = "Page (1-based)")
+		@Positive
+		@RequestParam(defaultValue = "1") final int page,
 
-        return ok(new BatchesResponse(batches.getContent(), mapPaginationInfo(batches)));
-    }
+		@Parameter(description = "Page size (default: 20)")
+		@Positive
+		@RequestParam(defaultValue = "20") final int pageSize) {
+		final var batches = dbIntegration.getBatches(from, to, PageRequest.of(page - 1, pageSize, Sort.by("completedAt").descending()));
 
-    BatchesResponse.PaginationInfo mapPaginationInfo(final Page<?> batchPage) {
-        return new BatchesResponse.PaginationInfo(
-            batchPage.getNumber() + 1,
-            batchPage.getSize(),
-            batchPage.getTotalPages(),
-            batchPage.getTotalElements());
-    }
+		if (batches.isEmpty()) {
+			return noContent().build();
+		}
+
+		return ok(new BatchesResponse(batches.getContent(), mapPaginationInfo(batches)));
+	}
+
+	BatchesResponse.PaginationInfo mapPaginationInfo(final Page<?> batchPage) {
+		return new BatchesResponse.PaginationInfo(
+			batchPage.getNumber() + 1,
+			batchPage.getSize(),
+			batchPage.getTotalPages(),
+			batchPage.getTotalElements());
+	}
+
 }

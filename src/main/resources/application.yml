@@ -15,9 +15,13 @@ openapi:
   title: InvoiceSender
   version: '@project.version@'
 
+invoice-processor:
+  schedule:
+    municipality-ids:
+      - 2281
 logbook:
   body-filters:
     # Exclude BASE64-encoded content from requests.
     jsonPath:
       - key: '$.files[*].content'
-        value : '[base64]'
+        value: '[base64]'

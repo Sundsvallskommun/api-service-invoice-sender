@@ -41,240 +41,245 @@ import se.sundsvall.invoicesender.model.Item;
 @ExtendWith(MockitoExtension.class)
 class InvoiceProcessorTests {
 
-    @Mock
-    private RaindanceIntegration mockRaindanceIntegration;
-    @Mock
-    private PartyIntegration mockPartyIntegration;
-    @Mock
-    private MessagingIntegration mockMessagingIntegration;
-    @Mock
-    private DbIntegration mockDbIntegration;
+	@Mock
+	private RaindanceIntegration mockRaindanceIntegration;
 
-    private InvoiceProcessor invoiceProcessor;
+	@Mock
+	private PartyIntegration mockPartyIntegration;
 
-    @BeforeEach
-    void setUp() {
-        invoiceProcessor = new InvoiceProcessor(mockRaindanceIntegration, mockPartyIntegration,
-            mockMessagingIntegration, mockDbIntegration, List.of("Faktura"), "-");
-    }
+	@Mock
+	private MessagingIntegration mockMessagingIntegration;
 
-    @Test
-    void markNonPdfItemsAsOther() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1.txt"),
-                new Item("file2.pdf"),
-                new Item("file3.zip"),
-                new Item("file4.docx"),
-                new Item("file5.pdf")
-            ));
+	@Mock
+	private DbIntegration mockDbIntegration;
 
-        invoiceProcessor.markNonPdfItemsAsOther(batch);
+	private InvoiceProcessor invoiceProcessor;
 
-        assertThat(batch.getItems())
-            .extracting(Item::getType)
-            .containsExactlyInAnyOrder(OTHER, UNKNOWN, OTHER, OTHER, UNKNOWN);
-    }
+	@BeforeEach
+	void setUp() {
+		invoiceProcessor = new InvoiceProcessor(mockRaindanceIntegration, mockPartyIntegration,
+			mockMessagingIntegration, mockDbIntegration, List.of("Faktura"), "-");
+	}
 
-    @Test
-    void markInvoiceItems() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1.txt"),
-                new Item("file2.pdf"),
-                new Item("file3.zip"),
-                new Item("file4.docx"),
-                new Item("file5.pdf")
-            ));
+	@Test
+	void markNonPdfItemsAsOther() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1.txt"),
+				new Item("file2.pdf"),
+				new Item("file3.zip"),
+				new Item("file4.docx"),
+				new Item("file5.pdf")
+			));
 
-        invoiceProcessor.markNonPdfItemsAsOther(batch);
-        invoiceProcessor.markInvoiceItems(batch);
+		invoiceProcessor.markNonPdfItemsAsOther(batch);
 
-        assertThat(batch.getItems())
-            .extracting(Item::getType)
-            .containsExactlyInAnyOrder(OTHER, INVOICE, OTHER, OTHER, INVOICE);
-    }
+		assertThat(batch.getItems())
+			.extracting(Item::getType)
+			.containsExactlyInAnyOrder(OTHER, UNKNOWN, OTHER, OTHER, UNKNOWN);
+	}
 
-    @Test
-    void extractInvoiceRecipientLegalIds() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1").withType(OTHER),
-                new Item("file2").withType(INVOICE).withFilename("somePrefix_123_to_456.pdf"),
-                new Item("file3").withType(INVOICE).withFilename("somePrefix_456_to_789.pdf"),
-                new Item("file4").withType(INVOICE).withFilename("somePrefix_abc_to_456.pdf")
-            ));
+	@Test
+	void markInvoiceItems() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1.txt"),
+				new Item("file2.pdf"),
+				new Item("file3.zip"),
+				new Item("file4.docx"),
+				new Item("file5.pdf")
+			));
 
-        invoiceProcessor.extractInvoiceRecipientLegalIds(batch);
+		invoiceProcessor.markNonPdfItemsAsOther(batch);
+		invoiceProcessor.markInvoiceItems(batch);
 
-        assertThat(batch.getItems())
-            .extracting(Item::getStatus)
-            .containsExactlyInAnyOrder(UNHANDLED, RECIPIENT_LEGAL_ID_FOUND, RECIPIENT_LEGAL_ID_FOUND, RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
-        assertThat(batch.getItems())
-            .extracting(Item::getRecipientLegalId)
-            .containsExactlyInAnyOrder(null, "456", "789", null);
+		assertThat(batch.getItems())
+			.extracting(Item::getType)
+			.containsExactlyInAnyOrder(OTHER, INVOICE, OTHER, OTHER, INVOICE);
+	}
 
-        verifyNoInteractions(mockRaindanceIntegration, mockPartyIntegration, mockDbIntegration, mockMessagingIntegration);
-    }
+	@Test
+	void extractInvoiceRecipientLegalIds() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1").withType(OTHER),
+				new Item("file2").withType(INVOICE).withFilename("somePrefix_123_to_456.pdf"),
+				new Item("file3").withType(INVOICE).withFilename("somePrefix_456_to_789.pdf"),
+				new Item("file4").withType(INVOICE).withFilename("somePrefix_abc_to_456.pdf")
+			));
 
-    @Test
-    void fetchInvoiceRecipientPartyIds() {
-        var batch = new Batch()
-            .withLocalPath("somePath")
-            .withItems(List.of(
-                new Item("file1.pdf")
-                    .withType(INVOICE)
-                    .withStatus(RECIPIENT_LEGAL_ID_FOUND)
-                    .withRecipientLegalId("legalId1"),
-                new Item("file2.pdf")
-                    .withType(INVOICE)
-                    .withStatus(RECIPIENT_LEGAL_ID_FOUND)
-                    .withRecipientLegalId("legalId1"),
-                new Item("file3.pdf").withType(INVOICE),
-                new Item("file4.pdf")
-                    .withType(INVOICE)
-                    .withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID)
-                    .withRecipientLegalId("legalId3")
-            ));
+		invoiceProcessor.extractInvoiceRecipientLegalIds(batch);
 
-        when(mockPartyIntegration.getPartyId(any(String.class)))
-            .thenReturn(Optional.of("somePartyId"))
-            .thenReturn(Optional.empty());
+		assertThat(batch.getItems())
+			.extracting(Item::getStatus)
+			.containsExactlyInAnyOrder(UNHANDLED, RECIPIENT_LEGAL_ID_FOUND, RECIPIENT_LEGAL_ID_FOUND, RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
+		assertThat(batch.getItems())
+			.extracting(Item::getRecipientLegalId)
+			.containsExactlyInAnyOrder(null, "456", "789", null);
 
-        invoiceProcessor.fetchInvoiceRecipientPartyIds(batch);
+		verifyNoInteractions(mockRaindanceIntegration, mockPartyIntegration, mockDbIntegration, mockMessagingIntegration);
+	}
 
-        assertThat(batch.getItems())
-            .extracting(Item::getStatus)
-            .containsExactlyInAnyOrder(RECIPIENT_PARTY_ID_FOUND, RECIPIENT_PARTY_ID_NOT_FOUND, UNHANDLED, RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
-        assertThat(batch.getItems())
-            .extracting(Item::getRecipientPartyId)
-            .containsExactlyInAnyOrder("somePartyId", null, null, null);
+	@Test
+	void fetchInvoiceRecipientPartyIds() {
+		final var batch = new Batch()
+			.withLocalPath("somePath")
+			.withItems(List.of(
+				new Item("file1.pdf")
+					.withType(INVOICE)
+					.withStatus(RECIPIENT_LEGAL_ID_FOUND)
+					.withRecipientLegalId("legalId1"),
+				new Item("file2.pdf")
+					.withType(INVOICE)
+					.withStatus(RECIPIENT_LEGAL_ID_FOUND)
+					.withRecipientLegalId("legalId1"),
+				new Item("file3.pdf").withType(INVOICE),
+				new Item("file4.pdf")
+					.withType(INVOICE)
+					.withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID)
+					.withRecipientLegalId("legalId3")
+			));
 
-        verify(mockPartyIntegration, times(2)).getPartyId(any(String.class));
-        verifyNoMoreInteractions(mockPartyIntegration);
-        verifyNoInteractions(mockDbIntegration, mockMessagingIntegration, mockRaindanceIntegration);
-    }
+		when(mockPartyIntegration.getPartyId(any(String.class), any(String.class)))
+			.thenReturn(Optional.of("somePartyId"))
+			.thenReturn(Optional.empty());
 
-    @Test
-    void sendDigitalInvoices() {
-        var batch = new Batch()
-            .withLocalPath("somePath")
-            .withItems(List.of(
-                new Item("file1.pdf")
-                    .withType(INVOICE)
-                    .withStatus(RECIPIENT_PARTY_ID_FOUND)
-                    .withRecipientPartyId("partyId1"),
-                new Item("file2.pdf").withType(INVOICE),
-                new Item("file3.pdf")
-                    .withType(INVOICE)
-                    .withStatus(RECIPIENT_PARTY_ID_FOUND)
-                    .withRecipientPartyId("partyId3")
-            ));
+		invoiceProcessor.fetchInvoiceRecipientPartyIds(batch, "2281");
 
-        when(mockMessagingIntegration.sendInvoice(any(String.class), any(Item.class)))
-            .thenReturn(SENT, NOT_SENT);
+		assertThat(batch.getItems())
+			.extracting(Item::getStatus)
+			.containsExactlyInAnyOrder(RECIPIENT_PARTY_ID_FOUND, RECIPIENT_PARTY_ID_NOT_FOUND, UNHANDLED, RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
+		assertThat(batch.getItems())
+			.extracting(Item::getRecipientPartyId)
+			.containsExactlyInAnyOrder("somePartyId", null, null, null);
 
-        invoiceProcessor.sendDigitalInvoices(batch);
+		verify(mockPartyIntegration, times(2)).getPartyId(any(String.class), any(String.class));
+		verifyNoMoreInteractions(mockPartyIntegration);
+		verifyNoInteractions(mockDbIntegration, mockMessagingIntegration, mockRaindanceIntegration);
+	}
 
-        assertThat(batch.getItems())
-            .extracting(Item::getStatus)
-            .containsExactlyInAnyOrder(SENT, UNHANDLED, NOT_SENT);
+	@Test
+	void sendDigitalInvoices() {
+		final var batch = new Batch()
+			.withLocalPath("somePath")
+			.withItems(List.of(
+				new Item("file1.pdf")
+					.withType(INVOICE)
+					.withStatus(RECIPIENT_PARTY_ID_FOUND)
+					.withRecipientPartyId("partyId1"),
+				new Item("file2.pdf").withType(INVOICE),
+				new Item("file3.pdf")
+					.withType(INVOICE)
+					.withStatus(RECIPIENT_PARTY_ID_FOUND)
+					.withRecipientPartyId("partyId3")
+			));
+		final var municipalityId = "someMunicipalityId";
 
-        verify(mockMessagingIntegration, times(2)).sendInvoice(any(String.class), any(Item.class));
-        verifyNoMoreInteractions(mockMessagingIntegration);
-        verifyNoInteractions(mockPartyIntegration, mockDbIntegration, mockRaindanceIntegration);
-    }
+		when(mockMessagingIntegration.sendInvoice(any(String.class), any(Item.class), any(String.class)))
+			.thenReturn(SENT, NOT_SENT);
 
-    @Test
-    void completeBatchAndStoreExecution() {
-        var batchCaptor = ArgumentCaptor.forClass(Batch.class);
+		invoiceProcessor.sendDigitalInvoices(batch, municipalityId);
 
-        when(mockDbIntegration.storeBatch(any(Batch.class)))
-            .thenReturn(new BatchDto(123, "basename", LocalDateTime.now(), LocalDateTime.now(), 5, 3, false));
+		assertThat(batch.getItems())
+			.extracting(Item::getStatus)
+			.containsExactlyInAnyOrder(SENT, UNHANDLED, NOT_SENT);
 
-        var result = invoiceProcessor.completeBatchAndStoreExecution(new Batch());
+		verify(mockMessagingIntegration, times(2)).sendInvoice(any(String.class), any(Item.class), any(String.class));
+		verifyNoMoreInteractions(mockMessagingIntegration);
+		verifyNoInteractions(mockPartyIntegration, mockDbIntegration, mockRaindanceIntegration);
+	}
 
-        assertThat(result).isNotNull();
-        verify(mockDbIntegration).storeBatch(batchCaptor.capture());
-        verifyNoMoreInteractions(mockDbIntegration);
-        verifyNoInteractions(mockRaindanceIntegration, mockPartyIntegration, mockMessagingIntegration);
+	@Test
+	void completeBatchAndStoreExecution() {
+		final var batchCaptor = ArgumentCaptor.forClass(Batch.class);
 
-        assertThat(batchCaptor.getValue().getCompletedAt()).isNotNull();
-    }
+		when(mockDbIntegration.storeBatch(any(Batch.class)))
+			.thenReturn(new BatchDto(123, "basename", LocalDateTime.now(), LocalDateTime.now(), 5, 3, false));
 
-    @Test
-    void getItems() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1").withRecipientPartyId("partyId1"),
-                new Item("file2").withRecipientPartyId("partyId2")
-            ));
+		final var result = invoiceProcessor.completeBatchAndStoreExecution(new Batch());
 
-        var result = invoiceProcessor.getItems(batch, item -> "partyId1".equals(item.getRecipientPartyId()));
+		assertThat(result).isNotNull();
+		verify(mockDbIntegration).storeBatch(batchCaptor.capture());
+		verifyNoMoreInteractions(mockDbIntegration);
+		verifyNoInteractions(mockRaindanceIntegration, mockPartyIntegration, mockMessagingIntegration);
 
-        assertThat(result).isNotNull().hasSize(1);
-    }
+		assertThat(batchCaptor.getValue().getCompletedAt()).isNotNull();
+	}
 
-    @Test
-    void getProcessableInvoiceItems() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1").withType(OTHER),
-                new Item("file2").withType(INVOICE),
-                new Item("file3").withType(INVOICE),
-                new Item("file4").withType(INVOICE).withStatus(IGNORED)
-            ));
+	@Test
+	void getItems() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1").withRecipientPartyId("partyId1"),
+				new Item("file2").withRecipientPartyId("partyId2")
+			));
 
-        var result = invoiceProcessor.getProcessableInvoiceItems(batch);
+		final var result = invoiceProcessor.getItems(batch, item -> "partyId1".equals(item.getRecipientPartyId()));
 
-        assertThat(result).isNotNull().hasSize(2);
-    }
+		assertThat(result).isNotNull().hasSize(1);
+	}
 
-    @Test
-    void getSentInvoiceItems() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1").withType(OTHER),
-                new Item("file2").withType(INVOICE).withStatus(SENT),
-                new Item("file3").withType(INVOICE).withStatus(SENT),
-                new Item("file4").withType(INVOICE).withStatus(IGNORED),
-                new Item("file5").withType(INVOICE).withStatus(NOT_SENT)
-            ));
+	@Test
+	void getProcessableInvoiceItems() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1").withType(OTHER),
+				new Item("file2").withType(INVOICE),
+				new Item("file3").withType(INVOICE),
+				new Item("file4").withType(INVOICE).withStatus(IGNORED)
+			));
 
-        var result = invoiceProcessor.getSentInvoiceItems(batch);
+		final var result = invoiceProcessor.getProcessableInvoiceItems(batch);
 
-        assertThat(result).isNotNull().hasSize(2);
-    }
+		assertThat(result).isNotNull().hasSize(2);
+	}
 
-    @Test
-    void getInvoiceItemsWithPartyIdSet() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1").withType(OTHER),
-                new Item("file2").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
-                new Item("file3").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
-                new Item("file4").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_NOT_FOUND),
-                new Item("file5").withType(INVOICE)
-            ));
+	@Test
+	void getSentInvoiceItems() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1").withType(OTHER),
+				new Item("file2").withType(INVOICE).withStatus(SENT),
+				new Item("file3").withType(INVOICE).withStatus(SENT),
+				new Item("file4").withType(INVOICE).withStatus(IGNORED),
+				new Item("file5").withType(INVOICE).withStatus(NOT_SENT)
+			));
 
-        var result = invoiceProcessor.getInvoiceItemsWithPartyIdSet(batch);
+		final var result = invoiceProcessor.getSentInvoiceItems(batch);
 
-        assertThat(result).isNotNull().hasSize(2);
-    }
+		assertThat(result).isNotNull().hasSize(2);
+	}
 
-    @Test
-    void getInvoiceItemsWithLegalIdSet() {
-        var batch = new Batch()
-            .withItems(List.of(
-                new Item("file1").withType(OTHER),
-                new Item("file2").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_FOUND),
-                new Item("file3").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
-                new Item("file4").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
-                new Item("file5").withType(INVOICE)
-            ));
+	@Test
+	void getInvoiceItemsWithPartyIdSet() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1").withType(OTHER),
+				new Item("file2").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
+				new Item("file3").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
+				new Item("file4").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_NOT_FOUND),
+				new Item("file5").withType(INVOICE)
+			));
 
-        var result = invoiceProcessor.getInvoiceItemsWithLegalIdSet(batch);
+		final var result = invoiceProcessor.getInvoiceItemsWithPartyIdSet(batch);
 
-        assertThat(result).isNotNull().hasSize(1);
-    }
+		assertThat(result).isNotNull().hasSize(2);
+	}
+
+	@Test
+	void getInvoiceItemsWithLegalIdSet() {
+		final var batch = new Batch()
+			.withItems(List.of(
+				new Item("file1").withType(OTHER),
+				new Item("file2").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_FOUND),
+				new Item("file3").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
+				new Item("file4").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
+				new Item("file5").withType(INVOICE)
+			));
+
+		final var result = invoiceProcessor.getInvoiceItemsWithLegalIdSet(batch);
+
+		assertThat(result).isNotNull().hasSize(1);
+	}
+
 }

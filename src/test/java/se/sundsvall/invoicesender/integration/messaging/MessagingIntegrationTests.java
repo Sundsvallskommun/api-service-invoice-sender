@@ -51,7 +51,17 @@ class MessagingIntegrationTests {
 	private ITemplateEngine mockTemplateEngine;
 
 	private MessagingIntegration messagingIntegration;
+
 	private String testFilePath;
+
+	private static Item createMockInvoiceItem() {
+		return new Item()
+			.withFilename("test.file")
+			.withRecipientPartyId(UUID.randomUUID().toString())
+			.withMetadata(new Item.Metadata()
+				.withTotalAmount("12.34")
+				.withDueDate("1986-02-26"));
+	}
 
 	@BeforeEach
 	void setUp() throws IOException {
@@ -73,29 +83,29 @@ class MessagingIntegrationTests {
 
 	@Test
 	void testSendInvoice() {
-		when(mockClient.sendDigitalInvoice(any(DigitalInvoiceRequest.class)))
+		when(mockClient.sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class)))
 			.thenReturn(new MessageResult()
 				.deliveries(List.of(new DeliveryResult()
 					.status(MessageStatus.SENT))));
 
 		final var invoice = createMockInvoiceItem();
 
-		final var result = messagingIntegration.sendInvoice(testFilePath, invoice);
+		final var result = messagingIntegration.sendInvoice(testFilePath, invoice, "2281");
 		assertThat(result).isEqualTo(ItemStatus.SENT);
 
-		verify(mockClient, times(1)).sendDigitalInvoice(any(DigitalInvoiceRequest.class));
+		verify(mockClient, times(1)).sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class));
 		verifyNoMoreInteractions(mockClient);
 	}
 
 	@Test
 	void testSendInvoiceWhenExceptionIsThrown() {
-		when(mockClient.sendDigitalInvoice(any(DigitalInvoiceRequest.class)))
+		when(mockClient.sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class)))
 			.thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
 
-		final var result = messagingIntegration.sendInvoice(testFilePath, createMockInvoiceItem());
+		final var result = messagingIntegration.sendInvoice(testFilePath, createMockInvoiceItem(), "2281");
 		assertThat(result).isEqualTo(ItemStatus.NOT_SENT);
 
-		verify(mockClient, times(1)).sendDigitalInvoice(any(DigitalInvoiceRequest.class));
+		verify(mockClient, times(1)).sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class));
 		verifyNoMoreInteractions(mockClient);
 	}
 
@@ -104,9 +114,9 @@ class MessagingIntegrationTests {
 		when(mockTemplateEngine.process(any(String.class), any(Context.class)))
 			.thenReturn("someHtmlMessage");
 
-		messagingIntegration.sendStatusReport(emptyList());
+		messagingIntegration.sendStatusReport(emptyList(), "2281");
 
-		verify(mockClient, times(1)).sendEmail(any(EmailRequest.class));
+		verify(mockClient, times(1)).sendEmail(any(String.class), any(EmailRequest.class));
 		verifyNoMoreInteractions(mockClient);
 		verify(mockTemplateEngine, times(1)).process(any(String.class), any(Context.class));
 		verifyNoMoreInteractions(mockTemplateEngine);
@@ -114,26 +124,18 @@ class MessagingIntegrationTests {
 
 	@Test
 	void testSendStatusReportWhenExceptionIsThrown() {
-		when(mockClient.sendEmail(any(EmailRequest.class)))
+		when(mockClient.sendEmail(any(String.class), any(EmailRequest.class)))
 			.thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
 
 		when(mockTemplateEngine.process(any(String.class), any(Context.class)))
 			.thenReturn("someHtmlMessage");
 
-		messagingIntegration.sendStatusReport(emptyList());
+		messagingIntegration.sendStatusReport(emptyList(), "2281");
 
-		verify(mockClient, times(1)).sendEmail(any(EmailRequest.class));
+		verify(mockClient, times(1)).sendEmail(any(String.class), any(EmailRequest.class));
 		verifyNoMoreInteractions(mockClient);
 		verify(mockTemplateEngine, times(1)).process(any(String.class), any(Context.class));
 		verifyNoMoreInteractions(mockTemplateEngine);
 	}
 
-	private static Item createMockInvoiceItem() {
-		return new Item()
-			.withFilename("test.file")
-			.withRecipientPartyId(UUID.randomUUID().toString())
-			.withMetadata(new Item.Metadata()
-				.withTotalAmount("12.34")
-				.withDueDate("1986-02-26"));
-	}
 }
