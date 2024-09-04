@@ -15,6 +15,7 @@ import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_FOU
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID;
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
+import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.model.ItemType.OTHER;
 import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
@@ -240,11 +241,12 @@ public class InvoiceProcessor {
 
 	void sendDigitalInvoices(final Batch batch, final String municipalityId) {
 		getInvoiceItemsWithPartyIdSet(batch).forEach(item -> {
-				item.setStatus(messagingIntegration.sendInvoice(batch.getLocalPath(), item, municipalityId));
+			var status = messagingIntegration.sendInvoice(batch.getLocalPath(), item, municipalityId);
 
-				LOG.info("Sent invoice {}", item.getFilename());
-			}
-		);
+			item.setStatus(status);
+
+			LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
+		});
 	}
 
 	void updateArchiveIndex(final Batch batch) throws IOException {
