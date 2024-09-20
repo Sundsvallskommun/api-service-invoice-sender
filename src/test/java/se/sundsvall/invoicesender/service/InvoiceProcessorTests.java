@@ -223,10 +223,10 @@ class InvoiceProcessorTests {
 	void getProcessableInvoiceItems() {
 		final var batch = new Batch()
 			.withItems(List.of(
-				new Item("file1").withType(OTHER),
-				new Item("file2").withType(INVOICE),
-				new Item("file3").withType(INVOICE),
-				new Item("file4").withType(INVOICE).withStatus(IGNORED)
+				new Item("file1.png").withType(OTHER),
+				new Item("file2.pdf").withType(INVOICE),
+				new Item("file3.pdf").withType(INVOICE),
+				new Item("file4.pdf").withType(INVOICE).withStatus(IGNORED)
 			));
 
 		final var result = invoiceProcessor.getProcessableInvoiceItems(batch);
@@ -238,11 +238,11 @@ class InvoiceProcessorTests {
 	void getSentInvoiceItems() {
 		final var batch = new Batch()
 			.withItems(List.of(
-				new Item("file1").withType(OTHER),
-				new Item("file2").withType(INVOICE).withStatus(SENT),
-				new Item("file3").withType(INVOICE).withStatus(SENT),
-				new Item("file4").withType(INVOICE).withStatus(IGNORED),
-				new Item("file5").withType(INVOICE).withStatus(NOT_SENT)
+				new Item("file1.jpg").withType(OTHER),
+				new Item("file2.pdf").withType(INVOICE).withStatus(SENT),
+				new Item("file3.pdf").withType(INVOICE).withStatus(SENT),
+				new Item("file4.pdf").withType(INVOICE).withStatus(IGNORED),
+				new Item("file5.pdf").withType(INVOICE).withStatus(NOT_SENT)
 			));
 
 		final var result = invoiceProcessor.getSentInvoiceItems(batch);
@@ -254,11 +254,11 @@ class InvoiceProcessorTests {
 	void getInvoiceItemsWithPartyIdSet() {
 		final var batch = new Batch()
 			.withItems(List.of(
-				new Item("file1").withType(OTHER),
-				new Item("file2").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
-				new Item("file3").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
-				new Item("file4").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_NOT_FOUND),
-				new Item("file5").withType(INVOICE)
+				new Item("file1.txt").withType(OTHER),
+				new Item("file2.pdf").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
+				new Item("file3.pdf").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
+				new Item("file4.pdf").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_NOT_FOUND),
+				new Item("file5.pdf").withType(INVOICE)
 			));
 
 		final var result = invoiceProcessor.getInvoiceItemsWithPartyIdSet(batch);
@@ -270,11 +270,11 @@ class InvoiceProcessorTests {
 	void getInvoiceItemsWithLegalIdSet() {
 		final var batch = new Batch()
 			.withItems(List.of(
-				new Item("file1").withType(OTHER),
-				new Item("file2").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_FOUND),
-				new Item("file3").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
-				new Item("file4").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
-				new Item("file5").withType(INVOICE)
+				new Item("file1.docx").withType(OTHER),
+				new Item("file2.pdf").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_FOUND),
+				new Item("file3.pdf").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
+				new Item("file4.pdf").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
+				new Item("file5.pdf").withType(INVOICE)
 			));
 
 		final var result = invoiceProcessor.getInvoiceItemsWithLegalIdSet(batch);

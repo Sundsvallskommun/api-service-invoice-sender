@@ -1,6 +1,8 @@
 package se.sundsvall.invoicesender.model;
 
+import static java.util.function.Predicate.not;
 import static se.sundsvall.invoicesender.model.ItemStatus.IGNORED;
+import static se.sundsvall.invoicesender.model.ItemStatus.METADATA_INCOMPLETE;
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_FOUND;
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
 import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
@@ -10,10 +12,11 @@ import java.util.function.Predicate;
 
 public class Item {
 
-    public static final Predicate<Item> ITEM_IS_A_PDF = item -> item.getFilename().endsWith(".pdf");
-    public static final Predicate<Item> ITEM_IS_INVOICE = item -> item.getType() == INVOICE;
-    public static final Predicate<Item> ITEM_IS_PROCESSABLE = ITEM_IS_INVOICE.and(item -> item.getStatus() != IGNORED);
-    public static final Predicate<Item> ITEM_IS_IGNORED = ITEM_IS_INVOICE.and(item -> item.getStatus() == IGNORED);
+    public static final Predicate<Item> ITEM_IS_A_PDF = item -> item.getFilename().toLowerCase().endsWith(".pdf");
+    public static final Predicate<Item> ITEM_IS_AN_INVOICE = ITEM_IS_A_PDF.and(item -> item.getType() == INVOICE);
+    public static final Predicate<Item> ITEM_IS_IGNORED = item -> item.getStatus() == IGNORED;
+    public static final Predicate<Item> ITEM_LACKS_METADATA = item -> item.getStatus() == METADATA_INCOMPLETE;
+    public static final Predicate<Item> ITEM_IS_PROCESSABLE = ITEM_IS_AN_INVOICE.and(not(ITEM_IS_IGNORED)).and(not(ITEM_LACKS_METADATA));
     public static final Predicate<Item> ITEM_HAS_LEGAL_ID = item -> item.getStatus() == RECIPIENT_LEGAL_ID_FOUND;
     public static final Predicate<Item> ITEM_HAS_PARTY_ID = item -> item.getStatus() == RECIPIENT_PARTY_ID_FOUND;
     public static final Predicate<Item> ITEM_IS_SENT = item -> item.getStatus() == SENT;

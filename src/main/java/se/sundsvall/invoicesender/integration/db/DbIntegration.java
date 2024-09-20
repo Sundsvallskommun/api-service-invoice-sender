@@ -1,8 +1,8 @@
 package se.sundsvall.invoicesender.integration.db;
 
 import static java.util.Optional.ofNullable;
+import static se.sundsvall.invoicesender.model.Item.ITEM_IS_AN_INVOICE;
 import static se.sundsvall.invoicesender.model.Item.ITEM_IS_IGNORED;
-import static se.sundsvall.invoicesender.model.Item.ITEM_IS_INVOICE;
 import static se.sundsvall.invoicesender.model.Item.ITEM_IS_PROCESSABLE;
 import static se.sundsvall.invoicesender.model.Item.ITEM_IS_SENT;
 
@@ -48,7 +48,7 @@ public class DbIntegration {
 			.withStartedAt(batch.getStartedAt())
 			.withCompletedAt(batch.getCompletedAt())
 			.withItems(items.stream()
-				.filter(ITEM_IS_INVOICE)
+				.filter(ITEM_IS_AN_INVOICE)
 				.map(item -> new ItemEntity()
 					.withStatus(item.getStatus())
 					.withFilename(item.getFilename()))

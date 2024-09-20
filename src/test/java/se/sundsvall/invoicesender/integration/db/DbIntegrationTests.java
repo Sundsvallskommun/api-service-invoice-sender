@@ -69,14 +69,13 @@ class DbIntegrationTests {
 			.withBasename("someBasename")
 			.withItems(List.of(
 				new Item("something.xml").withType(OTHER).withStatus(UNHANDLED),
-				new Item("file1").withType(INVOICE).withStatus(SENT),
-				new Item("file2").withType(INVOICE).withStatus(SENT),
-				new Item("file3").withType(INVOICE).withStatus(IGNORED),
-				new Item("file4").withType(INVOICE).withStatus(NOT_SENT),
-				new Item("file5").withType(INVOICE).withStatus(NOT_SENT)
+				new Item("file1.pdf").withType(INVOICE).withStatus(SENT),
+				new Item("file2.pdf").withType(INVOICE).withStatus(SENT),
+				new Item("file3.pdf").withType(INVOICE).withStatus(IGNORED),
+				new Item("file4.pdf").withType(INVOICE).withStatus(NOT_SENT),
+				new Item("file5.pdf").withType(INVOICE).withStatus(NOT_SENT)
 			));
 		batch.setCompleted();
-
 
 		dbIntegration.storeBatch(batch, municipalityId);
 

@@ -5,6 +5,8 @@ public enum ItemStatus {
     UNHANDLED,
     /** Indicates that an invoice should be ignored */
     IGNORED,
+    /** Indicates that an invoice lacks required metadata */
+    METADATA_INCOMPLETE,
     /** Indicates that a valid legal id was found in the filename */
     RECIPIENT_LEGAL_ID_FOUND,
     /** Indicates that no valid legal id was found in the filename */
