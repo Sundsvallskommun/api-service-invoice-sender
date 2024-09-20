@@ -40,7 +40,6 @@ class ItemTests {
         });
     }
 
-
     @Test
     void testWithersAndGetters() {
         var item = new Item()

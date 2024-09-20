@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.util.function.Predicate.not;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_LEGAL_ID;
 import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_PARTY_ID;
@@ -11,6 +12,7 @@ import static se.sundsvall.invoicesender.model.Item.ITEM_IS_A_PDF;
 import static se.sundsvall.invoicesender.model.Item.ITEM_IS_PROCESSABLE;
 import static se.sundsvall.invoicesender.model.Item.ITEM_IS_SENT;
 import static se.sundsvall.invoicesender.model.ItemStatus.IGNORED;
+import static se.sundsvall.invoicesender.model.ItemStatus.METADATA_INCOMPLETE;
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_FOUND;
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID;
 import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
@@ -68,11 +70,11 @@ public class InvoiceProcessor {
 	private List<String> municipalityIds;
 
 	public InvoiceProcessor(final RaindanceIntegration raindanceIntegration,
-		final PartyIntegration partyIntegration,
-		final MessagingIntegration messagingIntegration,
-		final DbIntegration dbIntegration,
-		@Value("${invoice-processor.invoice-filename-prefixes:}") final List<String> invoiceFilenamePrefixes,
-		@Value("${invoice-processor.schedule.cron-expression:-}") final String cronExpression) {
+			final PartyIntegration partyIntegration,
+			final MessagingIntegration messagingIntegration,
+			final DbIntegration dbIntegration,
+			@Value("${invoice-processor.invoice-filename-prefixes:}") final List<String> invoiceFilenamePrefixes,
+			@Value("${invoice-processor.schedule.cron-expression:-}") final String cronExpression) {
 		this.raindanceIntegration = raindanceIntegration;
 		this.partyIntegration = partyIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -80,7 +82,7 @@ public class InvoiceProcessor {
 		this.invoiceFilenamePrefixes = invoiceFilenamePrefixes;
 
 		if (!"-".equals(cronExpression)) {
-			final var parsedCronExpression = parseCronExpression(cronExpression);
+			var parsedCronExpression = parseCronExpression(cronExpression);
 			LOG.info("Invoice processor is ENABLED to run {}", parsedCronExpression);
 		} else {
 			LOG.info("Invoice processor scheduling is DISABLED");
@@ -89,7 +91,6 @@ public class InvoiceProcessor {
 
 	@Scheduled(cron = "${invoice-processor.schedule.cron-expression:-}")
 	void run() {
-
 		municipalityIds.forEach(municipalityId -> {
 			try {
 				run(LocalDate.now(), municipalityId);
@@ -101,10 +102,10 @@ public class InvoiceProcessor {
 
 	public void run(final LocalDate date, final String municipalityId) throws IOException {
 		// Get the batches from Raindance
-		final var batches = raindanceIntegration.readBatches(date);
+		var batches = raindanceIntegration.readBatches(date);
 
-		final var processedBatches = new ArrayList<BatchDto>();
-		for (final var batch : batches) {
+		var processedBatches = new ArrayList<BatchDto>();
+		for (var batch : batches) {
 			if (batch.isProcessingEnabled()) {
 				LOG.info("Processing batch {}", batch.getBasename() + BATCH_FILE_SUFFIX);
 
@@ -182,26 +183,44 @@ public class InvoiceProcessor {
 	}
 
 	void extractItemMetadata(final Batch batch) throws IOException {
-		final var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
-		final var xml = Files.readString(path, ISO_8859_1);
+		var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
+		var xml = Files.readString(path, ISO_8859_1);
 
 		getProcessableInvoiceItems(batch).forEach(item -> {
 			LOG.info("Extracting metadata for item {}", item.getFilename());
 
 			// Create the XPath expression from the item filename
-			final var xPathExpression = format("//file[filename='%s']", item.getFilename());
+			var xPathExpression = format("//file[filename='%s']", item.getFilename());
 			// Evaluate
-			final var result = XmlUtil.find(xml, xPathExpression);
+			var result = XmlUtil.find(xml, xPathExpression);
 			// Extract the item metadata
+			var invoiceNumber = result.select("InvoiceNo").text();
+			var invoiceDate = result.select("InvoiceDate").text();
+			var dueDate = result.select("DueDate").text();
+			var payable = !"01".equals(result.select("AGF").text().trim());
+			var reminder = "1".equals(result.select("Reminder").text());
+			var accountNumber = result.select("PaymentNo").text();
+			var paymentReference = result.select("PaymentReference").text();
+			var totalAmount = result.select("TotalAmount").text();
+
+			// Check if we've managed to extract all required metadata fields. If not - mark it as incomplete and
+			// bail out early since we won't do any further processing on the item
+			if (isAnyBlank(invoiceNumber, invoiceDate, dueDate, accountNumber, paymentReference, totalAmount)) {
+				item.setStatus(METADATA_INCOMPLETE);
+
+				return;
+			}
+
+			// Set the item metadata
 			item.setMetadata(new Item.Metadata()
-				.withInvoiceNumber(result.select("InvoiceNo").text())
-				.withInvoiceDate(result.select("InvoiceDate").text())
-				.withDueDate(result.select("DueDate").text())
-				.withPayable(!"01".equals(result.select("AGF").text().trim()))
-				.withReminder("1".equals(result.select("Reminder").text()))
-				.withAccountNumber(result.select("PaymentNo").text())
-				.withPaymentReference(result.select("PaymentReference").text())
-				.withTotalAmount(result.select("TotalAmount").text())
+				.withInvoiceNumber(invoiceNumber)
+				.withInvoiceDate(invoiceDate)
+				.withDueDate(dueDate)
+				.withPayable(payable)
+				.withReminder(reminder)
+				.withAccountNumber(accountNumber)
+				.withPaymentReference(paymentReference)
+				.withTotalAmount(totalAmount)
 			);
 		});
 	}
@@ -210,7 +229,7 @@ public class InvoiceProcessor {
 		getProcessableInvoiceItems(batch).forEach(item -> {
 			// Try to extract the recipient's legal id from the invoice PDF filename and update
 			// the invoice accordingly
-			final var matcher = RECIPIENT_PATTERN.matcher(item.getFilename());
+			var matcher = RECIPIENT_PATTERN.matcher(item.getFilename());
 			if (matcher.matches()) {
 				LOG.info("Extracted recipient legal id for item {}", item.getFilename());
 
@@ -250,14 +269,14 @@ public class InvoiceProcessor {
 	}
 
 	void updateArchiveIndex(final Batch batch) throws IOException {
-		final var sentItems = getSentInvoiceItems(batch);
+		var sentItems = getSentInvoiceItems(batch);
 
 		if (!sentItems.isEmpty()) {
-			final var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
+			var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
 			var xml = Files.readString(path, ISO_8859_1);
 
-			for (final var sentItem : sentItems) {
-				final var xPathExpression = String.format("//file[filename='%s']", sentItem.getFilename());
+			for (var sentItem : sentItems) {
+				var xPathExpression = String.format("//file[filename='%s']", sentItem.getFilename());
 
 				// Remove the matching nodes
 				xml = XmlUtil.remove(xml, xPathExpression);
@@ -301,5 +320,4 @@ public class InvoiceProcessor {
 			.filter(predicate)
 			.toList();
 	}
-
 }
