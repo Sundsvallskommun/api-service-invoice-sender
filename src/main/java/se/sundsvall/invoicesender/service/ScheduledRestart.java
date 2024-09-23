@@ -1,7 +1,5 @@
 package se.sundsvall.invoicesender.service;
 
-import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,17 +18,14 @@ class ScheduledRestart {
 
     private ConfigurableApplicationContext context;
     private final boolean enabled;
-    private final String cronExpression;
 
     ScheduledRestart(final ConfigurableApplicationContext context,
-            @Value("${scheduled-restart.enabled:false}") final boolean enabled,
-            @Value("${scheduled-restart.cron-expression:-}") final String cronExpression) {
+      @Value("${scheduled-restart.enabled:false}") final boolean enabled) {
         this.context = context;
         this.enabled = enabled;
-        this.cronExpression = cronExpression;
 
-        if (enabled && !"-".equals(cronExpression)) {
-            LOG.info("Scheduled restart is ENABLED to run {}", parseCronExpression(cronExpression));
+        if (enabled) {
+            LOG.info("Scheduled restart is ENABLED");
         } else {
             LOG.info("Scheduled restart is DISABLED");
         }
