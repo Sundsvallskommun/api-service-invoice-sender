@@ -7,67 +7,85 @@ import org.junit.jupiter.api.Test;
 
 class ItemTests {
 
+    private static final String TOTAL_AMOUNT = "someTotalAmount";
+
+    private static final String PAYMENT_REFERENCE = "somePaymentReference";
+
+    private static final String INVOICE_NUMBER = "someInvoiceNumber";
+
+    private static final String INVOICE_DATE = "someInvoiceDate";
+
+    private static final String DUE_DATE = "someDueDate";
+
+    private static final String ACCOUNT_NUMBER = "someAccountNumber";
+
+    private static final String FILENAME = "someFilename";
+
+    private static final String LEGAL_ID = "someLegalId";
+
+    private static final String PARTY_ID = "somePartyId";
+
     @Test
     void testSettersAndGetters() {
-        var metadata = new Item.Metadata();
-        metadata.setAccountNumber("someAccountNumber");
-        metadata.setDueDate("someDueDate");
-        metadata.setInvoiceDate("someInvoiceDate");
+        final var metadata = new Item.Metadata();
+        metadata.setAccountNumber(ACCOUNT_NUMBER);
+        metadata.setDueDate(DUE_DATE);
+        metadata.setInvoiceDate(INVOICE_DATE);
         metadata.setReminder(true);
-        metadata.setInvoiceNumber("someInvoiceNumber");
-        metadata.setPaymentReference("somePaymentReference");
-        metadata.setTotalAmount("someTotalAmount");
+        metadata.setInvoiceNumber(INVOICE_NUMBER);
+        metadata.setPaymentReference(PAYMENT_REFERENCE);
+        metadata.setTotalAmount(TOTAL_AMOUNT);
 
-        var item = new Item();
-        item.setFilename("someFilename");
+        final var item = new Item();
+        item.setFilename(FILENAME);
         item.setStatus(SENT);
-        item.setRecipientLegalId("someLegalId");
-        item.setRecipientPartyId("somePartyId");
+        item.setRecipientLegalId(LEGAL_ID);
+        item.setRecipientPartyId(PARTY_ID);
         item.setMetadata(metadata);
 
-        assertThat(item.getFilename()).isEqualTo("someFilename");
+        assertThat(item.getFilename()).isEqualTo(FILENAME);
         assertThat(item.getStatus()).isEqualTo(SENT);
-        assertThat(item.getRecipientLegalId()).isEqualTo("someLegalId");
-        assertThat(item.getRecipientPartyId()).isEqualTo("somePartyId");
+        assertThat(item.getRecipientLegalId()).isEqualTo(LEGAL_ID);
+        assertThat(item.getRecipientPartyId()).isEqualTo(PARTY_ID);
         assertThat(item.getMetadata()).isNotNull().satisfies(itemMetadata -> {
-            assertThat(itemMetadata.getAccountNumber()).isEqualTo("someAccountNumber");
-            assertThat(itemMetadata.getDueDate()).isEqualTo("someDueDate");
-            assertThat(itemMetadata.getInvoiceDate()).isEqualTo("someInvoiceDate");
+            assertThat(itemMetadata.getAccountNumber()).isEqualTo(ACCOUNT_NUMBER);
+            assertThat(itemMetadata.getDueDate()).isEqualTo(DUE_DATE);
+            assertThat(itemMetadata.getInvoiceDate()).isEqualTo(INVOICE_DATE);
             assertThat(itemMetadata.isReminder()).isTrue();
-            assertThat(itemMetadata.getInvoiceNumber()).isEqualTo("someInvoiceNumber");
-            assertThat(itemMetadata.getPaymentReference()).isEqualTo("somePaymentReference");
-            assertThat(itemMetadata.getTotalAmount()).isEqualTo("someTotalAmount");
+            assertThat(itemMetadata.getInvoiceNumber()).isEqualTo(INVOICE_NUMBER);
+            assertThat(itemMetadata.getPaymentReference()).isEqualTo(PAYMENT_REFERENCE);
+            assertThat(itemMetadata.getTotalAmount()).isEqualTo(TOTAL_AMOUNT);
         });
     }
 
     @Test
     void testWithersAndGetters() {
-        var item = new Item()
-            .withFilename("someFilename")
+        final var item = new Item()
+            .withFilename(FILENAME)
             .withStatus(SENT)
-            .withRecipientLegalId("someLegalId")
-            .withRecipientPartyId("somePartyId")
+            .withRecipientLegalId(LEGAL_ID)
+            .withRecipientPartyId(PARTY_ID)
             .withMetadata(new Item.Metadata()
-                .withAccountNumber("someAccountNumber")
-                .withDueDate("someDueDate")
-                .withInvoiceDate("someInvoiceDate")
+                .withAccountNumber(ACCOUNT_NUMBER)
+                .withDueDate(DUE_DATE)
+                .withInvoiceDate(INVOICE_DATE)
                 .withReminder(true)
-                .withInvoiceNumber("someInvoiceNumber")
-                .withPaymentReference("somePaymentReference")
-                .withTotalAmount("someTotalAmount"));
+                .withInvoiceNumber(INVOICE_NUMBER)
+                .withPaymentReference(PAYMENT_REFERENCE)
+                .withTotalAmount(TOTAL_AMOUNT));
 
-        assertThat(item.getFilename()).isEqualTo("someFilename");
+        assertThat(item.getFilename()).isEqualTo(FILENAME);
         assertThat(item.getStatus()).isEqualTo(SENT);
-        assertThat(item.getRecipientLegalId()).isEqualTo("someLegalId");
-        assertThat(item.getRecipientPartyId()).isEqualTo("somePartyId");
+        assertThat(item.getRecipientLegalId()).isEqualTo(LEGAL_ID);
+        assertThat(item.getRecipientPartyId()).isEqualTo(PARTY_ID);
         assertThat(item.getMetadata()).isNotNull().satisfies(itemMetadata -> {
-            assertThat(itemMetadata.getAccountNumber()).isEqualTo("someAccountNumber");
-            assertThat(itemMetadata.getDueDate()).isEqualTo("someDueDate");
-            assertThat(itemMetadata.getInvoiceDate()).isEqualTo("someInvoiceDate");
+            assertThat(itemMetadata.getAccountNumber()).isEqualTo(ACCOUNT_NUMBER);
+            assertThat(itemMetadata.getDueDate()).isEqualTo(DUE_DATE);
+            assertThat(itemMetadata.getInvoiceDate()).isEqualTo(INVOICE_DATE);
             assertThat(itemMetadata.isReminder()).isTrue();
-            assertThat(itemMetadata.getInvoiceNumber()).isEqualTo("someInvoiceNumber");
-            assertThat(itemMetadata.getPaymentReference()).isEqualTo("somePaymentReference");
-            assertThat(itemMetadata.getTotalAmount()).isEqualTo("someTotalAmount");
+            assertThat(itemMetadata.getInvoiceNumber()).isEqualTo(INVOICE_NUMBER);
+            assertThat(itemMetadata.getPaymentReference()).isEqualTo(PAYMENT_REFERENCE);
+            assertThat(itemMetadata.getTotalAmount()).isEqualTo(TOTAL_AMOUNT);
         });
     }
 
@@ -76,7 +94,7 @@ class ItemTests {
         var item = new Item();
         assertThat(item.getFilename()).isNull();
 
-        item = new Item("someFilename");
-        assertThat(item.getFilename()).isEqualTo("someFilename");
+        item = new Item(FILENAME);
+        assertThat(item.getFilename()).isEqualTo(FILENAME);
     }
 }

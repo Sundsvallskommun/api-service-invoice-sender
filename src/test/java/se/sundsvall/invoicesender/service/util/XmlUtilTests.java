@@ -25,8 +25,7 @@ class XmlUtilTests {
         var xpathExpression = "//item[@id=2]";
         var result = XmlUtil.find(xml, xpathExpression);
 
-        assertThat(result).isNotNull();
-        assertThat(result.isEmpty()).isFalse();
+        assertThat(result).isNotNull().isNotEmpty();
     }
 
     @Test
