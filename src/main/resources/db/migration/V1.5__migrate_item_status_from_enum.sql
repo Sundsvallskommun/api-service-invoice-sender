@@ -1,0 +1,1 @@
+ALTER TABLE `batch_items` MODIFY COLUMN `status` VARCHAR(64) NOT NULL;

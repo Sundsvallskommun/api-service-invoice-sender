@@ -42,6 +42,11 @@ import se.sundsvall.invoicesender.model.Item;
 class InvoiceProcessorTests {
 
 	@Mock
+	private InvoiceProcessorProperties mockProperties;
+	@Mock
+	private InvoiceProcessorProperties.Schedule mockScheduleProperties;
+
+	@Mock
 	private RaindanceIntegration mockRaindanceIntegration;
 
 	@Mock
@@ -57,8 +62,12 @@ class InvoiceProcessorTests {
 
 	@BeforeEach
 	void setUp() {
-		invoiceProcessor = new InvoiceProcessor(mockRaindanceIntegration, mockPartyIntegration,
-			mockMessagingIntegration, mockDbIntegration, List.of("Faktura"), "-");
+		when(mockScheduleProperties.cronExpression()).thenReturn("-");
+		when(mockProperties.schedule()).thenReturn(mockScheduleProperties);
+		when(mockProperties.invoiceFilenamePrefixes()).thenReturn(List.of("Faktura"));
+
+		invoiceProcessor = new InvoiceProcessor(mockProperties, mockRaindanceIntegration, mockPartyIntegration,
+			mockMessagingIntegration, mockDbIntegration);
 	}
 
 	@Test

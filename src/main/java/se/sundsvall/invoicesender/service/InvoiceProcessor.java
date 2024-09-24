@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -65,22 +64,22 @@ public class InvoiceProcessor {
 	private final DbIntegration dbIntegration;
 
 	private final List<String> invoiceFilenamePrefixes;
+	private final List<String> municipalityIds;
 
-	@Value("${invoice-processor.schedule.municipality-ids}")
-	private List<String> municipalityIds;
-
-	public InvoiceProcessor(final RaindanceIntegration raindanceIntegration,
+	public InvoiceProcessor(final InvoiceProcessorProperties properties,
+			final RaindanceIntegration raindanceIntegration,
 			final PartyIntegration partyIntegration,
 			final MessagingIntegration messagingIntegration,
-			final DbIntegration dbIntegration,
-			@Value("${invoice-processor.invoice-filename-prefixes:}") final List<String> invoiceFilenamePrefixes,
-			@Value("${invoice-processor.schedule.cron-expression:-}") final String cronExpression) {
+			final DbIntegration dbIntegration) {
 		this.raindanceIntegration = raindanceIntegration;
 		this.partyIntegration = partyIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.dbIntegration = dbIntegration;
-		this.invoiceFilenamePrefixes = invoiceFilenamePrefixes;
 
+		invoiceFilenamePrefixes = properties.invoiceFilenamePrefixes();
+		municipalityIds = properties.schedule().municipalityIds();
+
+		var cronExpression = properties.schedule().cronExpression();
 		if (!"-".equals(cronExpression)) {
 			var parsedCronExpression = parseCronExpression(cronExpression);
 			LOG.info("Invoice processor is ENABLED to run {}", parsedCronExpression);

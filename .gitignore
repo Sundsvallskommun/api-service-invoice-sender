@@ -51,4 +51,4 @@ target/
 .env
 
 # Spring
-application-default.properties
+application-default.*

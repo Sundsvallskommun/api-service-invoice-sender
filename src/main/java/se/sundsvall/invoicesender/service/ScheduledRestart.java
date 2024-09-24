@@ -1,8 +1,9 @@
 package se.sundsvall.invoicesender.service;
 
+import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -16,24 +17,25 @@ class ScheduledRestart {
 
     private static final Logger LOG = LoggerFactory.getLogger(ScheduledRestart.class);
 
+    private final InvoiceProcessorProperties properties;
     private ConfigurableApplicationContext context;
-    private final boolean enabled;
 
     ScheduledRestart(final ConfigurableApplicationContext context,
-      @Value("${scheduled-restart.enabled:false}") final boolean enabled) {
+            final InvoiceProcessorProperties properties) {
         this.context = context;
-        this.enabled = enabled;
+        this.properties = properties;
 
-        if (enabled) {
-            LOG.info("Scheduled restart is ENABLED");
+        var cronExpression = properties.restart().cronExpression();
+        if (properties.restart().enabled() && !"-".equals(cronExpression)) {
+            LOG.info("Scheduled restart is ENABLED to run {}", parseCronExpression(cronExpression));
         } else {
             LOG.info("Scheduled restart is DISABLED");
         }
     }
 
-    @Scheduled(cron = "${scheduled-restart.cron-expression:-}")
+    @Scheduled(cron = "${invoice-procssor.restart.cron-expression:-}")
     void restart() {
-        if (!enabled) {
+        if (!properties.restart().enabled()) {
             return;
         }
 
