@@ -27,7 +27,9 @@ class ScheduledRestart {
 
         var cronExpression = properties.restart().cronExpression();
         if (properties.restart().enabled() && !"-".equals(cronExpression)) {
-            LOG.info("Scheduled restart is ENABLED to run {}", parseCronExpression(cronExpression));
+            var parsedCronExpression = parseCronExpression(cronExpression);
+
+            LOG.info("Scheduled restart is ENABLED to run {}", parsedCronExpression);
         } else {
             LOG.info("Scheduled restart is DISABLED");
         }
