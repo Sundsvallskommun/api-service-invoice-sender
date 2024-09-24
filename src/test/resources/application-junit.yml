@@ -9,6 +9,17 @@ spring:
   flyway:
     enabled: false
 
+# Invoice processor schedule
+invoice-processor:
+  schedule:
+    municipality-ids: 1984
+    cron-expression: '0 0 3 * * MON-FRI'
+  restart:
+    enabled: true
+    cron-expression: '0 30 5 * * MON-FRI'
+  invoice-filename-prefixes:
+    - Faktura
+
 integration:
   # Raindance
   raindance:
