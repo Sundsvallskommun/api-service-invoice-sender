@@ -33,7 +33,7 @@ class ScheduledRestart {
         }
     }
 
-    @Scheduled(cron = "${invoice-procssor.restart.cron-expression:-}")
+    @Scheduled(cron = "${invoice-processor.restart.cron-expression:-}")
     void restart() {
         if (!properties.restart().enabled()) {
             return;

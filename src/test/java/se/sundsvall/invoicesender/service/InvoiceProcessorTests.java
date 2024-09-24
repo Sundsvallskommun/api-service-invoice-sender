@@ -1,6 +1,8 @@
 package se.sundsvall.invoicesender.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
+import static org.junit.platform.commons.util.ReflectionUtils.findMethod;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
@@ -68,6 +71,15 @@ class InvoiceProcessorTests {
 
 		invoiceProcessor = new InvoiceProcessor(mockProperties, mockRaindanceIntegration, mockPartyIntegration,
 			mockMessagingIntegration, mockDbIntegration);
+	}
+
+	@Test
+	void verifyScheduledAnnotationCronExpressionExpression() {
+		var scheduledAnnotation = findMethod(InvoiceProcessor.class, "run")
+			.flatMap(restartMethod -> findAnnotation(restartMethod, Scheduled.class))
+			.orElseThrow(() -> new IllegalStateException("Unable to find the 'restart' method on the " + InvoiceProcessor.class.getName() + " class"));
+
+		assertThat(scheduledAnnotation.cron()).isEqualTo("${invoice-processor.schedule.cron-expression:-}");
 	}
 
 	@Test
