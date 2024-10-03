@@ -180,6 +180,20 @@
 							</configOptions>
 						</configuration>
 					</execution>
+					<execution>
+						<id>citizen-api</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>
+								${project.basedir}/src/main/resources/integrations/citizen-api.yml
+							</inputSpec>
+							<configOptions>
+								<modelPackage>generated.se.sundsvall.citizen</modelPackage>
+							</configOptions>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 
