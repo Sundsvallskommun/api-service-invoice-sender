@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
 import static org.junit.platform.commons.util.ReflectionUtils.findMethod;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -33,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
@@ -53,6 +55,9 @@ class InvoiceProcessorTests {
 	private RaindanceIntegration mockRaindanceIntegration;
 
 	@Mock
+	private CitizenIntegration mockCitizenIntegration;
+
+	@Mock
 	private PartyIntegration mockPartyIntegration;
 
 	@Mock
@@ -69,8 +74,8 @@ class InvoiceProcessorTests {
 		when(mockProperties.schedule()).thenReturn(mockScheduleProperties);
 		when(mockProperties.invoiceFilenamePrefixes()).thenReturn(List.of("Faktura"));
 
-		invoiceProcessor = new InvoiceProcessor(mockProperties, mockRaindanceIntegration, mockPartyIntegration,
-			mockMessagingIntegration, mockDbIntegration);
+		invoiceProcessor = new InvoiceProcessor(mockProperties, mockRaindanceIntegration,
+			mockCitizenIntegration, mockPartyIntegration, mockMessagingIntegration, mockDbIntegration);
 	}
 
 	@Test
@@ -138,7 +143,34 @@ class InvoiceProcessorTests {
 			.extracting(Item::getRecipientLegalId)
 			.containsExactlyInAnyOrder(null, "456", "789", null);
 
-		verifyNoInteractions(mockRaindanceIntegration, mockPartyIntegration, mockDbIntegration, mockMessagingIntegration);
+		verifyNoInteractions(mockRaindanceIntegration, mockCitizenIntegration, mockPartyIntegration, mockDbIntegration, mockMessagingIntegration);
+	}
+
+	@Test
+	void removeProtectedIdentityItems() {
+		final var batch = new Batch()
+			.withLocalPath("somePath")
+			.withItems(List.of(
+				new Item("file1.pdf")
+					.withType(INVOICE)
+					.withStatus(RECIPIENT_LEGAL_ID_FOUND)
+					.withRecipientLegalId("legalId1"),
+				new Item("file2.pdf")
+					.withType(INVOICE)
+					.withStatus(RECIPIENT_LEGAL_ID_FOUND)
+					.withRecipientLegalId("legalId2")
+			));
+
+		when(mockCitizenIntegration.hasProtectedIdentity("legalId1")).thenReturn(false);
+		when(mockCitizenIntegration.hasProtectedIdentity("legalId2")).thenReturn(true);
+
+		invoiceProcessor.removeProtectedIdentityItems(batch);
+
+		assertThat(batch.getItems()).hasSize(1).extracting(Item::getFilename).containsOnly("file1.pdf");
+
+		verify(mockCitizenIntegration, times(2)).hasProtectedIdentity(anyString());
+		verifyNoMoreInteractions(mockCitizenIntegration);
+		verifyNoInteractions(mockPartyIntegration, mockDbIntegration, mockMessagingIntegration, mockRaindanceIntegration);
 	}
 
 	@Test
@@ -153,7 +185,7 @@ class InvoiceProcessorTests {
 				new Item("file2.pdf")
 					.withType(INVOICE)
 					.withStatus(RECIPIENT_LEGAL_ID_FOUND)
-					.withRecipientLegalId("legalId1"),
+					.withRecipientLegalId("legalId2"),
 				new Item("file3.pdf").withType(INVOICE),
 				new Item("file4.pdf")
 					.withType(INVOICE)
@@ -176,7 +208,7 @@ class InvoiceProcessorTests {
 
 		verify(mockPartyIntegration, times(2)).getPartyId(any(String.class), any(String.class));
 		verifyNoMoreInteractions(mockPartyIntegration);
-		verifyNoInteractions(mockDbIntegration, mockMessagingIntegration, mockRaindanceIntegration);
+		verifyNoInteractions(mockCitizenIntegration, mockDbIntegration, mockMessagingIntegration, mockRaindanceIntegration);
 	}
 
 	@Test
@@ -207,7 +239,7 @@ class InvoiceProcessorTests {
 
 		verify(mockMessagingIntegration, times(2)).sendInvoice(any(String.class), any(Item.class), any(String.class));
 		verifyNoMoreInteractions(mockMessagingIntegration);
-		verifyNoInteractions(mockPartyIntegration, mockDbIntegration, mockRaindanceIntegration);
+		verifyNoInteractions(mockCitizenIntegration, mockPartyIntegration, mockDbIntegration, mockRaindanceIntegration);
 	}
 
 	@Test
@@ -222,7 +254,7 @@ class InvoiceProcessorTests {
 		assertThat(result).isNotNull();
 		verify(mockDbIntegration).storeBatch(batchCaptor.capture(), any(String.class));
 		verifyNoMoreInteractions(mockDbIntegration);
-		verifyNoInteractions(mockRaindanceIntegration, mockPartyIntegration, mockMessagingIntegration);
+		verifyNoInteractions(mockRaindanceIntegration, mockCitizenIntegration, mockPartyIntegration, mockMessagingIntegration);
 
 		assertThat(batchCaptor.getValue().getCompletedAt()).isNotNull();
 	}

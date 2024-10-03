@@ -12,7 +12,7 @@ public class Batch {
     private String archivePath;
     private String basename;
     private byte[] data;
-    private List<Item> items;
+    private final List<Item> items = new ArrayList<>();
     private final LocalDateTime startedAt = LocalDateTime.now();
     private LocalDateTime completedAt;
 
@@ -99,20 +99,23 @@ public class Batch {
     }
 
     public Batch addItem(final Item item) {
-        if (items == null) {
-            items = new ArrayList<>();
-        }
         items.add(item);
         return this;
     }
 
+    public Batch removeItem(final Item item) {
+        items.remove(item);
+        return this;
+    }
+
     public Batch withItems(final List<Item> items) {
-        this.items = items;
+        setItems(items);
         return this;
     }
 
     public void setItems(final List<Item> items) {
-        this.items = items;
+        this.items.clear();
+        this.items.addAll(items);
     }
 
     public LocalDateTime getStartedAt() {
