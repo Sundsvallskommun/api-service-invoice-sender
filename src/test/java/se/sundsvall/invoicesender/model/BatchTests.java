@@ -56,11 +56,21 @@ class BatchTests {
     }
 
     @Test
-    void testAddItem() {
+    void addItem() {
         var batch = new Batch();
-        assertThat(batch.getItems()).isNull();
 
         batch.addItem(new Item("someItem"));
+        assertThat(batch.getItems()).hasSize(1);
+    }
+
+    @Test
+    void removeItem() {
+        var batch = new Batch();
+        batch.addItem(new Item("someItem"));
+        batch.addItem(new Item("someOtherItem"));
+
+        assertThat(batch.getItems()).hasSize(2);
+        batch.removeItem(new Item("someItem"));
         assertThat(batch.getItems()).hasSize(1);
     }
 }

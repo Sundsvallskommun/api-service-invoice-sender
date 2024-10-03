@@ -8,6 +8,7 @@ import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_FOU
 import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class Item {
@@ -111,6 +112,27 @@ public class Item {
 
     public void setRecipientPartyId(final String recipientPartyId) {
         this.recipientPartyId = recipientPartyId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Item item)) {
+            return false;
+        }
+        return type == item.type &&
+            status == item.status &&
+            Objects.equals(filename, item.filename) &&
+            Objects.equals(metadata, item.metadata) &&
+            Objects.equals(recipientLegalId, item.recipientLegalId) &&
+            Objects.equals(recipientPartyId, item.recipientPartyId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, status, filename, metadata, recipientLegalId, recipientPartyId);
     }
 
     public static class Metadata {
@@ -226,6 +248,29 @@ public class Item {
 
         public void setReminder(final boolean reminder) {
             this.reminder = reminder;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Metadata metadata)) {
+                return false;
+            }
+            return payable == metadata.payable &&
+                reminder == metadata.reminder &&
+                Objects.equals(invoiceNumber, metadata.invoiceNumber) &&
+                Objects.equals(invoiceDate, metadata.invoiceDate) &&
+                Objects.equals(dueDate, metadata.dueDate) &&
+                Objects.equals(accountNumber, metadata.accountNumber) &&
+                Objects.equals(paymentReference, metadata.paymentReference) &&
+                Objects.equals(totalAmount, metadata.totalAmount);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(invoiceNumber, invoiceDate, dueDate, accountNumber, paymentReference, totalAmount, payable, reminder);
         }
     }
 }

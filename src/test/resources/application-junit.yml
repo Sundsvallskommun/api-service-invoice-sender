@@ -38,6 +38,14 @@ integration:
         process: false
     local-work-directory: /tmp/raindance/incoming
 
+  # Citizen
+  citizen:
+    url: http://something.com/citizen
+    oauth2:
+      token-url: http://something.com/token
+      client-id: someClientId
+      client-secret: someClientSecret
+
   # Party
   party:
     url: http://something.com/party

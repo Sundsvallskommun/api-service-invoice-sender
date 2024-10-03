@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
@@ -56,7 +57,7 @@ public class InvoiceProcessor {
 	private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
 	private final RaindanceIntegration raindanceIntegration;
-
+	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
 
 	private final MessagingIntegration messagingIntegration;
@@ -68,10 +69,12 @@ public class InvoiceProcessor {
 
 	public InvoiceProcessor(final InvoiceProcessorProperties properties,
 			final RaindanceIntegration raindanceIntegration,
+			final CitizenIntegration citizenIntegration,
 			final PartyIntegration partyIntegration,
 			final MessagingIntegration messagingIntegration,
 			final DbIntegration dbIntegration) {
 		this.raindanceIntegration = raindanceIntegration;
+		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.dbIntegration = dbIntegration;
@@ -104,6 +107,7 @@ public class InvoiceProcessor {
 		var batches = raindanceIntegration.readBatches(date);
 
 		var processedBatches = new ArrayList<BatchDto>();
+
 		for (var batch : batches) {
 			if (batch.isProcessingEnabled()) {
 				LOG.info("Processing batch {}", batch.getBasename() + BATCH_FILE_SUFFIX);
@@ -117,7 +121,9 @@ public class InvoiceProcessor {
 				extractItemMetadata(batch);
 				// Extract recipient legal id:s if possible
 				extractInvoiceRecipientLegalIds(batch);
-				// Get the recipient party id from the invoices where the recipient legal id is set
+				// Remove any items where the recipient has a protected identity
+				removeProtectedIdentityItems(batch);
+				// Get the recipient party id from the invoices that are left and where the recipient legal id is set
 				fetchInvoiceRecipientPartyIds(batch, municipalityId);
 				// Send digital mail for the invoices where the recipient party id is set
 				sendDigitalInvoices(batch, municipalityId);
@@ -238,6 +244,16 @@ public class InvoiceProcessor {
 				LOG.info("Failed to extract recipient legal id for item {}", item.getFilename());
 
 				item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
+			}
+		});
+	}
+
+	void removeProtectedIdentityItems(final Batch batch) {
+		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> {
+			if (citizenIntegration.hasProtectedIdentity(item.getRecipientLegalId())) {
+				LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
+
+				batch.removeItem(item);
 			}
 		});
 	}
