@@ -21,7 +21,7 @@ import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.model.ItemType.OTHER;
 import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
-import static se.sundsvall.invoicesender.util.PersonUtil.isValidLegalId;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
 
 import java.io.IOException;
 import java.nio.file.Files;

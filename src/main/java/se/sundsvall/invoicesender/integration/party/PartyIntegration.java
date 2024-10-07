@@ -1,7 +1,7 @@
 package se.sundsvall.invoicesender.integration.party;
 
 import static generated.se.sundsvall.party.PartyType.PRIVATE;
-import static se.sundsvall.invoicesender.util.PersonUtil.addCenturyDigitsToLegalId;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.addCenturyDigitsToLegalId;
 
 import java.util.Optional;
 

@@ -7,12 +7,12 @@ import java.time.format.DateTimeParseException;
 import org.apache.commons.validator.routines.checkdigit.CheckDigitException;
 import org.apache.commons.validator.routines.checkdigit.LuhnCheckDigit;
 
-public final class PersonUtil {
+public final class LegalIdUtil {
 
     private static final LuhnCheckDigit LUHN = new LuhnCheckDigit();
     private static final DateTimeFormatter DATE_PART_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    private PersonUtil() { }
+    private LegalIdUtil() { }
 
     public static String addCenturyDigitsToLegalId(final String legalId) {
         // Strip everything but digits from the legal id

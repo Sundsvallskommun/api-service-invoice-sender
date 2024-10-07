@@ -2,7 +2,7 @@ package se.sundsvall.invoicesender.integration.citizen;
 
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
-import static se.sundsvall.invoicesender.util.PersonUtil.addCenturyDigitsToLegalId;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.addCenturyDigitsToLegalId;
 
 import org.springframework.stereotype.Component;
 

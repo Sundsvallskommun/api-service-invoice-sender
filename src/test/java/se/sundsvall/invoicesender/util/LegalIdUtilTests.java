@@ -8,18 +8,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class PersonUtilTests {
+class LegalIdUtilTests {
 
     @ParameterizedTest
     @MethodSource("argumentsForAddCenturyDigitsToLegalId")
     void addCenturyDigitsToLegalId(final String legalId, final String expected) {
-        assertThat(PersonUtil.addCenturyDigitsToLegalId(legalId)).isEqualTo(expected);
+        assertThat(LegalIdUtil.addCenturyDigitsToLegalId(legalId)).isEqualTo(expected);
     }
 
     @ParameterizedTest
     @MethodSource("argumentsForIsValidLegalId")
     void isValidLegalId(final String legalId, final boolean valid) {
-        assertThat(PersonUtil.isValidLegalId(legalId)).isEqualTo(valid);
+        assertThat(LegalIdUtil.isValidLegalId(legalId)).isEqualTo(valid);
     }
 
     static Stream<Arguments> argumentsForAddCenturyDigitsToLegalId() {
@@ -36,7 +36,6 @@ class PersonUtilTests {
             Arguments.of("not-containing-digits", false),   // No digits at all
             Arguments.of("12345", false),                   // Too short
             Arguments.of("12345671234567", false),          // Too long
-            Arguments.of("195513071770", false),            // Invalid date part with 13 as the month field
             Arguments.of("195513071770", false),            // Invalid date part with 13 as the month field
             Arguments.of("8701162383", true),               // Valid 10-digit legal id
             Arguments.of("950211-2387", true),              // Valid 10-digit legal id with dash
