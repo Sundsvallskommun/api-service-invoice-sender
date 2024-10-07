@@ -89,6 +89,7 @@
 			<groupId>org.thymeleaf</groupId>
 			<artifactId>thymeleaf-spring6</artifactId>
 		</dependency>
+
 		<!-- Other -->
 		<dependency>
 			<groupId>eu.agno3.jcifs</groupId>
