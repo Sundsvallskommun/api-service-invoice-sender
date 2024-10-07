@@ -21,6 +21,7 @@ import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.model.ItemType.OTHER;
 import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -121,6 +122,8 @@ public class InvoiceProcessor {
 				extractItemMetadata(batch);
 				// Extract recipient legal id:s if possible
 				extractInvoiceRecipientLegalIds(batch);
+				// Remove any items that have invalid recipient legal ids
+				removeItemsWithInvalidLegalIds(batch);
 				// Remove any items where the recipient has a protected identity
 				removeProtectedIdentityItems(batch);
 				// Get the recipient party id from the invoices that are left and where the recipient legal id is set
@@ -244,6 +247,16 @@ public class InvoiceProcessor {
 				LOG.info("Failed to extract recipient legal id for item {}", item.getFilename());
 
 				item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
+			}
+		});
+	}
+
+	void removeItemsWithInvalidLegalIds(final Batch batch) {
+		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> {
+			if (!isValidLegalId(item.getRecipientLegalId())) {
+				LOG.info("Invalid recipient legal id - skipping item {}", item.getFilename());
+
+				batch.removeItem(item);
 			}
 		});
 	}

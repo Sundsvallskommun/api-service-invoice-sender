@@ -28,9 +28,9 @@ class CitizenIntegrationTests {
 
 	@Test
 	void hasProtectedIdentity() {
-		var personalNumber1 = "personalNumber1";
+		var personalNumber1 = "190000000001";
 		var personId1 = "personId1";
-		var personalNumber2 = "personalNumber2";
+		var personalNumber2 = "190000000002";
 		var personId2 = "personId2";
 
 		when(mockPersonIdResponse.getStatusCode()).thenReturn(NO_CONTENT).thenReturn(OK);
@@ -48,5 +48,17 @@ class CitizenIntegrationTests {
 		verify(mockCitizenClient).getPerson(personId2);
 		verify(mockPersonIdResponse, times(2)).getStatusCode();
 		verifyNoMoreInteractions(mockCitizenClient, mockPersonIdResponse);
+	}
+
+	@Test
+	void hasProtectedIdentityWhenCitizenClientThrowsException() {
+		var personalNumber = "190000000001";
+
+		when(mockCitizenClient.getPersonId(personalNumber)).thenThrow(new NullPointerException());
+
+		assertThat(citizenIntegration.hasProtectedIdentity(personalNumber)).isFalse();
+
+		verify(mockCitizenClient).getPersonId(personalNumber);
+		verifyNoMoreInteractions(mockCitizenClient);
 	}
 }

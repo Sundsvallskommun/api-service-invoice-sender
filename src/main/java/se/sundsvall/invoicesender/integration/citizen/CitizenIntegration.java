@@ -1,17 +1,15 @@
 package se.sundsvall.invoicesender.integration.citizen;
 
+import static org.apache.commons.lang3.StringUtils.strip;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.addCenturyDigitsToLegalId;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CitizenIntegration {
 
     static final String INTEGRATION_NAME = "citizen";
-
-    private static final Logger LOG = LoggerFactory.getLogger(CitizenIntegration.class);
 
     private final CitizenClient citizenClient;
 
@@ -20,12 +18,21 @@ public class CitizenIntegration {
     }
 
     public boolean hasProtectedIdentity(final String personalNumber) {
-        // Get the person id
-        var personId = citizenClient.getPersonId(personalNumber);
-        // Get the person data, or rather just the HTTP status code for it - a request for data for
-        // a protected identity person yields a 204 No Content
-        var personResponse = citizenClient.getPerson(personId);
+        var personalNumberWithCenturyDigits = addCenturyDigitsToLegalId(personalNumber);
 
-        return personResponse.getStatusCode().isSameCodeAs(NO_CONTENT);
+        try {
+            // Get the person id
+            var personId = citizenClient.getPersonId(personalNumberWithCenturyDigits);
+            // Remove the quotation marks that exist for whatever reason from the person id
+            var cleanPersonId = strip(personId, "\"");
+            // Get the person data, or rather just the HTTP status code for it - a request for data for
+            // a protected identity person yields a 204 No Content
+            var personResponse = citizenClient.getPerson(cleanPersonId);
+
+            return personResponse.getStatusCode().isSameCodeAs(NO_CONTENT);
+        } catch (Exception e) {
+            // If anything goes wrong - assume that the recipient doesn't have a protected identity
+            return false;
+        }
     }
 }
