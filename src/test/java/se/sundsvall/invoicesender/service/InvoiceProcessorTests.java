@@ -147,7 +147,7 @@ class InvoiceProcessorTests {
 	}
 
 	@Test
-	void removeProtectedIdentityItems() {
+	void markProtectedIdentityItems() {
 		final var batch = new Batch()
 			.withLocalPath("somePath")
 			.withItems(List.of(
@@ -164,9 +164,9 @@ class InvoiceProcessorTests {
 		when(mockCitizenIntegration.hasProtectedIdentity("legalId1")).thenReturn(false);
 		when(mockCitizenIntegration.hasProtectedIdentity("legalId2")).thenReturn(true);
 
-		invoiceProcessor.removeProtectedIdentityItems(batch);
+		invoiceProcessor.markProtectedIdentityItems(batch);
 
-		assertThat(batch.getItems()).hasSize(1).extracting(Item::getFilename).containsOnly("file1.pdf");
+		assertThat(batch.getItems()).hasSize(2).extracting(Item::getStatus).containsExactlyInAnyOrder(RECIPIENT_LEGAL_ID_FOUND, RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 
 		verify(mockCitizenIntegration, times(2)).hasProtectedIdentity(anyString());
 		verifyNoMoreInteractions(mockCitizenIntegration);
