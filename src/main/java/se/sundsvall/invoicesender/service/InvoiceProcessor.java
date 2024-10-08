@@ -123,9 +123,9 @@ public class InvoiceProcessor {
 				// Extract recipient legal id:s if possible
 				extractInvoiceRecipientLegalIds(batch);
 				// Remove any items that have invalid recipient legal ids
-				removeItemsWithInvalidLegalIds(batch);
+				markItemsWithInvalidLegalIds(batch);
 				// Remove any items where the recipient has a protected identity
-				removeProtectedIdentityItems(batch);
+				markProtectedIdentityItems(batch);
 				// Get the recipient party id from the invoices that are left and where the recipient legal id is set
 				fetchInvoiceRecipientPartyIds(batch, municipalityId);
 				// Send digital mail for the invoices where the recipient party id is set
@@ -251,22 +251,22 @@ public class InvoiceProcessor {
 		});
 	}
 
-	void removeItemsWithInvalidLegalIds(final Batch batch) {
+	void markItemsWithInvalidLegalIds(final Batch batch) {
 		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> {
 			if (!isValidLegalId(item.getRecipientLegalId())) {
 				LOG.info("Invalid recipient legal id - skipping item {}", item.getFilename());
 
-				batch.removeItem(item);
+				item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 			}
 		});
 	}
 
-	void removeProtectedIdentityItems(final Batch batch) {
+	void markProtectedIdentityItems(final Batch batch) {
 		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> {
 			if (citizenIntegration.hasProtectedIdentity(item.getRecipientLegalId())) {
 				LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
 
-				batch.removeItem(item);
+				item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 			}
 		});
 	}
