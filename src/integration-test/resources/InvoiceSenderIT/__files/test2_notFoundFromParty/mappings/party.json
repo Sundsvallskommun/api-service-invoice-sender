@@ -1,12 +1,10 @@
 {
-  "request": {
-    "method": "GET",
-    "url": "/party/PRIVATE/198403092383/partyId"
-  },
-  "response": {
-    "headers": {
-      "Content-Type": "text/plain"
-    },
-    "status": "404"
-  }
+	"request": {
+		"method": "GET",
+		"url": "/party/PRIVATE/198403092383/partyId"
+	},
+	"response": {
+		"headers": {"Content-Type": "text/plain"},
+		"status": "404"
+	}
 }

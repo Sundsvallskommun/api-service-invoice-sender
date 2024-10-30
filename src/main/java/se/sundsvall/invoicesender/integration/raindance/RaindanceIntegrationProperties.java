@@ -13,42 +13,31 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @ConfigurationProperties("integration.raindance")
 record RaindanceIntegrationProperties(
 
-        @NotBlank
-        String host,
-        @DefaultValue("445")
-        int port,
-        @NotBlank
-        String domain,
-        @NotBlank
-        String username,
-        @NotBlank
-        String password,
+	@NotBlank String host,
+	@DefaultValue("445") int port,
+	@NotBlank String domain,
+	@NotBlank String username,
+	@NotBlank String password,
 
-        @NotBlank
-        String share,
+	@NotBlank String share,
 
-        @NotEmpty
-        Map<String, BatchSetup> batchSetup,
+	@NotEmpty Map<String, BatchSetup> batchSetup,
 
-        @DefaultValue("PT30S")
-        Duration connectTimeout,
-        @DefaultValue("PT30S")
-        Duration responseTimeout,
+	@DefaultValue("PT30S") Duration connectTimeout,
+	@DefaultValue("PT30S") Duration responseTimeout,
 
-        @NotBlank
-        String localWorkDirectory,
+	@NotBlank String localWorkDirectory,
 
-        @DefaultValue("")
-        String outputFileExtraSuffix) {
+	@DefaultValue("") String outputFileExtraSuffix) {
 
-    record BatchSetup(@NotBlank String targetPath, String archivePath, boolean process) { }
+	record BatchSetup(@NotBlank String targetPath, String archivePath, boolean process) {}
 
-    Properties jcifsProperties() {
-        var jcifsProperties = new Properties();
-        jcifsProperties.setProperty("jcifs.smb.client.connTimeout", Long.toString(connectTimeout().toMillis()));
-        jcifsProperties.setProperty("jcifs.smb.client.responseTimeout", Long.toString(responseTimeout().toMillis()));
-        jcifsProperties.setProperty("jcifs.smb.client.minVersion", "SMB300");
-        jcifsProperties.setProperty("jcifs.smb.client.maxVersion", "SMB311");
-        return jcifsProperties;
-    }
+	Properties jcifsProperties() {
+		var jcifsProperties = new Properties();
+		jcifsProperties.setProperty("jcifs.smb.client.connTimeout", Long.toString(connectTimeout().toMillis()));
+		jcifsProperties.setProperty("jcifs.smb.client.responseTimeout", Long.toString(responseTimeout().toMillis()));
+		jcifsProperties.setProperty("jcifs.smb.client.minVersion", "SMB300");
+		jcifsProperties.setProperty("jcifs.smb.client.maxVersion", "SMB311");
+		return jcifsProperties;
+	}
 }

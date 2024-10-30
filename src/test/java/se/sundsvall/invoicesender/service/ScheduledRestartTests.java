@@ -9,12 +9,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 class ScheduledRestartTests {
 
-    @Test
-    void verifyScheduledAnnotationCronExpressionExpression() {
-        var scheduledAnnotation = findMethod(ScheduledRestart.class, "restart")
-            .flatMap(restartMethod -> findAnnotation(restartMethod, Scheduled.class))
-            .orElseThrow(() -> new IllegalStateException("Unable to find the 'restart' method on the " + ScheduledRestart.class.getName() + " class"));
+	@Test
+	void verifyScheduledAnnotationCronExpressionExpression() {
+		var scheduledAnnotation = findMethod(ScheduledRestart.class, "restart")
+			.flatMap(restartMethod -> findAnnotation(restartMethod, Scheduled.class))
+			.orElseThrow(() -> new IllegalStateException("Unable to find the 'restart' method on the " + ScheduledRestart.class.getName() + " class"));
 
-        assertThat(scheduledAnnotation.cron()).isEqualTo("${invoice-processor.restart.cron-expression:-}");
-    }
+		assertThat(scheduledAnnotation.cron()).isEqualTo("${invoice-processor.restart.cron-expression:-}");
+	}
 }

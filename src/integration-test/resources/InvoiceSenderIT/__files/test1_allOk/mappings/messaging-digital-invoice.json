@@ -1,25 +1,19 @@
 {
-  "request": {
-    "method": "POST",
-    "url": "/messaging/digital-invoice",
-    "bodyPatterns": [{
-      "matchesJsonPath": "$.party[?(@.partyId == '88c1f3c1-5bbb-4c18-b061-94e891fdeaf4')]"
-    }]
-  },
-  "response": {
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "status": "201",
-    "jsonBody": {
-      "messageId": "7d3c7c0a-f218-42d4-b446-36595a20c759",
-      "deliveries": [
-        {
-          "messageType": "DIGITAL_INVOICE",
-          "deliveryId": "608dac91-10b5-4352-9c9a-c94d1b0ed125",
-          "status": "SENT"
-        }
-      ]
-    }
-  }
+	"request": {
+		"method": "POST",
+		"bodyPatterns": [{"matchesJsonPath": "$.party[?(@.partyId == '88c1f3c1-5bbb-4c18-b061-94e891fdeaf4')]"}],
+		"url": "/messaging/digital-invoice"
+	},
+	"response": {
+		"headers": {"Content-Type": "application/json"},
+		"jsonBody": {
+			"messageId": "7d3c7c0a-f218-42d4-b446-36595a20c759",
+			"deliveries": [{
+				"deliveryId": "608dac91-10b5-4352-9c9a-c94d1b0ed125",
+				"messageType": "DIGITAL_INVOICE",
+				"status": "SENT"
+			}]
+		},
+		"status": "201"
+	}
 }

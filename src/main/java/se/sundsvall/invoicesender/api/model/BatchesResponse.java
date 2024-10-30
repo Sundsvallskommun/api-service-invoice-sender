@@ -7,16 +7,17 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 
-@JsonPropertyOrder({"batches", "pagination"})
+@JsonPropertyOrder({
+	"batches", "pagination"
+})
 public record BatchesResponse(
 
-    List<BatchDto> batches,
-    @JsonProperty("pagination")
-    PaginationInfo paginationInfo) {
+	List<BatchDto> batches,
+	@JsonProperty("pagination") PaginationInfo paginationInfo) {
 
-    public record PaginationInfo(
-        int page,
-        int pageSize,
-        int totalPages,
-        long totalElements) { }
+	public record PaginationInfo(
+		int page,
+		int pageSize,
+		int totalPages,
+		long totalElements) {}
 }

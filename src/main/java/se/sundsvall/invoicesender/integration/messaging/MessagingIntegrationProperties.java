@@ -19,47 +19,31 @@ import se.sundsvall.invoicesender.integration.Oauth2;
 @ConfigurationProperties("integration.messaging")
 record MessagingIntegrationProperties(
 
-        @NotBlank
-        String url,
+	@NotBlank String url,
 
-        @DefaultValue("PT10S")
-        Duration connectTimeout,
+	@DefaultValue("PT10S") Duration connectTimeout,
 
-        @DefaultValue("PT30S")
-        Duration readTimeout,
+	@DefaultValue("PT30S") Duration readTimeout,
 
-        @Valid
-        @NotNull
-        Oauth2 oauth2,
+	@Valid @NotNull Oauth2 oauth2,
 
-        @Valid
-        @NotNull
-        Invoice invoice,
+	@Valid @NotNull Invoice invoice,
 
-        @Valid
-        @NotNull
-        StatusReport statusReport) {
+	@Valid @NotNull StatusReport statusReport) {
 
-    record Invoice(
+	record Invoice(
 
-        @NotBlank
-        String subject,
+		@NotBlank String subject,
 
-        @DefaultValue("Faktura #")
-        String referencePrefix) { }
+		@DefaultValue("Faktura #") String referencePrefix) {}
 
-    record StatusReport(
+	record StatusReport(
 
-        @NotBlank
-        String senderName,
+		@NotBlank String senderName,
 
-        @Email
-        @DefaultValue("noreply@sundsvall.se")
-        String senderEmailAddress,
+		@Email @DefaultValue("noreply@sundsvall.se") String senderEmailAddress,
 
-        @NotEmpty
-        List<@Email @NotBlank String> recipientEmailAddresses,
+		@NotEmpty List<@Email @NotBlank String> recipientEmailAddresses,
 
-        @DefaultValue("Utskick av fakturor")
-        String subjectPrefix) { }
+		@DefaultValue("Utskick av fakturor") String subjectPrefix) {}
 }

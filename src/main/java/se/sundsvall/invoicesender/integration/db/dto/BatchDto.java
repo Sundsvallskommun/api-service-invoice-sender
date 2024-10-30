@@ -9,13 +9,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public record BatchDto(
 
-    Integer id,
-    String basename,
-    @JsonFormat(shape = STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime startedAt,
-    @JsonFormat(shape = STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime completedAt,
-    long totalItems,
-    long sentItems,
-    @JsonIgnore
-    boolean processingEnabled) { }
+	Integer id,
+	String basename,
+	@JsonFormat(shape = STRING, pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startedAt,
+	@JsonFormat(shape = STRING, pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime completedAt,
+	long totalItems,
+	long sentItems,
+	@JsonIgnore boolean processingEnabled) {}

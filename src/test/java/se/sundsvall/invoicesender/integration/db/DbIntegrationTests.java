@@ -63,7 +63,7 @@ class DbIntegrationTests {
 	@Test
 	void testStoreBatch() {
 		final var batchEntityCaptor = ArgumentCaptor.forClass(BatchEntity.class);
-    
+
 		final var municipalityId = "2281";
 		final var batch = new Batch()
 			.withBasename("someBasename")
@@ -73,8 +73,7 @@ class DbIntegrationTests {
 				new Item("file2.pdf").withType(INVOICE).withStatus(SENT),
 				new Item("file3.pdf").withType(INVOICE).withStatus(IGNORED),
 				new Item("file4.pdf").withType(INVOICE).withStatus(NOT_SENT),
-				new Item("file5.pdf").withType(INVOICE).withStatus(NOT_SENT)
-			));
+				new Item("file5.pdf").withType(INVOICE).withStatus(NOT_SENT)));
 		batch.setCompleted();
 
 		dbIntegration.storeBatch(batch, municipalityId);

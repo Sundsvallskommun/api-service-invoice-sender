@@ -9,51 +9,51 @@ import org.junit.jupiter.api.Test;
 
 class BatchEntityTests {
 
-    @Test
-    void testWithersAndGetters() {
-        assertThat(new BatchEntity().getStartedAt()).isNotNull();
+	@Test
+	void testWithersAndGetters() {
+		assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
-        var now = LocalDateTime.now();
+		var now = LocalDateTime.now();
 
-        var batchEntity = new BatchEntity()
-            .withId(12345)
-            .withBasename("someBasename")
-            .withStartedAt(now)
-            .withCompletedAt(now.plusSeconds(30L))
-            .withItems(List.of(new ItemEntity()))
-            .withSentItems(456L)
-            .withTotalItems(789L);
+		var batchEntity = new BatchEntity()
+			.withId(12345)
+			.withBasename("someBasename")
+			.withStartedAt(now)
+			.withCompletedAt(now.plusSeconds(30L))
+			.withItems(List.of(new ItemEntity()))
+			.withSentItems(456L)
+			.withTotalItems(789L);
 
-        assertThat(batchEntity.getId()).isEqualTo(12345);
-        assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
-        assertThat(batchEntity.getStartedAt()).isEqualTo(now);
-        assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
-        assertThat(batchEntity.getItems()).hasSize(1);
-        assertThat(batchEntity.getSentItems()).isEqualTo(456L);
-        assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
-    }
+		assertThat(batchEntity.getId()).isEqualTo(12345);
+		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
+		assertThat(batchEntity.getStartedAt()).isEqualTo(now);
+		assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
+		assertThat(batchEntity.getItems()).hasSize(1);
+		assertThat(batchEntity.getSentItems()).isEqualTo(456L);
+		assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
+	}
 
-    @Test
-    void testSettersAndGetters() {
-        assertThat(new BatchEntity().getStartedAt()).isNotNull();
+	@Test
+	void testSettersAndGetters() {
+		assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
-        var now = LocalDateTime.now();
+		var now = LocalDateTime.now();
 
-        var batchEntity = new BatchEntity();
-        batchEntity.setId(12345);
-        batchEntity.setBasename("someBasename");
-        batchEntity.setStartedAt(now);
-        batchEntity.setCompletedAt(now.plusSeconds(30L));
-        batchEntity.setItems(List.of(new ItemEntity()));
-        batchEntity.setSentItems(456L);
-        batchEntity.setTotalItems(789L);
+		var batchEntity = new BatchEntity();
+		batchEntity.setId(12345);
+		batchEntity.setBasename("someBasename");
+		batchEntity.setStartedAt(now);
+		batchEntity.setCompletedAt(now.plusSeconds(30L));
+		batchEntity.setItems(List.of(new ItemEntity()));
+		batchEntity.setSentItems(456L);
+		batchEntity.setTotalItems(789L);
 
-        assertThat(batchEntity.getId()).isEqualTo(12345);
-        assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
-        assertThat(batchEntity.getStartedAt()).isEqualTo(now);
-        assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
-        assertThat(batchEntity.getItems()).hasSize(1);
-        assertThat(batchEntity.getSentItems()).isEqualTo(456L);
-        assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
-    }
+		assertThat(batchEntity.getId()).isEqualTo(12345);
+		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
+		assertThat(batchEntity.getStartedAt()).isEqualTo(now);
+		assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
+		assertThat(batchEntity.getItems()).hasSize(1);
+		assertThat(batchEntity.getSentItems()).isEqualTo(456L);
+		assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
+	}
 }

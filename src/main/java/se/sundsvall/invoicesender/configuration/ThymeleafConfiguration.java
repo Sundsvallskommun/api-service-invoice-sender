@@ -12,19 +12,19 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
 @Configuration
 class ThymeleafConfiguration {
 
-    @Bean
-    ITemplateResolver templateResolver() {
-        var templateResolver = new SpringResourceTemplateResolver();
-        templateResolver.setCharacterEncoding(UTF_8.name());
-        templateResolver.setPrefix("classpath:/templates/");
-        templateResolver.setSuffix(".html");
-        return templateResolver;
-    }
+	@Bean
+	ITemplateResolver templateResolver() {
+		var templateResolver = new SpringResourceTemplateResolver();
+		templateResolver.setCharacterEncoding(UTF_8.name());
+		templateResolver.setPrefix("classpath:/templates/");
+		templateResolver.setSuffix(".html");
+		return templateResolver;
+	}
 
-    @Bean
-    ITemplateEngine templateEngine() {
-        var templateEngine = new SpringTemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver());
-        return templateEngine;
-    }
+	@Bean
+	ITemplateEngine templateEngine() {
+		var templateEngine = new SpringTemplateEngine();
+		templateEngine.setTemplateResolver(templateResolver());
+		return templateEngine;
+	}
 }
