@@ -61,6 +61,8 @@ public class InvoiceProcessor {
 
 	private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
+	private static final String DISABLED_CRON = "-";
+
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
 	private final MessagingIntegration messagingIntegration;
@@ -70,11 +72,11 @@ public class InvoiceProcessor {
 	private final Map<String, List<String>> invoiceFilenamePrefixes = new HashMap<>();
 
 	public InvoiceProcessor(final TaskScheduler taskScheduler,
-			final RaindanceIntegrationProperties properties,
-			final CitizenIntegration citizenIntegration,
-			final PartyIntegration partyIntegration,
-			final MessagingIntegration messagingIntegration,
-			final DbIntegration dbIntegration) {
+		final RaindanceIntegrationProperties properties,
+		final CitizenIntegration citizenIntegration,
+		final PartyIntegration partyIntegration,
+		final MessagingIntegration messagingIntegration,
+		final DbIntegration dbIntegration) {
 		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -89,6 +91,13 @@ public class InvoiceProcessor {
 
 			raindanceEnvironment.batchSetup().forEach((batchName, batchSetup) -> {
 				var cronExpression = batchSetup.scheduling().cronExpression();
+
+				// Check if the batch is disabled
+				if (DISABLED_CRON.equals(cronExpression)) {
+					LOG.info("Batch with prefix {} is disabled", batchName);
+					return;
+				}
+
 				var parsedCronExpression = parseCronExpression(cronExpression);
 				LOG.info("Scheduling run for batches with prefix {} {}", batchName, parsedCronExpression);
 
@@ -104,6 +113,24 @@ public class InvoiceProcessor {
 				}, cronTrigger);
 			});
 		});
+	}
+
+	/**
+	 * Runs the invoice processor for the given date, municipality id and each configured batch-setup.
+	 * 
+	 * @param date           the date.
+	 * @param municipalityId the municipality id.
+	 */
+	public void run(final LocalDate date, final String municipalityId) {
+		raindanceIntegrations.get(municipalityId).getBatchSetups()
+			.forEach(batchName -> {
+				LOG.info("Running batch with prefix {} for municipality {}", batchName, municipalityId);
+				try {
+					run(date, municipalityId, batchName);
+				} catch (IOException e) {
+					LOG.error("Failed to process invoice batch with prefix {} for municipality {}", batchName, municipalityId, e);
+				}
+			});
 	}
 
 	public void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
@@ -235,8 +262,7 @@ public class InvoiceProcessor {
 				.withReminder(reminder)
 				.withAccountNumber(accountNumber)
 				.withPaymentReference(paymentReference)
-				.withTotalAmount(totalAmount)
-			);
+				.withTotalAmount(totalAmount));
 		});
 	}
 
@@ -279,18 +305,17 @@ public class InvoiceProcessor {
 	}
 
 	void fetchInvoiceRecipientPartyIds(final Batch batch, final String municipalityId) {
-		getInvoiceItemsWithLegalIdSet(batch).forEach(item ->
-			partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
-				.ifPresentOrElse(partyId -> {
-					LOG.info("Fetched recipient party id for item {}", item.getFilename());
+		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
+			.ifPresentOrElse(partyId -> {
+				LOG.info("Fetched recipient party id for item {}", item.getFilename());
 
-					item.setRecipientPartyId(partyId);
-					item.setStatus(RECIPIENT_PARTY_ID_FOUND);
-				}, () -> {
-					LOG.info("Failed to fetch recipient party id for item {}", item.getFilename());
+				item.setRecipientPartyId(partyId);
+				item.setStatus(RECIPIENT_PARTY_ID_FOUND);
+			}, () -> {
+				LOG.info("Failed to fetch recipient party id for item {}", item.getFilename());
 
-					item.setStatus(RECIPIENT_PARTY_ID_NOT_FOUND);
-				}));
+				item.setStatus(RECIPIENT_PARTY_ID_NOT_FOUND);
+			}));
 	}
 
 	void sendDigitalInvoices(final Batch batch, final String municipalityId) {

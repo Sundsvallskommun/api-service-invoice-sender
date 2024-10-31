@@ -8,8 +8,6 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "invoice-processor.restart")
 record ScheduledRestartProperties(
 
-    @DefaultValue("false")
-    boolean enabled,
+	@DefaultValue("false") boolean enabled,
 
-    @DefaultValue("-")
-    String cronExpression) { }
+	@DefaultValue("-") String cronExpression) {}

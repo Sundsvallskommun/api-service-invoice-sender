@@ -6,10 +6,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.noContent;
 import static org.springframework.http.ResponseEntity.ok;
 
-import java.io.IOException;
 import java.time.LocalDate;
-
-import jakarta.validation.constraints.Positive;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +33,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 
 @Tag(name = "Batch Resources")
 @RestController
@@ -66,8 +64,8 @@ class BatchResources {
 		})
 	@PostMapping("/trigger/{date}")
 	ResponseEntity<Void> triggerBatch(
-			@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-			@PathVariable("date") final LocalDate date) throws IOException {
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@PathVariable("date") final LocalDate date) {
 		invoiceProcessor.run(date, municipalityId);
 
 		return ok().build();

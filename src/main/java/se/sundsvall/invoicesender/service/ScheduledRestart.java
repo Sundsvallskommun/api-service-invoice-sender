@@ -15,41 +15,41 @@ import se.sundsvall.invoicesender.Application;
 @Component
 class ScheduledRestart {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ScheduledRestart.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ScheduledRestart.class);
 
-    private final ScheduledRestartProperties properties;
-    private ConfigurableApplicationContext context;
+	private final ScheduledRestartProperties properties;
+	private ConfigurableApplicationContext context;
 
-    ScheduledRestart(final ConfigurableApplicationContext context,
-            final ScheduledRestartProperties properties) {
-        this.context = context;
-        this.properties = properties;
+	ScheduledRestart(final ConfigurableApplicationContext context,
+		final ScheduledRestartProperties properties) {
+		this.context = context;
+		this.properties = properties;
 
-        var cronExpression = properties.cronExpression();
-        if (properties.enabled() && !"-".equals(cronExpression)) {
-            var parsedCronExpression = parseCronExpression(cronExpression);
+		var cronExpression = properties.cronExpression();
+		if (properties.enabled() && !"-".equals(cronExpression)) {
+			var parsedCronExpression = parseCronExpression(cronExpression);
 
-            LOG.info("Scheduled restart is ENABLED to run {}", parsedCronExpression);
-        } else {
-            LOG.info("Scheduled restart is DISABLED");
-        }
-    }
+			LOG.info("Scheduled restart is ENABLED to run {}", parsedCronExpression);
+		} else {
+			LOG.info("Scheduled restart is DISABLED");
+		}
+	}
 
-    @Scheduled(cron = "${invoice-processor.restart.cron-expression:-}")
-    void restart() {
-        if (!properties.enabled()) {
-            return;
-        }
+	@Scheduled(cron = "${invoice-processor.restart.cron-expression:-}")
+	void restart() {
+		if (!properties.enabled()) {
+			return;
+		}
 
-        LOG.info("Restarting application");
+		LOG.info("Restarting application");
 
-        var args = context.getBean(ApplicationArguments.class);
+		var args = context.getBean(ApplicationArguments.class);
 
-        var thread = new Thread(() -> {
-            context.close();
-            context = SpringApplication.run(Application.class, args.getSourceArgs());
-        });
-        thread.setDaemon(false);
-        thread.start();
-    }
+		var thread = new Thread(() -> {
+			context.close();
+			context = SpringApplication.run(Application.class, args.getSourceArgs());
+		});
+		thread.setDaemon(false);
+		thread.start();
+	}
 }

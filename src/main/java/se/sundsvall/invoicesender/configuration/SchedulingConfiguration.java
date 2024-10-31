@@ -10,12 +10,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 @EnableScheduling
 class SchedulingConfiguration {
 
-    @Bean
-    TaskScheduler taskScheduler() {
-        var scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(25);
-        scheduler.setThreadNamePrefix("invoice-processor-");
-        scheduler.setWaitForTasksToCompleteOnShutdown(true);
-        return scheduler;
-    }
+	@Bean
+	TaskScheduler taskScheduler() {
+		var scheduler = new ThreadPoolTaskScheduler();
+		scheduler.setPoolSize(25);
+		scheduler.setThreadNamePrefix("invoice-processor-");
+		scheduler.setWaitForTasksToCompleteOnShutdown(true);
+		return scheduler;
+	}
 }

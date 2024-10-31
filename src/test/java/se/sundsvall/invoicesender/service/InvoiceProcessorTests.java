@@ -1,8 +1,6 @@
 package se.sundsvall.invoicesender.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
-import static org.junit.platform.commons.util.ReflectionUtils.findMethod;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -26,13 +24,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
@@ -40,16 +38,23 @@ import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
 import se.sundsvall.invoicesender.integration.party.PartyIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
 import se.sundsvall.invoicesender.model.Batch;
 import se.sundsvall.invoicesender.model.Item;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceProcessorTests {
 
+	private static final String MUNICIPALITY_ID = "2281";
+
 	@Mock
-	private ScheduledRestartProperties mockProperties;
+	private TaskScheduler mockTaskScheduler;
+
 	@Mock
-	private ScheduledRestartProperties.Schedule mockScheduleProperties;
+	private RaindanceIntegrationProperties mockRaindanceProperties;
+
+	@Mock
+	private ScheduledRestartProperties mockScheduleProperties;
 
 	@Mock
 	private RaindanceIntegration mockRaindanceIntegration;
@@ -66,26 +71,8 @@ class InvoiceProcessorTests {
 	@Mock
 	private DbIntegration mockDbIntegration;
 
+	@InjectMocks
 	private InvoiceProcessor invoiceProcessor;
-
-	@BeforeEach
-	void setUp() {
-		when(mockScheduleProperties.cronExpression()).thenReturn("-");
-		when(mockProperties.schedule()).thenReturn(mockScheduleProperties);
-		when(mockProperties.invoiceFilenamePrefixes()).thenReturn(List.of("Faktura"));
-
-		invoiceProcessor = new InvoiceProcessor(mockProperties, mockRaindanceIntegration,
-			mockCitizenIntegration, mockPartyIntegration, mockMessagingIntegration, mockDbIntegration);
-	}
-
-	@Test
-	void verifyScheduledAnnotationCronExpressionExpression() {
-		var scheduledAnnotation = findMethod(InvoiceProcessor.class, "run")
-			.flatMap(restartMethod -> findAnnotation(restartMethod, Scheduled.class))
-			.orElseThrow(() -> new IllegalStateException("Unable to find the 'restart' method on the " + InvoiceProcessor.class.getName() + " class"));
-
-		assertThat(scheduledAnnotation.cron()).isEqualTo("${invoice-processor.schedule.cron-expression:-}");
-	}
 
 	@Test
 	void markNonPdfItemsAsOther() {
@@ -115,7 +102,7 @@ class InvoiceProcessorTests {
 				new Item("file5.pdf")));
 
 		invoiceProcessor.markNonPdfItemsAsOther(batch);
-		invoiceProcessor.markInvoiceItems(batch);
+		invoiceProcessor.markInvoiceItems(batch, MUNICIPALITY_ID);
 
 		assertThat(batch.getItems())
 			.extracting(Item::getType)
