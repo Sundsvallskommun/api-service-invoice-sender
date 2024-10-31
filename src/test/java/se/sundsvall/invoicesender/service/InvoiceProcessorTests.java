@@ -47,9 +47,9 @@ import se.sundsvall.invoicesender.model.Item;
 class InvoiceProcessorTests {
 
 	@Mock
-	private InvoiceProcessorProperties mockProperties;
+	private ScheduledRestartProperties mockProperties;
 	@Mock
-	private InvoiceProcessorProperties.Schedule mockScheduleProperties;
+	private ScheduledRestartProperties.Schedule mockScheduleProperties;
 
 	@Mock
 	private RaindanceIntegration mockRaindanceIntegration;

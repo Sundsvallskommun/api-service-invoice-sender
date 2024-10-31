@@ -9,6 +9,8 @@ import static org.springframework.http.ResponseEntity.ok;
 import java.io.IOException;
 import java.time.LocalDate;
 
+import jakarta.validation.constraints.Positive;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,17 +25,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 
+import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
+import se.sundsvall.invoicesender.api.model.BatchesResponse;
+import se.sundsvall.invoicesender.integration.db.DbIntegration;
+import se.sundsvall.invoicesender.service.InvoiceProcessor;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Positive;
-import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
-import se.sundsvall.invoicesender.api.model.BatchesResponse;
-import se.sundsvall.invoicesender.integration.db.DbIntegration;
-import se.sundsvall.invoicesender.service.InvoiceProcessor;
 
 @Tag(name = "Batch Resources")
 @RestController
@@ -64,8 +66,8 @@ class BatchResources {
 		})
 	@PostMapping("/trigger/{date}")
 	ResponseEntity<Void> triggerBatch(
-		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable("date") final LocalDate date) throws IOException {
+			@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+			@PathVariable("date") final LocalDate date) throws IOException {
 		invoiceProcessor.run(date, municipalityId);
 
 		return ok().build();
