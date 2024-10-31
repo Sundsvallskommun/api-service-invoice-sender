@@ -14,15 +14,10 @@ import se.sundsvall.invoicesender.integration.Oauth2;
 @ConfigurationProperties(prefix = "integration.citizen")
 record CitizenIntegrationProperties(
 
-    @NotBlank
-    String url,
+	@NotBlank String url,
 
-    @DefaultValue("PT10S")
-    Duration connectTimeout,
+	@DefaultValue("PT10S") Duration connectTimeout,
 
-    @DefaultValue("PT30S")
-    Duration readTimeout,
+	@DefaultValue("PT30S") Duration readTimeout,
 
-    @Valid
-    @NotNull
-    Oauth2 oauth2) { }
+	@Valid @NotNull Oauth2 oauth2) {}

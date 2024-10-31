@@ -1,14 +1,12 @@
-<?xml version="1.0"?>
-<project
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
-		xmlns="http://maven.apache.org/POM/4.0.0">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>se.sundsvall.dept44</groupId>
 		<artifactId>dept44-service-parent</artifactId>
-		<version>6.0.2</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>6.0.3</version>
+		<relativePath />
+		<!-- lookup parent from repository -->
 	</parent>
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-invoice-sender</artifactId>
@@ -29,8 +27,7 @@
 
 		<exposed.app.port>8080</exposed.app.port>
 
-		<generated-sources-path>${project.build.directory}/generated-sources
-		</generated-sources-path>
+		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
 		<generated-sources-java-path>src/main/java</generated-sources-java-path>
 	</properties>
 
@@ -136,8 +133,7 @@
 					<configOptions>
 						<sourceFolder>${generated-sources-java-path}</sourceFolder>
 						<generateSupportingFiles>false</generateSupportingFiles>
-						<generatedConstructorWithRequiredArgs>false
-						</generatedConstructorWithRequiredArgs>
+						<generatedConstructorWithRequiredArgs>false</generatedConstructorWithRequiredArgs>
 						<generatePom>false</generatePom>
 						<library>spring-boot</library>
 						<dateLibrary>java8</dateLibrary>
@@ -159,9 +155,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<inputSpec>
-								${project.basedir}/src/main/resources/integrations/party-api.yml
-							</inputSpec>
+							<inputSpec>${project.basedir}/src/main/resources/integrations/party-api.yml</inputSpec>
 							<configOptions>
 								<modelPackage>generated.se.sundsvall.party</modelPackage>
 							</configOptions>
@@ -173,9 +167,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<inputSpec>
-								${project.basedir}/src/main/resources/integrations/messaging-api.yml
-							</inputSpec>
+							<inputSpec>${project.basedir}/src/main/resources/integrations/messaging-api.yml</inputSpec>
 							<configOptions>
 								<modelPackage>generated.se.sundsvall.messaging</modelPackage>
 							</configOptions>
@@ -187,9 +179,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<inputSpec>
-								${project.basedir}/src/main/resources/integrations/citizen-api.yml
-							</inputSpec>
+							<inputSpec>${project.basedir}/src/main/resources/integrations/citizen-api.yml</inputSpec>
 							<configOptions>
 								<modelPackage>generated.se.sundsvall.citizen</modelPackage>
 							</configOptions>
@@ -205,20 +195,14 @@
 					<excludes>
 						<exclude>**/se/sundsvall/invoicesender/Application*</exclude>
 						<exclude>**/se/sundsvall/invoicesender/configuration/**/**</exclude>
-						<exclude>
-							**/se/sundsvall/invoicesender/integration/**/**IntegrationConfiguration**
-						</exclude>
-						<exclude>
-							**/se/sundsvall/invoicesender/integration/**/**IntegrationProperties**
-						</exclude>
+						<exclude>**/se/sundsvall/invoicesender/integration/**/**IntegrationConfiguration**</exclude>
+						<exclude>**/se/sundsvall/invoicesender/integration/**/**IntegrationProperties**</exclude>
 						<!-- Exclude Invoice processor -->
 						<exclude>**/se/sundsvall/invoicesender/service/InvoiceProcessor**</exclude>
 						<exclude>**/se/sundsvall/invoicesender/service/ScheduledRestart**</exclude>
 						<exclude>**/se/sundsvall/invoicesender/service/util/CronUtil**</exclude>
 						<!-- Exclude Raindance integration (SMB/JCIFS) -->
-						<exclude>
-							**/se/sundsvall/invoicesender/integration/raindance/RaindanceIntegration**
-						</exclude>
+						<exclude>**/se/sundsvall/invoicesender/integration/raindance/RaindanceIntegration**</exclude>
 						<!-- Exclude generated code -->
 						<exclude>**/generated/**</exclude>
 					</excludes>

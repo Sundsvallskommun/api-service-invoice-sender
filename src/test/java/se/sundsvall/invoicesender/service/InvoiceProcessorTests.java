@@ -95,8 +95,7 @@ class InvoiceProcessorTests {
 				new Item("file2.pdf"),
 				new Item("file3.zip"),
 				new Item("file4.docx"),
-				new Item("file5.pdf")
-			));
+				new Item("file5.pdf")));
 
 		invoiceProcessor.markNonPdfItemsAsOther(batch);
 
@@ -113,8 +112,7 @@ class InvoiceProcessorTests {
 				new Item("file2.pdf"),
 				new Item("file3.zip"),
 				new Item("file4.docx"),
-				new Item("file5.pdf")
-			));
+				new Item("file5.pdf")));
 
 		invoiceProcessor.markNonPdfItemsAsOther(batch);
 		invoiceProcessor.markInvoiceItems(batch);
@@ -131,8 +129,7 @@ class InvoiceProcessorTests {
 				new Item("file1").withType(OTHER),
 				new Item("file2").withType(INVOICE).withFilename("somePrefix_123_to_456.pdf"),
 				new Item("file3").withType(INVOICE).withFilename("somePrefix_456_to_789.pdf"),
-				new Item("file4").withType(INVOICE).withFilename("somePrefix_abc_to_456.pdf")
-			));
+				new Item("file4").withType(INVOICE).withFilename("somePrefix_abc_to_456.pdf")));
 
 		invoiceProcessor.extractInvoiceRecipientLegalIds(batch);
 
@@ -158,8 +155,7 @@ class InvoiceProcessorTests {
 				new Item("file2.pdf")
 					.withType(INVOICE)
 					.withStatus(RECIPIENT_LEGAL_ID_FOUND)
-					.withRecipientLegalId("legalId2")
-			));
+					.withRecipientLegalId("legalId2")));
 
 		when(mockCitizenIntegration.hasProtectedIdentity("legalId1")).thenReturn(false);
 		when(mockCitizenIntegration.hasProtectedIdentity("legalId2")).thenReturn(true);
@@ -190,8 +186,7 @@ class InvoiceProcessorTests {
 				new Item("file4.pdf")
 					.withType(INVOICE)
 					.withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID)
-					.withRecipientLegalId("legalId3")
-			));
+					.withRecipientLegalId("legalId3")));
 
 		when(mockPartyIntegration.getPartyId(any(String.class), any(String.class)))
 			.thenReturn(Optional.of("somePartyId"))
@@ -224,8 +219,7 @@ class InvoiceProcessorTests {
 				new Item("file3.pdf")
 					.withType(INVOICE)
 					.withStatus(RECIPIENT_PARTY_ID_FOUND)
-					.withRecipientPartyId("partyId3")
-			));
+					.withRecipientPartyId("partyId3")));
 		final var municipalityId = "someMunicipalityId";
 
 		when(mockMessagingIntegration.sendInvoice(any(String.class), any(Item.class), any(String.class)))
@@ -264,8 +258,7 @@ class InvoiceProcessorTests {
 		final var batch = new Batch()
 			.withItems(List.of(
 				new Item("file1").withRecipientPartyId("partyId1"),
-				new Item("file2").withRecipientPartyId("partyId2")
-			));
+				new Item("file2").withRecipientPartyId("partyId2")));
 
 		final var result = invoiceProcessor.getItems(batch, item -> "partyId1".equals(item.getRecipientPartyId()));
 
@@ -279,8 +272,7 @@ class InvoiceProcessorTests {
 				new Item("file1.png").withType(OTHER),
 				new Item("file2.pdf").withType(INVOICE),
 				new Item("file3.pdf").withType(INVOICE),
-				new Item("file4.pdf").withType(INVOICE).withStatus(IGNORED)
-			));
+				new Item("file4.pdf").withType(INVOICE).withStatus(IGNORED)));
 
 		final var result = invoiceProcessor.getProcessableInvoiceItems(batch);
 
@@ -295,8 +287,7 @@ class InvoiceProcessorTests {
 				new Item("file2.pdf").withType(INVOICE).withStatus(SENT),
 				new Item("file3.pdf").withType(INVOICE).withStatus(SENT),
 				new Item("file4.pdf").withType(INVOICE).withStatus(IGNORED),
-				new Item("file5.pdf").withType(INVOICE).withStatus(NOT_SENT)
-			));
+				new Item("file5.pdf").withType(INVOICE).withStatus(NOT_SENT)));
 
 		final var result = invoiceProcessor.getSentInvoiceItems(batch);
 
@@ -311,8 +302,7 @@ class InvoiceProcessorTests {
 				new Item("file2.pdf").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
 				new Item("file3.pdf").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_FOUND),
 				new Item("file4.pdf").withType(INVOICE).withStatus(RECIPIENT_PARTY_ID_NOT_FOUND),
-				new Item("file5.pdf").withType(INVOICE)
-			));
+				new Item("file5.pdf").withType(INVOICE)));
 
 		final var result = invoiceProcessor.getInvoiceItemsWithPartyIdSet(batch);
 
@@ -327,8 +317,7 @@ class InvoiceProcessorTests {
 				new Item("file2.pdf").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_FOUND),
 				new Item("file3.pdf").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
 				new Item("file4.pdf").withType(INVOICE).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID),
-				new Item("file5.pdf").withType(INVOICE)
-			));
+				new Item("file5.pdf").withType(INVOICE)));
 
 		final var result = invoiceProcessor.getInvoiceItemsWithLegalIdSet(batch);
 

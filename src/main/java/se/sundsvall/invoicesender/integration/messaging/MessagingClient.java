@@ -14,8 +14,7 @@ import generated.se.sundsvall.messaging.MessageResult;
 @FeignClient(
 	name = INTEGRATION_NAME,
 	configuration = MessagingIntegrationConfiguration.class,
-	url = "${integration.messaging.url}"
-)
+	url = "${integration.messaging.url}")
 interface MessagingClient {
 
 	@PostMapping("/{municipalityId}/digital-invoice")

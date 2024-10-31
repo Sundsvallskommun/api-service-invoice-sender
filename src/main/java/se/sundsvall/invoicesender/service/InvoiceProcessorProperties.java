@@ -15,30 +15,21 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "invoice-processor")
 public record InvoiceProcessorProperties(
 
-    @Valid
-    @NotNull
-    Schedule schedule,
+	@Valid @NotNull Schedule schedule,
 
-    @Valid
-    @NotNull
-    Restart restart,
+	@Valid @NotNull Restart restart,
 
-    @NotEmpty
-    List<String> invoiceFilenamePrefixes) {
+	@NotEmpty List<String> invoiceFilenamePrefixes) {
 
-    public record Schedule(
+	public record Schedule(
 
-        @NotBlank
-        String cronExpression,
+		@NotBlank String cronExpression,
 
-        @NotEmpty
-        List<String> municipalityIds) { }
+		@NotEmpty List<String> municipalityIds) {}
 
-    public record Restart(
+	public record Restart(
 
-        @DefaultValue("-")
-        String cronExpression,
+		@DefaultValue("-") String cronExpression,
 
-        @DefaultValue("false")
-        boolean enabled) { }
+		@DefaultValue("false") boolean enabled) {}
 }

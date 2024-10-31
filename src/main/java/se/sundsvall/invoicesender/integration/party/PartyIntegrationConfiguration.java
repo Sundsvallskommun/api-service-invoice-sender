@@ -23,21 +23,21 @@ import feign.Request;
 @EnableConfigurationProperties(PartyIntegrationProperties.class)
 class PartyIntegrationConfiguration {
 
-    @Bean
-    FeignBuilderCustomizer feignBuilderCustomizer(final PartyIntegrationProperties properties) {
-        return FeignMultiCustomizer.create()
-            .withErrorDecoder(new ProblemErrorDecoder(INTEGRATION_NAME, List.of(NOT_FOUND.value())))
-            .withRetryableOAuth2InterceptorForClientRegistration(ClientRegistration
-                .withRegistrationId(INTEGRATION_NAME)
-                .tokenUri(properties.oauth2().tokenUrl())
-                .clientId(properties.oauth2().clientId())
-                .clientSecret(properties.oauth2().clientSecret())
-                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .build())
-            .withRequestOptions(new Request.Options(
-                properties.connectTimeout().toMillis(), MILLISECONDS,
-                properties.readTimeout().toMillis(), MILLISECONDS,
-                true))
-            .composeCustomizersToOne();
-    }
+	@Bean
+	FeignBuilderCustomizer feignBuilderCustomizer(final PartyIntegrationProperties properties) {
+		return FeignMultiCustomizer.create()
+			.withErrorDecoder(new ProblemErrorDecoder(INTEGRATION_NAME, List.of(NOT_FOUND.value())))
+			.withRetryableOAuth2InterceptorForClientRegistration(ClientRegistration
+				.withRegistrationId(INTEGRATION_NAME)
+				.tokenUri(properties.oauth2().tokenUrl())
+				.clientId(properties.oauth2().clientId())
+				.clientSecret(properties.oauth2().clientSecret())
+				.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+				.build())
+			.withRequestOptions(new Request.Options(
+				properties.connectTimeout().toMillis(), MILLISECONDS,
+				properties.readTimeout().toMillis(), MILLISECONDS,
+				true))
+			.composeCustomizersToOne();
+	}
 }

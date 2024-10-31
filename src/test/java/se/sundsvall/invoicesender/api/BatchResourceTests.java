@@ -74,7 +74,6 @@ class BatchResourceTests {
 			.exchange()
 			.expectStatus().isOk();
 
-
 		verify(mockInvoiceProcessor, times(1)).run(eq(date), any(String.class));
 		verifyNoMoreInteractions(mockInvoiceProcessor);
 		verifyNoInteractions(mockDbIntegration);

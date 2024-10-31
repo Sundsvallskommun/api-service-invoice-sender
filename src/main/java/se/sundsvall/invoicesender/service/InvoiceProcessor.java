@@ -69,11 +69,11 @@ public class InvoiceProcessor {
 	private final List<String> municipalityIds;
 
 	public InvoiceProcessor(final InvoiceProcessorProperties properties,
-			final RaindanceIntegration raindanceIntegration,
-			final CitizenIntegration citizenIntegration,
-			final PartyIntegration partyIntegration,
-			final MessagingIntegration messagingIntegration,
-			final DbIntegration dbIntegration) {
+		final RaindanceIntegration raindanceIntegration,
+		final CitizenIntegration citizenIntegration,
+		final PartyIntegration partyIntegration,
+		final MessagingIntegration messagingIntegration,
+		final DbIntegration dbIntegration) {
 		this.raindanceIntegration = raindanceIntegration;
 		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
@@ -228,8 +228,7 @@ public class InvoiceProcessor {
 				.withReminder(reminder)
 				.withAccountNumber(accountNumber)
 				.withPaymentReference(paymentReference)
-				.withTotalAmount(totalAmount)
-			);
+				.withTotalAmount(totalAmount));
 		});
 	}
 
@@ -272,18 +271,17 @@ public class InvoiceProcessor {
 	}
 
 	void fetchInvoiceRecipientPartyIds(final Batch batch, final String municipalityId) {
-		getInvoiceItemsWithLegalIdSet(batch).forEach(item ->
-			partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
-				.ifPresentOrElse(partyId -> {
-					LOG.info("Fetched recipient party id for item {}", item.getFilename());
+		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
+			.ifPresentOrElse(partyId -> {
+				LOG.info("Fetched recipient party id for item {}", item.getFilename());
 
-					item.setRecipientPartyId(partyId);
-					item.setStatus(RECIPIENT_PARTY_ID_FOUND);
-				}, () -> {
-					LOG.info("Failed to fetch recipient party id for item {}", item.getFilename());
+				item.setRecipientPartyId(partyId);
+				item.setStatus(RECIPIENT_PARTY_ID_FOUND);
+			}, () -> {
+				LOG.info("Failed to fetch recipient party id for item {}", item.getFilename());
 
-					item.setStatus(RECIPIENT_PARTY_ID_NOT_FOUND);
-				}));
+				item.setStatus(RECIPIENT_PARTY_ID_NOT_FOUND);
+			}));
 	}
 
 	void sendDigitalInvoices(final Batch batch, final String municipalityId) {

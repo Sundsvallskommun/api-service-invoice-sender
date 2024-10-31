@@ -4,13 +4,13 @@ import it.burning.cron.CronExpressionDescriptor;
 
 public final class CronUtil {
 
-    static {
-        CronExpressionDescriptor.setDefaultLocale("en");
-    }
+	static {
+		CronExpressionDescriptor.setDefaultLocale("en");
+	}
 
-    private CronUtil() { }
+	private CronUtil() {}
 
-    public static String parseCronExpression(final String cronExpression) {
-        return CronExpressionDescriptor.getDescription(cronExpression);
-    }
+	public static String parseCronExpression(final String cronExpression) {
+		return CronExpressionDescriptor.getDescription(cronExpression);
+	}
 }
