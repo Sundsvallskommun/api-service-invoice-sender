@@ -111,6 +111,7 @@ public class MessagingIntegration {
 	}
 
 	public void sendStatusReport(final List<BatchDto> batches, final String municipalityId) {
+		LOG.info("Sending status report");
 		final var request = new EmailRequest()
 			.sender(new EmailSender()
 				.name(statusReportSenderName)

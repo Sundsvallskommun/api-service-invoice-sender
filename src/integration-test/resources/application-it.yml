@@ -9,23 +9,48 @@ spring:
   flyway:
     enabled: false
 
+# Invoice processor schedule
+invoice-processor:
+  restart:
+    enabled: false
+    cron-expression: '-'
+
 integration:
-  # Raindance
+  # Raindance integration
   raindance:
-    host: localhost
-    port: 1445
-    domain: SOMEWORKGROUP
-    username: user
-    password: p4ssw0rd
-    batch-setup:
-      "Faktura-pdf":
-        target-path: mnt/PN/
-        archive-path: mnt/Kivra/Arkiv/
-        process: true
-      "Betalningspaminnelse-pdf":
-        target-path: mnt/PN/
-        process: false
-    local-work-directory: /tmp/raindance/incoming
+    environments:
+      2281:
+        host: localhost
+        port: 1445
+        domain: SOMEWORKGROUP
+        username: user
+        password: p4ssw0rd
+        share: mnt/Kivra/
+        invoice-filename-prefixes:
+          - Faktura
+        batch-setup:
+          "Faktura-pdf":
+            scheduling:
+              cron-expression: '-'
+            process: true
+            target-path: mnt/PN/
+            archive-path: mnt/Kivra/Arkiv/
+          "Betalningspaminnelse-pdf":
+            scheduling:
+              cron-expression: '-'
+            process: false
+            target-path: mnt/PN/
+        local-work-directory: /tmp/raindance/incoming
+        connect-timeout: PT10S
+        response-timeout: PT15S
+
+  # Citizen
+  citizen:
+    url: http://localhost:${wiremock.server.port}/citizen
+    oauth2:
+      token-url: http://localhost:${wiremock.server.port}/token
+      client-id: someClientId
+      client-secret: someClientSecret
 
   # Party
   party:
@@ -34,7 +59,7 @@ integration:
       token-url: http://localhost:${wiremock.server.port}/token
       client-id: someClientId
       client-secret: someClientSecret
-  
+
   # Messaging
   messaging:
     url: http://localhost:${wiremock.server.port}/messaging

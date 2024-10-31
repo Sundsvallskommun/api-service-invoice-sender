@@ -1,22 +1,8 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
-import jcifs.CIFSContext;
-import jcifs.CIFSException;
-import jcifs.context.SingletonContext;
-import jcifs.smb.NtlmPasswordAuthenticator;
-import jcifs.smb.SmbFile;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorOutputStream;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.stereotype.Component;
-import se.sundsvall.invoicesender.model.Batch;
-import se.sundsvall.invoicesender.model.Item;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
+import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,16 +18,29 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.zip.Deflater;
 
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.nio.file.StandardOpenOption.WRITE;
-import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorOutputStream;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Component
-@EnableConfigurationProperties(RaindanceIntegrationProperties.class)
+import se.sundsvall.invoicesender.model.Batch;
+import se.sundsvall.invoicesender.model.Item;
+
+import jcifs.CIFSContext;
+import jcifs.config.PropertyConfiguration;
+import jcifs.context.BaseContext;
+import jcifs.smb.NtlmPasswordAuthenticator;
+import jcifs.smb.SmbFile;
+
 public class RaindanceIntegration {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RaindanceIntegration.class);
@@ -54,43 +53,39 @@ public class RaindanceIntegration {
 	private final int port;
 
 	private final Path localWorkDirectory;
-	private final Map<String, RaindanceIntegrationProperties.BatchSetup> batchFileSetup;
+	private final Map<String, RaindanceIntegrationProperties.RaindanceEnvironment.BatchSetup> batchSetup;
 	private final String outputFileExtraSuffix;
 	private final CIFSContext context;
 	private final String incomingShareUrl;
 
-	RaindanceIntegration(final RaindanceIntegrationProperties properties) throws IOException {
-		host = properties.host();
-		port = properties.port();
-
-		localWorkDirectory = Paths.get(properties.localWorkDirectory());
-		if (!Files.exists(localWorkDirectory)) {
-			Files.createDirectories(localWorkDirectory);
-		}
-
-		batchFileSetup = properties.batchSetup();
-		outputFileExtraSuffix = properties.outputFileExtraSuffix();
-
-		// Attempt to initialize the JCIFS context
+	public RaindanceIntegration(final RaindanceIntegrationProperties.RaindanceEnvironment environment) {
 		try {
-			LOG.info("Raindance connection timeout set to {} ms and response timeout set to {} ms",
-				properties.connectTimeout().toMillis(), properties.responseTimeout().toMillis());
+			host = environment.host();
+			port = environment.port();
 
-			SingletonContext.init(properties.jcifsProperties());
-		} catch (CIFSException e) {
-			LOG.info("JCIFS context already initialized");
+			localWorkDirectory = Paths.get(environment.localWorkDirectory());
+			if (!Files.exists(localWorkDirectory)) {
+				Files.createDirectories(localWorkDirectory);
+			}
+
+			batchSetup = environment.batchSetup();
+			outputFileExtraSuffix = environment.outputFileExtraSuffix();
+
+			// Initialize the JCIFS context
+			var config = new PropertyConfiguration(environment.jcifsProperties());
+			context = new BaseContext(config)
+				.withCredentials(new NtlmPasswordAuthenticator(
+					environment.domain(), environment.username(), environment.password()));
+
+			incomingShareUrl = String.format("smb://%s:%d/%s", host, port, appendTrailingSlashIfMissing(environment.share()));
+
+			LOG.info("Raindance will be reading from {}", incomingShareUrl);
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to initialize Raindance integration", e);
 		}
-
-		context = SingletonContext.getInstance()
-			.withCredentials(new NtlmPasswordAuthenticator(
-				properties.domain(), properties.username(), properties.password()));
-
-		incomingShareUrl = String.format("smb://%s:%d/%s", host, port, appendTrailingSlashIfMissing(properties.share()));
-
-		LOG.info("Raindance will be reading from {}", incomingShareUrl);
 	}
 
-	public List<Batch> readBatches(final LocalDate date) throws IOException {
+	public List<Batch> readBatches(final LocalDate date, final String batchName) throws IOException {
 		LOG.info("Reading batch(es) for {}", date);
 
 		var datePart = date.format(DATE_FORMATTER);
@@ -100,22 +95,24 @@ public class RaindanceIntegration {
 			for (var file : share.listFiles()) {
 				var filename = file.getName();
 
-				// Filter manually
-				var matchingBatchSetup = batchFileSetup.entrySet().stream()
-					.filter(entry -> filename.startsWith(entry.getKey()) &&
-						filename.contains("-" + datePart + "_") &&
-						filename.toLowerCase().endsWith(BATCH_FILE_SUFFIX))
-					.findFirst()
-					.map(Map.Entry::getValue)
-					.orElse(null);
+				// Filter manually - match on batch name
 
-				if (matchingBatchSetup == null) {
+				// filename starts with batchName parameter
+				// filename contains "-" + datePart + "_"
+				// filename lower-case ends with BATCH_FILE_SUFFIX
+
+				// if not - skip file, close and continue as below
+
+				if (!filename.startsWith(batchName) || !filename.contains("-" + datePart + "_") || !filename.toLowerCase().endsWith(BATCH_FILE_SUFFIX)) {
 					LOG.info("Skipping file '{}'", filename);
 
 					file.close();
 
 					continue;
 				}
+
+				// Get the matching batch setup
+				var matchingBatchSetup = batchSetup.get(batchName);
 
 				// Use a random sub-work-directory for the batch
 				var localBatchWorkDirectory = localWorkDirectory.resolve(UUID.randomUUID().toString());
@@ -161,8 +158,7 @@ public class RaindanceIntegration {
 						var zipEntryName = zipEntry.getName();
 
 						// Mitigate potential "zip-slip"
-						Path normalizedPath = localBatchWorkDirectory.resolve(zipEntryName).normalize();
-						if (!normalizedPath.startsWith(localBatchWorkDirectory)) {
+						if (localBatchWorkDirectory.resolve(zipEntryName).normalize().startsWith("..")) {
 							LOG.info("  Skipping file '{}'", zipEntryName);
 
 							continue;
@@ -281,5 +277,9 @@ public class RaindanceIntegration {
 
 	String appendTrailingSlashIfMissing(final String s) {
 		return s.endsWith("/") ? s : s + "/";
+	}
+
+	public Set<String> getBatchSetups() {
+		return this.batchSetup.keySet();
 	}
 }

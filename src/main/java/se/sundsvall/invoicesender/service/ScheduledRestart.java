@@ -17,16 +17,16 @@ class ScheduledRestart {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ScheduledRestart.class);
 
-	private final InvoiceProcessorProperties properties;
+	private final ScheduledRestartProperties properties;
 	private ConfigurableApplicationContext context;
 
 	ScheduledRestart(final ConfigurableApplicationContext context,
-		final InvoiceProcessorProperties properties) {
+		final ScheduledRestartProperties properties) {
 		this.context = context;
 		this.properties = properties;
 
-		var cronExpression = properties.restart().cronExpression();
-		if (properties.restart().enabled() && !"-".equals(cronExpression)) {
+		var cronExpression = properties.cronExpression();
+		if (properties.enabled() && !"-".equals(cronExpression)) {
 			var parsedCronExpression = parseCronExpression(cronExpression);
 
 			LOG.info("Scheduled restart is ENABLED to run {}", parsedCronExpression);
@@ -37,7 +37,7 @@ class ScheduledRestart {
 
 	@Scheduled(cron = "${invoice-processor.restart.cron-expression:-}")
 	void restart() {
-		if (!properties.restart().enabled()) {
+		if (!properties.enabled()) {
 			return;
 		}
 

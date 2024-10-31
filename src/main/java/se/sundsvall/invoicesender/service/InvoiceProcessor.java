@@ -28,14 +28,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
@@ -44,6 +47,7 @@ import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
 import se.sundsvall.invoicesender.integration.party.PartyIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
 import se.sundsvall.invoicesender.model.Batch;
 import se.sundsvall.invoicesender.model.Item;
 import se.sundsvall.invoicesender.service.util.XmlUtil;
@@ -57,57 +61,85 @@ public class InvoiceProcessor {
 
 	private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
-	private final RaindanceIntegration raindanceIntegration;
+	private static final String DISABLED_CRON = "-";
+
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
-
 	private final MessagingIntegration messagingIntegration;
-
 	private final DbIntegration dbIntegration;
 
-	private final List<String> invoiceFilenamePrefixes;
-	private final List<String> municipalityIds;
+	private final Map<String, RaindanceIntegration> raindanceIntegrations = new HashMap<>();
+	private final Map<String, List<String>> invoiceFilenamePrefixes = new HashMap<>();
 
-	public InvoiceProcessor(final InvoiceProcessorProperties properties,
-		final RaindanceIntegration raindanceIntegration,
+	public InvoiceProcessor(final TaskScheduler taskScheduler,
+		final RaindanceIntegrationProperties properties,
 		final CitizenIntegration citizenIntegration,
 		final PartyIntegration partyIntegration,
 		final MessagingIntegration messagingIntegration,
 		final DbIntegration dbIntegration) {
-		this.raindanceIntegration = raindanceIntegration;
 		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.dbIntegration = dbIntegration;
 
-		invoiceFilenamePrefixes = properties.invoiceFilenamePrefixes();
-		municipalityIds = properties.schedule().municipalityIds();
+		properties.environments().forEach((municipalityId, raindanceEnvironment) -> {
+			// Create a Raindance integration for the given municipality id
+			raindanceIntegrations.put(municipalityId, new RaindanceIntegration(raindanceEnvironment));
 
-		var cronExpression = properties.schedule().cronExpression();
-		if (!"-".equals(cronExpression)) {
-			var parsedCronExpression = parseCronExpression(cronExpression);
-			LOG.info("Invoice processor is ENABLED to run {}", parsedCronExpression);
-		} else {
-			LOG.info("Invoice processor scheduling is DISABLED");
-		}
-	}
+			// Get the invoice filename prefixes
+			invoiceFilenamePrefixes.put(municipalityId, raindanceEnvironment.invoiceFilenamePrefixes());
 
-	@Scheduled(cron = "${invoice-processor.schedule.cron-expression:-}")
-	void run() {
-		municipalityIds.forEach(municipalityId -> {
-			try {
-				run(LocalDate.now(), municipalityId);
-			} catch (final Exception e) {
-				LOG.error("Failed to process invoices for municipality {}", municipalityId, e);
-			}
+			raindanceEnvironment.batchSetup().forEach((batchName, batchSetup) -> {
+				var cronExpression = batchSetup.scheduling().cronExpression();
+
+				// Check if the batch is disabled
+				if (DISABLED_CRON.equals(cronExpression)) {
+					LOG.info("Batch with prefix {} is disabled", batchName);
+					return;
+				}
+
+				var parsedCronExpression = parseCronExpression(cronExpression);
+				LOG.info("Scheduling run for batches with prefix {} {}", batchName, parsedCronExpression);
+
+				// Create the cron trigger
+				var cronTrigger = new CronTrigger(cronExpression);
+				// Schedule it
+				taskScheduler.schedule(() -> {
+					try {
+						run(LocalDate.now(), municipalityId, batchName);
+					} catch (final Exception e) {
+						LOG.error("Failed to process invoice batch with prefix {} for municipality {}", batchName, municipalityId, e);
+					}
+				}, cronTrigger);
+			});
 		});
 	}
 
-	public void run(final LocalDate date, final String municipalityId) throws IOException {
-		// Get the batches from Raindance
-		var batches = raindanceIntegration.readBatches(date);
+	/**
+	 * Runs the invoice processor for the given date, municipality id and each configured batch-setup.
+	 * 
+	 * @param date           the date.
+	 * @param municipalityId the municipality id.
+	 */
+	public void run(final LocalDate date, final String municipalityId) {
+		raindanceIntegrations.get(municipalityId).getBatchSetups()
+			.forEach(batchName -> {
+				LOG.info("Running batch with prefix {} for municipality {}", batchName, municipalityId);
+				try {
+					run(date, municipalityId, batchName);
+				} catch (IOException e) {
+					LOG.error("Failed to process invoice batch with prefix {} for municipality {}", batchName, municipalityId, e);
+				}
+			});
+	}
 
+	public void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
 		var processedBatches = new ArrayList<BatchDto>();
+
+		// Get the Raindance integration
+		var raindanceIntegration = raindanceIntegrations.get(municipalityId);
+		// Get the batches from Raindance
+		var batches = raindanceIntegration.readBatches(date, batchName);
 
 		for (var batch : batches) {
 			if (batch.isProcessingEnabled()) {
@@ -116,7 +148,7 @@ public class InvoiceProcessor {
 				// Mark non-invoice items (i.e. not PDF:s)
 				markNonPdfItemsAsOther(batch);
 				// Mark invoice items
-				markInvoiceItems(batch);
+				markInvoiceItems(batch, municipalityId);
 
 				// Extract the item metadata
 				extractItemMetadata(batch);
@@ -176,13 +208,15 @@ public class InvoiceProcessor {
 	 *
 	 * @param batch the batch.
 	 */
-	void markInvoiceItems(final Batch batch) {
+	void markInvoiceItems(final Batch batch, final String municipalityId) {
 		getItems(batch, ITEM_IS_A_PDF).forEach(item -> {
 			LOG.info("Marking item {} as an INVOICE", item.getFilename());
 
 			item.setType(INVOICE);
 
-			if (isNotEmpty(invoiceFilenamePrefixes) && invoiceFilenamePrefixes.stream().noneMatch(prefix -> item.getFilename().startsWith(prefix))) {
+			var invoiceFilenamePrefixesForMunicipality = invoiceFilenamePrefixes.get(municipalityId);
+
+			if (isNotEmpty(invoiceFilenamePrefixesForMunicipality) && invoiceFilenamePrefixesForMunicipality.stream().noneMatch(prefix -> item.getFilename().startsWith(prefix))) {
 				LOG.info("Marking item {} as IGNORED", item.getFilename());
 
 				item.setStatus(IGNORED);
