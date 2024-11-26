@@ -12,11 +12,7 @@
 	<artifactId>api-service-invoice-sender</artifactId>
 	<version>2.0</version>
 	<name>api-service-invoice-sender</name>
-
 	<properties>
-		<app.jvm.xms.mb>1024</app.jvm.xms.mb>
-		<app.jvm.xmx.mb>1024</app.jvm.xmx.mb>
-
 		<smbj.version>0.12.0</smbj.version>
 		<jcifs-ng.version>2.1.10</jcifs-ng.version>
 		<commons-compress.version>1.27.1</commons-compress.version>
@@ -24,13 +20,9 @@
 		<jsoup.version>1.18.1</jsoup.version>
 		<xz.version>1.10</xz.version>
 		<cron-expression-descriptor.version>1.2.10</cron-expression-descriptor.version>
-
-		<exposed.app.port>8080</exposed.app.port>
-
 		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
 		<generated-sources-java-path>src/main/java</generated-sources-java-path>
 	</properties>
-
 	<dependencies>
 		<!-- Test -->
 		<dependency>
@@ -53,7 +45,6 @@
 			<artifactId>mariadb</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<!-- Framework -->
 		<dependency>
 			<groupId>se.sundsvall.dept44</groupId>
@@ -63,7 +54,6 @@
 			<groupId>se.sundsvall.dept44</groupId>
 			<artifactId>dept44-common-validators</artifactId>
 		</dependency>
-
 		<!-- JPA, JDBC and Flyway -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -86,7 +76,6 @@
 			<groupId>org.thymeleaf</groupId>
 			<artifactId>thymeleaf-spring6</artifactId>
 		</dependency>
-
 		<!-- Other -->
 		<dependency>
 			<groupId>eu.agno3.jcifs</groupId>
@@ -120,7 +109,6 @@
 			<version>${cron-expression-descriptor.version}</version>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -144,7 +132,6 @@
 						<useSwaggerAnnotations>true</useSwaggerAnnotations>
 						<hideGenerationTimestamp>true</hideGenerationTimestamp>
 						<interfaceOnly>true</interfaceOnly>
-						<useJakartaEe>true</useJakartaEe>
 						<useSpringBoot3>true</useSpringBoot3>
 					</configOptions>
 				</configuration>
