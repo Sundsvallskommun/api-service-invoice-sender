@@ -1,5 +1,17 @@
 package se.sundsvall.invoicesender.integration.db;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
+import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,20 +21,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
-import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
 
 @ExtendWith(MockitoExtension.class)
 class DbIntegrationTests {
@@ -51,7 +49,7 @@ class DbIntegrationTests {
 		assertThat(result.getNumber()).isZero();
 		assertThat(result.getTotalPages()).isEqualTo(2);
 
-		verify(batchRepositoryMock, times(1)).findAllByCompletedAtBetweenAndMunicipalityId(
+		verify(batchRepositoryMock).findAllByCompletedAtBetweenAndMunicipalityId(
 			any(LocalDateTime.class), any(LocalDateTime.class), any(String.class), any(Pageable.class));
 		verifyNoMoreInteractions(batchRepositoryMock);
 	}

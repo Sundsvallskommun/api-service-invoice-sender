@@ -1,37 +1,5 @@
 package se.sundsvall.invoicesender.service;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
-import org.springframework.test.util.ReflectionTestUtils;
-import se.sundsvall.dept44.test.annotation.resource.Load;
-import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
-import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
-import se.sundsvall.invoicesender.integration.db.DbIntegration;
-import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
-import se.sundsvall.invoicesender.integration.db.entity.ItemStatus;
-import se.sundsvall.invoicesender.integration.db.entity.ItemType;
-import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
-import se.sundsvall.invoicesender.integration.party.PartyIntegration;
-import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
-import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
-
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,6 +27,37 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
+import org.springframework.test.util.ReflectionTestUtils;
+import se.sundsvall.dept44.test.annotation.resource.Load;
+import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
+import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
+import se.sundsvall.invoicesender.integration.db.DbIntegration;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
+import se.sundsvall.invoicesender.integration.db.entity.ItemStatus;
+import se.sundsvall.invoicesender.integration.db.entity.ItemType;
+import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
+import se.sundsvall.invoicesender.integration.party.PartyIntegration;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
 
 @ExtendWith({
 	MockitoExtension.class, ResourceLoaderExtension.class
@@ -156,8 +155,8 @@ class InvoiceProcessorTests {
 			assertThat(metadata.getInvoiceNumber()).isEqualTo("123");
 			assertThat(metadata.getInvoiceDate()).isEqualTo("2024-02-02");
 			assertThat(metadata.getDueDate()).isEqualTo("2024-03-03");
-			assertThat(metadata.isPayable()).isEqualTo(true);
-			assertThat(metadata.isReminder()).isEqualTo(false);
+			assertThat(metadata.isPayable()).isTrue();
+			assertThat(metadata.isReminder()).isFalse();
 			assertThat(metadata.getAccountNumber()).isEqualTo("1234-1234");
 			assertThat(metadata.getPaymentReference()).isEqualTo("9001011234");
 			assertThat(metadata.getTotalAmount()).isEqualTo("1000.00");

@@ -5,9 +5,9 @@ ALTER TABLE `batch_executions`
 ALTER TABLE `batch_executions`
     ADD COLUMN `archive_path` VARCHAR(255) NULL;
 ALTER TABLE `batch_executions`
-    ADD COLUMN `processing_enabled` BIT NOT NULL DEFAULT 1;
+    ADD COLUMN `processing_enabled` BIT NOT NULL DEFAULT 0;
 ALTER TABLE `batch_executions`
-    ADD COLUMN `completed` BIT NOT NULL DEFAULT 0;
+    ADD COLUMN `completed` BIT NOT NULL DEFAULT 1;
 ALTER TABLE `batch_executions`
     ADD COLUMN `data` LONGBLOB NULL;
 ALTER TABLE `batch_items`
