@@ -15,6 +15,10 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 
 public final class Constants {
 
+	private Constants() {
+
+	}
+
 	public static final Predicate<ItemEntity> ITEM_IS_A_PDF = item -> item.getFilename().toLowerCase().endsWith(".pdf");
 	public static final Predicate<ItemEntity> ITEM_IS_AN_INVOICE = ITEM_IS_A_PDF.and(item -> item.getType() == INVOICE);
 	public static final Predicate<ItemEntity> ITEM_IS_IGNORED = item -> item.getStatus() == IGNORED;
