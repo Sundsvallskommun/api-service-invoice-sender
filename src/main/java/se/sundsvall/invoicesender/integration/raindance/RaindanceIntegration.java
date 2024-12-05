@@ -1,8 +1,20 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.nio.file.StandardOpenOption.WRITE;
-import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
+import jcifs.CIFSContext;
+import jcifs.config.PropertyConfiguration;
+import jcifs.context.BaseContext;
+import jcifs.smb.NtlmPasswordAuthenticator;
+import jcifs.smb.SmbFile;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorOutputStream;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,28 +34,19 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.zip.Deflater;
-import jcifs.CIFSContext;
-import jcifs.config.PropertyConfiguration;
-import jcifs.context.BaseContext;
-import jcifs.smb.NtlmPasswordAuthenticator;
-import jcifs.smb.SmbFile;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorOutputStream;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import se.sundsvall.invoicesender.model.Batch;
-import se.sundsvall.invoicesender.model.Item;
+
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
 
 public class RaindanceIntegration {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RaindanceIntegration.class);
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
-	private static final Predicate<Item> UNSENT_ITEMS = item -> item.getStatus() != SENT;
+	private static final Predicate<ItemEntity> UNSENT_ITEMS = item -> item.getStatus() != SENT;
 	private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
 	private final String host;
@@ -70,11 +73,16 @@ public class RaindanceIntegration {
 
 			// Initialize the JCIFS context
 			var config = new PropertyConfiguration(environment.jcifsProperties());
+
+			System.out.println("domain: " + environment.domain());
+			System.out.println("username: " + environment.username());
+			System.out.println("password: " + environment.password());
+
 			context = new BaseContext(config)
 				.withCredentials(new NtlmPasswordAuthenticator(
 					environment.domain(), environment.username(), environment.password()));
 
-			incomingShareUrl = String.format("smb://%s:%d/%s", host, port, appendTrailingSlashIfMissing(environment.share()));
+			incomingShareUrl = String.format("smb://%s:%d//%s", host, port, appendTrailingSlashIfMissing(environment.share()));
 
 			LOG.info("Raindance will be reading from {}", incomingShareUrl);
 		} catch (IOException e) {
@@ -82,12 +90,12 @@ public class RaindanceIntegration {
 		}
 	}
 
-	public List<Batch> readBatches(final LocalDate date, final String batchName) throws IOException {
+	public List<BatchEntity> readBatches(final LocalDate date, final String batchName) throws IOException {
 		LOG.info("Reading batch(es) for {}", date);
 
 		var datePart = date.format(DATE_FORMATTER);
 		try (var share = new SmbFile(incomingShareUrl, context)) {
-			var batches = new ArrayList<Batch>();
+			var batches = new ArrayList<BatchEntity>();
 
 			for (var file : share.listFiles()) {
 				var filename = file.getName();
@@ -116,24 +124,23 @@ public class RaindanceIntegration {
 				Files.createDirectories(localBatchWorkDirectory);
 
 				// Create a batch
-				var batch = new Batch()
+				var batchEntity = new BatchEntity()
 					.withLocalPath(localBatchWorkDirectory.toString())
 					.withBasename(filename.replaceAll("\\.zip\\.7z$", ""))
 					.withTargetPath(matchingBatchSetup.targetPath())
 					.withArchivePath(matchingBatchSetup.archivePath())
-					.withProcess(matchingBatchSetup.process());
+					.withProcessingEnabled(matchingBatchSetup.process());
 				// Read/copy the file data
 				try (var in = file.getInputStream(); var baos = new ByteArrayOutputStream()) {
 					IOUtils.copy(in, baos);
-
-					batch.setData(baos.toByteArray());
+					batchEntity.setData(baos.toByteArray());
 				}
 				file.close();
 
 				// Store the 7z file locally
 				var sevenZipFile = localBatchWorkDirectory.resolve(filename).toFile();
 				try (var out = new FileOutputStream(sevenZipFile)) {
-					IOUtils.copy(new ByteArrayInputStream(batch.getData()), out);
+					IOUtils.copy(new ByteArrayInputStream(batchEntity.getData()), out);
 				}
 
 				LOG.info("Processing 7z file '{}' using work directory '{}'", filename, localBatchWorkDirectory.toAbsolutePath());
@@ -170,12 +177,17 @@ public class RaindanceIntegration {
 						}
 
 						// Add the item to the current batch
-						batch.addItem(new Item(zipEntryName));
+						batchEntity.getItems().add(new ItemEntity()
+							.withFilename(zipEntryName)
+							.withStatus(UNHANDLED)
+							.withType(UNKNOWN)
+							.withBatch(batchEntity));
+
 						zipEntry = zipArchiveInputStream.getNextEntry();
 					}
 				}
 
-				batches.add(batch);
+				batches.add(batchEntity);
 			}
 
 			LOG.info("Read {} batch(es)", batches.size());
@@ -184,7 +196,7 @@ public class RaindanceIntegration {
 		}
 	}
 
-	public void writeBatch(final Batch batch) throws IOException {
+	public void writeBatch(final BatchEntity batch) throws IOException {
 		var targetPath = String.format("smb://%s:%d/%s%s", host, port,
 			appendTrailingSlashIfMissing(batch.getTargetPath()),
 			batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix);
@@ -212,7 +224,7 @@ public class RaindanceIntegration {
 		}
 	}
 
-	public void archiveOriginalBatch(final Batch batch) throws IOException {
+	public void archiveOriginalBatch(final BatchEntity batch) throws IOException {
 		var sourcePath = incomingShareUrl + batch.getBasename() + BATCH_FILE_SUFFIX;
 		var targetPath = String.format("smb://%s:%d/%s%s", host, port,
 			appendTrailingSlashIfMissing(batch.getArchivePath()),
@@ -233,7 +245,7 @@ public class RaindanceIntegration {
 		}
 	}
 
-	private void recreateSevenZipFile(final Batch batch) throws IOException {
+	private void recreateSevenZipFile(final BatchEntity batch) throws IOException {
 		var batchPath = Paths.get(batch.getLocalPath());
 
 		// We're only interested in putting back unsent items
@@ -272,8 +284,8 @@ public class RaindanceIntegration {
 		}
 	}
 
-	String appendTrailingSlashIfMissing(final String s) {
-		return s.endsWith("/") ? s : s + "/";
+	String appendTrailingSlashIfMissing(final String string) {
+		return string.endsWith("/") ? string : string + "/";
 	}
 
 	public Set<String> getBatchSetups() {

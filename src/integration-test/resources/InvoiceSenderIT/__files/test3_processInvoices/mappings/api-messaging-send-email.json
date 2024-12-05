@@ -1,0 +1,19 @@
+{
+	"request": {
+		"method": "POST",
+		"bodyPatterns": [{"contains": "someone@something.com"}],
+		"url": "/messaging/2281/email"
+	},
+	"response": {
+		"headers": {"Content-Type": "application/json"},
+		"jsonBody": {
+			"messageId": "bb25d4ae-7ae3-4140-9ff0-93f77bff770a",
+			"deliveries": [{
+				"deliveryId": "7d6f8933-91b1-493c-a947-34c6a47e0015",
+				"messageType": "EMAIL",
+				"status": "SENT"
+			}]
+		},
+		"status": 201
+	}
+}

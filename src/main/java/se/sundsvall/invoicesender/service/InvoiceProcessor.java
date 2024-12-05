@@ -1,38 +1,5 @@
 package se.sundsvall.invoicesender.service;
 
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.ISO_8859_1;
-import static java.util.function.Predicate.not;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isAnyBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_LEGAL_ID;
-import static se.sundsvall.invoicesender.model.Item.ITEM_HAS_PARTY_ID;
-import static se.sundsvall.invoicesender.model.Item.ITEM_IS_A_PDF;
-import static se.sundsvall.invoicesender.model.Item.ITEM_IS_PROCESSABLE;
-import static se.sundsvall.invoicesender.model.Item.ITEM_IS_SENT;
-import static se.sundsvall.invoicesender.model.ItemStatus.IGNORED;
-import static se.sundsvall.invoicesender.model.ItemStatus.METADATA_INCOMPLETE;
-import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_FOUND;
-import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID;
-import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
-import static se.sundsvall.invoicesender.model.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
-import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
-import static se.sundsvall.invoicesender.model.ItemType.INVOICE;
-import static se.sundsvall.invoicesender.model.ItemType.OTHER;
-import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
-import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,25 +8,55 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
-import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
+import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
 import se.sundsvall.invoicesender.integration.party.PartyIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
-import se.sundsvall.invoicesender.model.Batch;
-import se.sundsvall.invoicesender.model.Item;
+import se.sundsvall.invoicesender.service.model.Metadata;
 import se.sundsvall.invoicesender.service.util.XmlUtil;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isAnyBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IN_PROGRESS;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_LEGAL_ID_FOUND;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
+import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
+import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
+import static se.sundsvall.invoicesender.util.Constants.DISABLED_CRON;
+import static se.sundsvall.invoicesender.util.Constants.INVOICE_COULD_NOT_BE_SENT;
+import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_A_PDF;
+import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_NOT_PROCESSABLE;
+import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_HAS_INVALID_LEGAL_ID;
+import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_HAS_INVALID_PARTY_ID;
+import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_PATTERN;
+import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
 
 @Service
 public class InvoiceProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
-
-	private static final Pattern RECIPIENT_PATTERN = Pattern.compile("\\w+_\\d+_to_(\\d+)\\.pdf$");
-
-	private static final String BATCH_FILE_SUFFIX = ".zip.7z";
-
-	private static final String DISABLED_CRON = "-";
+	private static final String ARCHIVE_INDEX = "ArchiveIndex.xml";
 
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
@@ -115,7 +112,7 @@ public class InvoiceProcessor {
 
 	/**
 	 * Runs the invoice processor for the given date, municipality id and each configured batch-setup.
-	 * 
+	 *
 	 * @param date           the date.
 	 * @param municipalityId the municipality id.
 	 */
@@ -132,178 +129,204 @@ public class InvoiceProcessor {
 	}
 
 	public void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
-		var processedBatches = new ArrayList<BatchDto>();
 
 		// Get the Raindance integration
 		var raindanceIntegration = raindanceIntegrations.get(municipalityId);
 		// Get the batches from Raindance
 		var batches = raindanceIntegration.readBatches(date, batchName);
 
-		for (var batch : batches) {
-			if (batch.isProcessingEnabled()) {
-				LOG.info("Processing batch {}", batch.getBasename() + BATCH_FILE_SUFFIX);
+		var batchEntities = dbIntegration.persistBatches(batches);
 
-				// Mark non-invoice items (i.e. not PDF:s)
-				markNonPdfItemsAsOther(batch);
-				// Mark invoice items
-				markInvoiceItems(batch, municipalityId);
+		for (var batchEntity : batchEntities) {
+			if (batchEntity.isProcessingEnabled()) {
+				LOG.info("Processing batch {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
+				var localPath = batchEntity.getLocalPath();
+				var archiveIndex = mapXmlFileToString(localPath);
+				for (var item : batchEntity.getItems()) {
 
-				// Extract the item metadata
-				extractItemMetadata(batch);
-				// Extract recipient legal id:s if possible
-				extractInvoiceRecipientLegalIds(batch);
-				// Remove any items that have invalid recipient legal ids
-				markItemsWithInvalidLegalIds(batch);
-				// Remove any items where the recipient has a protected identity
-				markProtectedIdentityItems(batch);
-				// Get the recipient party id from the invoices that are left and where the recipient legal id is set
-				fetchInvoiceRecipientPartyIds(batch, municipalityId);
-				// Send digital mail for the invoices where the recipient party id is set
-				sendDigitalInvoices(batch, municipalityId);
-				// Update the archive index - ArchiveIndex.xml
-				updateArchiveIndex(batch);
+					// Mark invoice items
+					markItems(item, municipalityId);
+					if (ITEM_IS_NOT_PROCESSABLE.test(item)) {
+						// Stop processing item if it is not processable.
+						LOG.info("Item not processable - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					// Extract the item metadata
+					extractItemMetadata(item, archiveIndex);
+					if (ITEM_IS_NOT_PROCESSABLE.test(item)) {
+						// Stop processing item if it is not processable.
+						LOG.info("Item not processable - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					// Extract recipient legal id:s if possible
+					extractInvoiceRecipientLegalId(item);
+					if (RECIPIENT_HAS_INVALID_LEGAL_ID.test(item)) {
+						// Stop processing item if it does not have a legal id.
+						LOG.info("Item has an invalid legal id - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					// Remove any items that have invalid recipient legal ids
+					validateLegalId(item);
+					if (RECIPIENT_HAS_INVALID_LEGAL_ID.test(item)) {
+						// Stop processing item if it has an invalid legal id.
+						LOG.info("Invalid recipient legal id - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					// Remove any items where the recipient has a protected identity
+					markProtectedIdentityItems(item);
+					if (RECIPIENT_HAS_INVALID_LEGAL_ID.test(item)) {
+						// Stop processing item if the recipient has a protected identity.
+						LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					// Get the recipient party id from the invoices that are left and where the recipient legal id is set
+					fetchInvoiceRecipientPartyIds(item, municipalityId);
+					if (RECIPIENT_HAS_INVALID_PARTY_ID.test(item)) {
+						// Stop processing item if the recipient party id is invalid.
+						LOG.info("Invalid recipient party id - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					// Send digital mail for the invoices where the recipient party id is set
+					sendDigitalInvoices(item, localPath, municipalityId);
+					if (INVOICE_COULD_NOT_BE_SENT.test(item)) {
+						// Stop processing item if the invoice could not be sent.
+						LOG.info("Invoice could not be sent - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					dbIntegration.persistItem(item);
+					// Update the archive index - ArchiveIndex.xml
+					archiveIndex = removeItemFromArchiveIndex(item, archiveIndex, localPath);
+				}
 			} else {
-				LOG.info("Batch processing is disabled for {}", batch.getBasename() + BATCH_FILE_SUFFIX);
+				LOG.info("Batch processing is disabled for {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
 			}
 
 			// Write the batch back to Raindance
-			raindanceIntegration.writeBatch(batch);
+			raindanceIntegration.writeBatch(batchEntity);
 			// Mark the batch as completed and store it
-			processedBatches.add(completeBatchAndStoreExecution(batch, municipalityId));
+			updateAndPersistBatch(batchEntity);
 
 			// Archive the batch
-			if (isNotBlank(batch.getArchivePath())) {
-				LOG.info("Archiving batch {}", batch.getBasename() + BATCH_FILE_SUFFIX);
-
-				raindanceIntegration.archiveOriginalBatch(batch);
+			if (isNotBlank(batchEntity.getArchivePath())) {
+				LOG.info("Archiving batch {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
+				raindanceIntegration.archiveOriginalBatch(batchEntity);
 			}
-
 			// Clean up
-			FileUtils.deleteDirectory(Paths.get(batch.getLocalPath()).toFile());
+			FileUtils.deleteDirectory(Paths.get(batchEntity.getLocalPath()).toFile());
 		}
-
 		// Send a status report
-		messagingIntegration.sendStatusReport(processedBatches, municipalityId);
+		messagingIntegration.sendStatusReport(batchEntities, municipalityId);
 	}
 
-	/**
-	 * Marks the items in the batch that aren't PDF files as "other".
-	 *
-	 * @param batch the batch.
-	 */
-	void markNonPdfItemsAsOther(final Batch batch) {
-		getItems(batch, not(ITEM_IS_A_PDF)).forEach(item -> {
-			LOG.info("Marking item {} as OTHER", item.getFilename());
-
-			item.setType(OTHER);
-		});
-	}
-
-	/**
-	 * Marks the items in the batch that are PDF files as invoices. Also, if invoice filename
-	 * prefixes is set and non-empty, marks any items that don't start with any of the prefixes as
-	 * ignored.
-	 *
-	 * @param batch the batch.
-	 */
-	void markInvoiceItems(final Batch batch, final String municipalityId) {
-		getItems(batch, ITEM_IS_A_PDF).forEach(item -> {
-			LOG.info("Marking item {} as an INVOICE", item.getFilename());
-
+	void markItems(final ItemEntity item, final String municipalityId) {
+		if (ITEM_IS_A_PDF.test(item)) {
+			LOG.info("Setting item {} type to INVOICE", item.getFilename());
 			item.setType(INVOICE);
+			item.setStatus(IN_PROGRESS);
 
 			var invoiceFilenamePrefixesForMunicipality = invoiceFilenamePrefixes.get(municipalityId);
 
 			if (isNotEmpty(invoiceFilenamePrefixesForMunicipality) && invoiceFilenamePrefixesForMunicipality.stream().noneMatch(prefix -> item.getFilename().startsWith(prefix))) {
-				LOG.info("Marking item {} as IGNORED", item.getFilename());
-
+				LOG.info("Setting item {} status to IGNORED", item.getFilename());
 				item.setStatus(IGNORED);
 			}
-		});
+		} else {
+			LOG.info("Setting item {} type to OTHER and status to IGNORED", item.getFilename());
+			item.setType(OTHER);
+			item.setStatus(IGNORED);
+		}
 	}
 
-	void extractItemMetadata(final Batch batch) throws IOException {
-		var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
-		var xml = Files.readString(path, ISO_8859_1);
-
-		getProcessableInvoiceItems(batch).forEach(item -> {
-			LOG.info("Extracting metadata for item {}", item.getFilename());
-
-			// Create the XPath expression from the item filename
-			var xPathExpression = format("//file[filename='%s']", item.getFilename());
-			// Evaluate
-			var result = XmlUtil.find(xml, xPathExpression);
-			// Extract the item metadata
-			var invoiceNumber = result.select("InvoiceNo").text();
-			var invoiceDate = result.select("InvoiceDate").text();
-			var dueDate = result.select("DueDate").text();
-			var payable = !"01".equals(result.select("AGF").text().trim());
-			var reminder = "1".equals(result.select("Reminder").text());
-			var accountNumber = result.select("PaymentNo").text();
-			var paymentReference = result.select("PaymentReference").text();
-			var totalAmount = result.select("TotalAmount").text();
-
-			// Check if we've managed to extract all required metadata fields. If not - mark it as incomplete and
-			// bail out early since we won't do any further processing on the item
-			if (isAnyBlank(invoiceNumber, invoiceDate, dueDate, accountNumber, paymentReference, totalAmount)) {
-				item.setStatus(METADATA_INCOMPLETE);
-
-				return;
-			}
-
-			// Set the item metadata
-			item.setMetadata(new Item.Metadata()
-				.withInvoiceNumber(invoiceNumber)
-				.withInvoiceDate(invoiceDate)
-				.withDueDate(dueDate)
-				.withPayable(payable)
-				.withReminder(reminder)
-				.withAccountNumber(accountNumber)
-				.withPaymentReference(paymentReference)
-				.withTotalAmount(totalAmount));
-		});
+	String mapXmlFileToString(final String localPath) throws IOException {
+		var path = Paths.get(localPath).resolve(ARCHIVE_INDEX);
+		return Files.readString(path, ISO_8859_1);
 	}
 
-	void extractInvoiceRecipientLegalIds(final Batch batch) {
-		getProcessableInvoiceItems(batch).forEach(item -> {
-			// Try to extract the recipient's legal id from the invoice PDF filename and update
-			// the invoice accordingly
-			var matcher = RECIPIENT_PATTERN.matcher(item.getFilename());
-			if (matcher.matches()) {
-				LOG.info("Extracted recipient legal id for item {}", item.getFilename());
+	void extractInvoiceRecipientLegalId(final ItemEntity item) {
 
-				item.setStatus(RECIPIENT_LEGAL_ID_FOUND);
-				item.setRecipientLegalId(matcher.group(1));
-			} else {
-				LOG.info("Failed to extract recipient legal id for item {}", item.getFilename());
-
-				item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
-			}
-		});
+		// Try to extract the recipient's legal id from the invoice PDF filename and update
+		// the invoice accordingly
+		var matcher = RECIPIENT_PATTERN.matcher(item.getFilename());
+		if (matcher.matches()) {
+			LOG.info("Extracted recipient legal id for item {}", item.getFilename());
+			item.setStatus(RECIPIENT_LEGAL_ID_FOUND);
+			item.setRecipientLegalId(matcher.group(1));
+		} else {
+			LOG.info("Failed to extract recipient legal id for item {}", item.getFilename());
+			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
+		}
 	}
 
-	void markItemsWithInvalidLegalIds(final Batch batch) {
-		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> {
-			if (!isValidLegalId(item.getRecipientLegalId())) {
-				LOG.info("Invalid recipient legal id - skipping item {}", item.getFilename());
-
-				item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
-			}
-		});
+	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml, final String localPath) throws IOException {
+		var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
+		var path = Paths.get(localPath).resolve(ARCHIVE_INDEX);
+		Files.writeString(path, XmlUtil.XML_DECLARATION.concat("\n").concat(newXml), ISO_8859_1);
+		LOG.info("Removed item {} from ArchiveIndex.xml", item.getFilename());
+		return newXml;
 	}
 
-	void markProtectedIdentityItems(final Batch batch) {
-		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> {
-			if (citizenIntegration.hasProtectedIdentity(item.getRecipientLegalId())) {
-				LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
+	void extractItemMetadata(final ItemEntity item, final String archiveIndex) {
+		LOG.info("Extracting metadata for item {}", item.getFilename());
 
-				item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
-			}
-		});
+		// Evaluate
+		var result = XmlUtil.find(archiveIndex, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
+		// Extract the item metadata
+		var invoiceNumber = result.select("InvoiceNo").text();
+		var invoiceDate = result.select("InvoiceDate").text();
+		var dueDate = result.select("DueDate").text();
+		var payable = !"01".equals(result.select("AGF").text().trim());
+		var reminder = "1".equals(result.select("Reminder").text());
+		var accountNumber = result.select("PaymentNo").text();
+		var paymentReference = result.select("PaymentReference").text();
+		var totalAmount = result.select("TotalAmount").text();
+
+		// Check if we've managed to extract all required metadata fields. If not - mark it as incomplete and
+		// bail out early since we won't do any further processing on the item
+		if (isAnyBlank(invoiceNumber, invoiceDate, dueDate, accountNumber, paymentReference, totalAmount)) {
+			item.setStatus(METADATA_INCOMPLETE);
+			return;
+		}
+
+		// Set the item metadata
+		item.setMetadata(new Metadata()
+			.withInvoiceNumber(invoiceNumber)
+			.withInvoiceDate(invoiceDate)
+			.withDueDate(dueDate)
+			.withPayable(payable)
+			.withReminder(reminder)
+			.withAccountNumber(accountNumber)
+			.withPaymentReference(paymentReference)
+			.withTotalAmount(totalAmount));
 	}
 
-	void fetchInvoiceRecipientPartyIds(final Batch batch, final String municipalityId) {
-		getInvoiceItemsWithLegalIdSet(batch).forEach(item -> partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
+	void validateLegalId(final ItemEntity item) {
+		if (!isValidLegalId(item.getRecipientLegalId())) {
+			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
+		}
+	}
+
+	void markProtectedIdentityItems(final ItemEntity item) {
+		if (citizenIntegration.hasProtectedIdentity(item.getRecipientLegalId())) {
+			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
+		}
+	}
+
+	void fetchInvoiceRecipientPartyIds(final ItemEntity item, final String municipalityId) {
+		partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
 			.ifPresentOrElse(partyId -> {
 				LOG.info("Fetched recipient party id for item {}", item.getFilename());
 
@@ -313,69 +336,28 @@ public class InvoiceProcessor {
 				LOG.info("Failed to fetch recipient party id for item {}", item.getFilename());
 
 				item.setStatus(RECIPIENT_PARTY_ID_NOT_FOUND);
-			}));
+			});
 	}
 
-	void sendDigitalInvoices(final Batch batch, final String municipalityId) {
-		getInvoiceItemsWithPartyIdSet(batch).forEach(item -> {
-			var status = messagingIntegration.sendInvoice(batch.getLocalPath(), item, municipalityId);
+	void sendDigitalInvoices(final ItemEntity item, final String localPath, final String municipalityId) {
+		var status = messagingIntegration.sendInvoice(localPath, item, municipalityId);
+		item.setStatus(status);
+		LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
 
-			item.setStatus(status);
-
-			LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
-		});
 	}
 
-	void updateArchiveIndex(final Batch batch) throws IOException {
-		var sentItems = getSentInvoiceItems(batch);
+	void updateAndPersistBatch(final BatchEntity batchEntity) {
+		batchEntity.setCompleted(true);
+		batchEntity.setCompletedAt(LocalDateTime.now());
 
-		if (!sentItems.isEmpty()) {
-			var path = Paths.get(batch.getLocalPath()).resolve("ArchiveIndex.xml");
-			var xml = Files.readString(path, ISO_8859_1);
+		batchEntity.setIgnoredItems(batchEntity.getItems().stream()
+			.filter(item -> item.getStatus() == IGNORED)
+			.count());
+		batchEntity.setSentItems(batchEntity.getItems().stream()
+			.filter(item -> item.getStatus() == SENT)
+			.count());
 
-			for (var sentItem : sentItems) {
-				var xPathExpression = String.format("//file[filename='%s']", sentItem.getFilename());
-
-				// Remove the matching nodes
-				xml = XmlUtil.remove(xml, xPathExpression);
-			}
-
-			Files.writeString(path, XmlUtil.XML_DECLARATION.concat("\n").concat(xml), ISO_8859_1);
-		}
+		dbIntegration.persistBatch(batchEntity);
 	}
 
-	BatchDto completeBatchAndStoreExecution(final Batch batch, final String municipalityId) {
-		// Mark the batch as completed
-		batch.setCompleted();
-		// Store the batch execution
-		return dbIntegration.storeBatch(batch, municipalityId);
-	}
-
-	List<Item> getInvoiceItemsWithLegalIdSet(final Batch batch) {
-		return getProcessableInvoiceItems(batch).stream()
-			.filter(ITEM_HAS_LEGAL_ID)
-			.toList();
-	}
-
-	List<Item> getInvoiceItemsWithPartyIdSet(final Batch batch) {
-		return getProcessableInvoiceItems(batch).stream()
-			.filter(ITEM_HAS_PARTY_ID)
-			.toList();
-	}
-
-	List<Item> getSentInvoiceItems(final Batch batch) {
-		return getProcessableInvoiceItems(batch).stream()
-			.filter(ITEM_IS_SENT)
-			.toList();
-	}
-
-	List<Item> getProcessableInvoiceItems(final Batch batch) {
-		return getItems(batch, ITEM_IS_PROCESSABLE);
-	}
-
-	List<Item> getItems(final Batch batch, final Predicate<Item> predicate) {
-		return batch.getItems().stream()
-			.filter(predicate)
-			.toList();
-	}
 }
