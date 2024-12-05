@@ -1,7 +1,5 @@
 package se.sundsvall.invoicesender.util;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
@@ -19,7 +17,9 @@ import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_IGNORED;
 import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_NOT_PROCESSABLE;
 import static se.sundsvall.invoicesender.util.Constants.ITEM_LACKS_METADATA;
 
-public class PredicateTests {
+import org.junit.jupiter.api.Test;
+
+class PredicateTests {
 
 	private static final String DUMMY_DOT_PDF = "dummy.pdf";
 	private static final String DUMMY_DOT_DOCX = "dummy.docx";
