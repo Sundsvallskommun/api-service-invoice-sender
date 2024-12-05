@@ -1,0 +1,78 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test
+    driver-class-name: org.h2.Driver
+    username: sa
+  jpa:
+    hibernate:
+      ddl-auto: update
+  flyway:
+    enabled: false
+
+# Invoice processor schedule
+invoice-processor:
+  restart:
+    enabled: false
+    cron-expression: '-'
+
+integration:
+  # Raindance integration
+  raindance:
+    environments:
+      2281:
+        host: localhost
+        port: 1445
+        domain: WORKGROUP
+        username: user
+        password: 1234
+        share: files/
+        invoice-filename-prefixes:
+          - Faktura
+        batch-setup:
+          "Faktura-pdf":
+            scheduling:
+              cron-expression: '-'
+            process: true
+            target-path: files/return/
+            archive-path: files/archive/
+          "Betalningspaminnelse-pdf":
+            scheduling:
+              cron-expression: '-'
+            process: false
+            target-path: files/return/
+        local-work-directory: /tmp/raindance/incoming
+        connect-timeout: PT10S
+        response-timeout: PT15S
+
+  # Citizen
+  citizen:
+    url: http://localhost:${wiremock.server.port}/citizen
+    oauth2:
+      token-url: http://localhost:${wiremock.server.port}/token
+      client-id: someClientId
+      client-secret: someClientSecret
+
+  # Party
+  party:
+    url: http://localhost:${wiremock.server.port}/party
+    oauth2:
+      token-url: http://localhost:${wiremock.server.port}/token
+      client-id: someClientId
+      client-secret: someClientSecret
+
+  # Messaging
+  messaging:
+    url: http://localhost:${wiremock.server.port}/messaging
+    oauth2:
+      token-url: http://localhost:${wiremock.server.port}/token
+      client-id: someClientId
+      client-secret: someClientSecret
+    invoice:
+      subject: someSubject
+      reference-prefix: 'Faktura #'
+    status-report:
+      sender-name: SomeSender
+      sender-email-address: noreply@something.com
+      recipient-email-addresses:
+        - someone@something.com
+      subject-prefix: somePrefix

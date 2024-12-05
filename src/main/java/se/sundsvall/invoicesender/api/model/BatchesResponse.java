@@ -1,11 +1,9 @@
 package se.sundsvall.invoicesender.api.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
+import java.util.List;
 
 @JsonPropertyOrder({
 	"batches", "pagination"
@@ -19,5 +17,6 @@ public record BatchesResponse(
 		int page,
 		int pageSize,
 		int totalPages,
-		long totalElements) {}
+		long totalElements) {
+	}
 }
