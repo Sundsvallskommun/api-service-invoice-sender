@@ -65,9 +65,9 @@ public class MessagingIntegration {
 				request.setEmailAddress(recipientEmailAddress);
 
 				client.sendEmail(municipalityId, request);
-				LOG.info("Status report sent to " + recipientEmailAddress);
+				LOG.info("Status report sent to {}", recipientEmailAddress);
 			} catch (final Exception e) {
-				LOG.warn("Unable to send status report to " + recipientEmailAddress, e);
+				LOG.warn("Unable to send status report to {}", recipientEmailAddress, e);
 			}
 		}
 	}

@@ -74,10 +74,6 @@ public class RaindanceIntegration {
 			// Initialize the JCIFS context
 			var config = new PropertyConfiguration(environment.jcifsProperties());
 
-			System.out.println("domain: " + environment.domain());
-			System.out.println("username: " + environment.username());
-			System.out.println("password: " + environment.password());
-
 			context = new BaseContext(config)
 				.withCredentials(new NtlmPasswordAuthenticator(
 					environment.domain(), environment.username(), environment.password()));
