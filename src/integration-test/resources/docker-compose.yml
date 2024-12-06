@@ -2,14 +2,14 @@ version: '3'
 services:
   samba:
     image: dperson/samba
-    command:
-      sh -c "
-      mkdir -p /files/return /files/archive &&
-      /usr/bin/samba.sh -s 'files;/files;yes;no;no;user;none;user;none' -u 'user;1234' -w WORKGROUP -p
-      "
     ports:
       - "1445:445"
     tmpfs:
       - /tmp
     volumes:
       - ./raindance-share:/files:rw
+    command:
+      sh -c "
+      mkdir -p /files/return /files/archive &&
+      /usr/bin/samba.sh -s 'files;/files;yes;no;no;user;user;user;none' -u 'user;p4ssw0rd' -w SOMEWORKGROUP -p
+      "
