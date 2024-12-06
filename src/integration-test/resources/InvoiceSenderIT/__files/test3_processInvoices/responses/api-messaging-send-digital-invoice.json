@@ -1,0 +1,8 @@
+{
+	"messageId": "58f96da8-6d76-4fa6-bb92-64f71fdc6aa5",
+	"deliveries": [{
+		"deliveryId": "72a07e16-1b35-4b3f-8bf9-12256785ef34",
+		"messageType": "DIGITAL_INVOICE",
+		"status": "SENT"
+	}]
+}
