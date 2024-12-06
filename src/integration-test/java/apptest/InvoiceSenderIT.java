@@ -1,5 +1,16 @@
 package apptest;
 
+import static apptest.util.TestUtil.extractZipFile;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpStatus.OK;
+import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import jcifs.CIFSContext;
 import jcifs.smb.SmbFile;
 import org.apache.commons.io.FileUtils;
@@ -17,18 +28,6 @@ import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
 import se.sundsvall.invoicesender.service.InvoiceProcessor;
 import se.sundsvall.invoicesender.service.util.XmlUtil;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-
-import static apptest.util.TestUtil.extractZipFile;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpStatus.OK;
-import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
-
 @Testcontainers
 @WireMockAppTestSuite(files = "classpath:/InvoiceSenderIT/", classes = Application.class)
 class InvoiceSenderIT extends AbstractAppTest {
@@ -39,6 +38,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String SERVICE_PATH = "/2281/batches/trigger";
 	private static final String BASE_DIR = "src/integration-test/resources";
 	private static final String SHARE_DIR = BASE_DIR + "/raindance-share";
+	private static final String TEST_DATA_DIR = BASE_DIR + "/testdata";
 	private static final String ARCHIVE_INDEX_XML = "ArchiveIndex.xml";
 
 	@Autowired
@@ -51,7 +51,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 
 	@AfterAll
 	static void cleanUp() throws IOException {
-		FileUtils.cleanDirectory(new File(SHARE_DIR));
+		FileUtils.forceDeleteOnExit(new File(SHARE_DIR));
 	}
 
 	/**
@@ -60,7 +60,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	@Test
 	void test1_processInvoices() throws IOException {
 		var inputFile = "Faktura-pdf-200101_000001.zip.7z";
-		FileUtils.copyFileToDirectory(new File(BASE_DIR + File.separator + inputFile), new File(SHARE_DIR));
+		FileUtils.copyFileToDirectory(new File(TEST_DATA_DIR + File.separator + inputFile), new File(SHARE_DIR));
 
 		// Invoices that are part of the ZIP file and the status that we expect.
 		List<Invoice> invoices = List.of(
@@ -85,7 +85,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
 		try (var archiveFile = new SmbFile(ARCHIVE_PATH + inputFile, getCIFSContext())) {
-			var originalFile = new File(BASE_DIR + File.separator + inputFile);
+			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
 	}
@@ -96,7 +96,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	@Test
 	void test2_processInvoices() throws IOException {
 		var inputFile = "Faktura-pdf-200102_000002.zip.7z";
-		FileUtils.copyFileToDirectory(new File(BASE_DIR + File.separator + inputFile), new File(SHARE_DIR));
+		FileUtils.copyFileToDirectory(new File(TEST_DATA_DIR + File.separator + inputFile), new File(SHARE_DIR));
 
 		// Invoices that are part of the ZIP file and the status that we expect.
 		List<Invoice> invoices = List.of(
@@ -121,7 +121,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
 		try (var archiveFile = new SmbFile(ARCHIVE_PATH + inputFile, getCIFSContext())) {
-			var originalFile = new File(BASE_DIR + File.separator + inputFile);
+			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
 	}
@@ -132,7 +132,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	@Test
 	void test3_processInvoices() throws IOException {
 		var inputFile = "Faktura-pdf-200103_000003.zip.7z";
-		FileUtils.copyFileToDirectory(new File(BASE_DIR + File.separator + inputFile), new File(SHARE_DIR));
+		FileUtils.copyFileToDirectory(new File(TEST_DATA_DIR + File.separator + inputFile), new File(SHARE_DIR));
 
 		// Invoices that are part of the ZIP file and the status that we expect.
 		List<Invoice> invoices = List.of(
@@ -156,7 +156,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
 		try (var archiveFile = new SmbFile(ARCHIVE_PATH + inputFile, getCIFSContext())) {
-			var originalFile = new File(BASE_DIR + File.separator + inputFile);
+			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
 	}

@@ -1,5 +1,7 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
+import static jakarta.persistence.EnumType.STRING;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -10,8 +12,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import se.sundsvall.invoicesender.service.model.Metadata;
-
-import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Table(name = "batch_items")
@@ -146,5 +146,36 @@ public class ItemEntity {
 
 	public void setStatus(final ItemStatus status) {
 		this.status = status;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o instanceof ItemEntity other) {
+			return id != null && id.equals(other.id);
+		}
+
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "ItemEntity{" +
+			"id=" + id +
+			", filename='" + filename + '\'' +
+			", status=" + status +
+			", type=" + type +
+			", batch=" + batch +
+			", metadata=" + metadata +
+			", recipientPartyId='" + recipientPartyId + '\'' +
+			", recipientLegalId='" + recipientLegalId + '\'' +
+			'}';
 	}
 }

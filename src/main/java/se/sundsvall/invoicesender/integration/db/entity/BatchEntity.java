@@ -1,5 +1,8 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
+import static jakarta.persistence.CascadeType.PERSIST;
+import static jakarta.persistence.FetchType.EAGER;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,13 +12,10 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import static jakarta.persistence.CascadeType.PERSIST;
-import static jakarta.persistence.FetchType.EAGER;
 
 @Entity
 @Table(name = "batch_executions",
@@ -266,4 +266,41 @@ public class BatchEntity {
 		return this;
 	}
 
+	@Override
+	public String toString() {
+		return "BatchEntity{" +
+			"id=" + id +
+			", basename='" + basename + '\'' +
+			", municipalityId='" + municipalityId + '\'' +
+			", localPath='" + localPath + '\'' +
+			", archivePath='" + archivePath + '\'' +
+			", targetPath='" + targetPath + '\'' +
+			", startedAt=" + startedAt +
+			", completedAt=" + completedAt +
+			", items=" + items +
+			", totalItems=" + totalItems +
+			", ignoredItems=" + ignoredItems +
+			", sentItems=" + sentItems +
+			", processingEnabled=" + processingEnabled +
+			", completed=" + completed +
+			", data=" + Arrays.toString(data) +
+			'}';
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o instanceof BatchEntity other) {
+			return id != null && id.equals(other.id);
+		}
+
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
+	}
 }

@@ -12,3 +12,12 @@ ALTER TABLE `batch_executions`
     ADD COLUMN `data` LONGBLOB NULL;
 ALTER TABLE `batch_items`
     ADD COLUMN `type` VARCHAR(255) NULL;
+
+ALTER TABLE `batch_executions`
+    ALTER COLUMN `processing_enabled` DROP DEFAULT;
+ALTER TABLE `batch_executions`
+    ALTER COLUMN `completed` DROP DEFAULT;
+
+UPDATE `batch_items`
+SET `type` = 'UNKNOWN'
+WHERE `type` IS NULL;

@@ -22,9 +22,9 @@ integration:
       2281:
         host: localhost
         port: 1445
-        domain: WORKGROUP
+        domain: SOMEWORKGROUP
         username: user
-        password: 1234
+        password: p4ssw0rd
         share: files/
         invoice-filename-prefixes:
           - Faktura

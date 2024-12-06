@@ -1,5 +1,10 @@
 package se.sundsvall.invoicesender.integration.db;
 
+import static java.util.Optional.ofNullable;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -7,12 +12,6 @@ import org.springframework.stereotype.Component;
 import se.sundsvall.invoicesender.api.model.BatchDto;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
 
 @Component
 public class DbIntegration {
@@ -58,7 +57,6 @@ public class DbIntegration {
 			batch.getSentItems(),
 			false))
 			.orElse(null);
-
 	}
 
 }

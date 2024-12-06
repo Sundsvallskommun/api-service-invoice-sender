@@ -1,5 +1,7 @@
 package se.sundsvall.invoicesender.service.model;
 
+import java.util.Objects;
+
 public class Metadata {
 
 	private String invoiceNumber;
@@ -115,4 +117,33 @@ public class Metadata {
 		this.reminder = reminder;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		Metadata metadata = (Metadata) o;
+		return payable == metadata.payable && reminder == metadata.reminder && Objects.equals(invoiceNumber, metadata.invoiceNumber) && Objects.equals(invoiceDate, metadata.invoiceDate) && Objects.equals(dueDate, metadata.dueDate)
+			&& Objects.equals(accountNumber, metadata.accountNumber) && Objects.equals(paymentReference, metadata.paymentReference) && Objects.equals(totalAmount, metadata.totalAmount);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(invoiceNumber, invoiceDate, dueDate, accountNumber, paymentReference, totalAmount, payable, reminder);
+	}
+
+	@Override
+	public String toString() {
+		return "Metadata{" +
+			"invoiceNumber='" + invoiceNumber + '\'' +
+			", invoiceDate='" + invoiceDate + '\'' +
+			", dueDate='" + dueDate + '\'' +
+			", accountNumber='" + accountNumber + '\'' +
+			", paymentReference='" + paymentReference + '\'' +
+			", totalAmount='" + totalAmount + '\'' +
+			", payable=" + payable +
+			", reminder=" + reminder +
+			'}';
+	}
 }

@@ -1,20 +1,10 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
-import jcifs.CIFSContext;
-import jcifs.config.PropertyConfiguration;
-import jcifs.context.BaseContext;
-import jcifs.smb.NtlmPasswordAuthenticator;
-import jcifs.smb.SmbFile;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorOutputStream;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
-import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,12 +24,21 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.zip.Deflater;
-
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.nio.file.StandardOpenOption.WRITE;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
+import jcifs.CIFSContext;
+import jcifs.config.PropertyConfiguration;
+import jcifs.context.BaseContext;
+import jcifs.smb.NtlmPasswordAuthenticator;
+import jcifs.smb.SmbFile;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorOutputStream;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 public class RaindanceIntegration {
 
@@ -198,6 +197,12 @@ public class RaindanceIntegration {
 			batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix);
 
 		LOG.info("Storing batch '{}'", targetPath);
+		var testPath = String.format("smb://%s:%d/%s", host, port, appendTrailingSlashIfMissing(batch.getTargetPath()));
+		try (var testFile = new SmbFile(testPath, context)) {
+			if (!testFile.exists()) {
+				testFile.mkdirs();
+			}
+		}
 
 		if (batch.isProcessingEnabled()) {
 			var batchPath = Paths.get(batch.getLocalPath());
