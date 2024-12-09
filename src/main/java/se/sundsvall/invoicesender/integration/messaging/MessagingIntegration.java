@@ -1,6 +1,12 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+
 import generated.se.sundsvall.messaging.MessageStatus;
+import java.util.Base64;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -9,13 +15,6 @@ import org.thymeleaf.context.Context;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemStatus;
-
-import java.util.Base64;
-import java.util.List;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 
 @Component
 public class MessagingIntegration {

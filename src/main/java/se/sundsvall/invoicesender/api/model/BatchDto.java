@@ -1,11 +1,10 @@
 package se.sundsvall.invoicesender.api.model;
 
+import static com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.time.LocalDateTime;
-
-import static com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING;
 
 public record BatchDto(
 

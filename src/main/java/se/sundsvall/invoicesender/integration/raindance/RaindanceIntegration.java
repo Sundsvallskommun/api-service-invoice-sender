@@ -197,12 +197,6 @@ public class RaindanceIntegration {
 			batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix);
 
 		LOG.info("Storing batch '{}'", targetPath);
-		var testPath = String.format("smb://%s:%d/%s", host, port, appendTrailingSlashIfMissing(batch.getTargetPath()));
-		try (var testFile = new SmbFile(testPath, context)) {
-			if (!testFile.exists()) {
-				testFile.mkdirs();
-			}
-		}
 
 		if (batch.isProcessingEnabled()) {
 			var batchPath = Paths.get(batch.getLocalPath());

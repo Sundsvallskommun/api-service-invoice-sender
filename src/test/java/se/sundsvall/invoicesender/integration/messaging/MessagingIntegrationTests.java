@@ -1,10 +1,25 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
+import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.TEMPLATE_NAME;
+
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,22 +35,6 @@ import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemStatus;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Stream;
-
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
-import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.TEMPLATE_NAME;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingIntegrationTests {

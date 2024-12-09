@@ -1,14 +1,18 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
+import static generated.se.sundsvall.messaging.Details.AccountTypeEnum.BANKGIRO;
+import static generated.se.sundsvall.messaging.Details.PaymentReferenceTypeEnum.SE_OCR;
+import static generated.se.sundsvall.messaging.DigitalInvoiceFile.ContentTypeEnum.APPLICATION_PDF;
+import static generated.se.sundsvall.messaging.DigitalInvoiceRequest.TypeEnum.INVOICE;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.format.DateTimeFormatter.ISO_DATE;
+
 import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
 import generated.se.sundsvall.messaging.DigitalInvoiceParty;
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.EmailSender;
-import org.springframework.stereotype.Component;
-import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -16,13 +20,8 @@ import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
-
-import static generated.se.sundsvall.messaging.Details.AccountTypeEnum.BANKGIRO;
-import static generated.se.sundsvall.messaging.Details.PaymentReferenceTypeEnum.SE_OCR;
-import static generated.se.sundsvall.messaging.DigitalInvoiceFile.ContentTypeEnum.APPLICATION_PDF;
-import static generated.se.sundsvall.messaging.DigitalInvoiceRequest.TypeEnum.INVOICE;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.format.DateTimeFormatter.ISO_DATE;
+import org.springframework.stereotype.Component;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 @Component
 public class MessagingMapper {
