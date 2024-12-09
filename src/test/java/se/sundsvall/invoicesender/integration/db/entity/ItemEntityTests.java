@@ -82,7 +82,7 @@ class ItemEntityTests {
 
 	@Test
 	void testHashCode() {
-		assertThat(new ItemEntity().hashCode()).isEqualTo(ItemEntity.class.hashCode());
+		assertThat(new ItemEntity()).hasSameHashCodeAs(ItemEntity.class);
 	}
 
 	private static class EqualsArgumentsProvider implements ArgumentsProvider {

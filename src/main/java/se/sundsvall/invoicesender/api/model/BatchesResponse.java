@@ -2,7 +2,6 @@ package se.sundsvall.invoicesender.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import java.util.List;
 
 @JsonPropertyOrder({

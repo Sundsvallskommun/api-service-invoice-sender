@@ -116,7 +116,7 @@ class BatchEntityTests {
 
 	@Test
 	void testHashCode() {
-		assertThat(new BatchEntity().hashCode()).isEqualTo(BatchEntity.class.hashCode());
+		assertThat(new BatchEntity()).hasSameHashCodeAs(BatchEntity.class);
 	}
 
 	private static class EqualsArgumentsProvider implements ArgumentsProvider {

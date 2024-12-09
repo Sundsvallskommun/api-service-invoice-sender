@@ -1,7 +1,11 @@
 {
 	"request": {
 		"method": "POST",
-		"bodyPatterns": [{"contains": "someone@something.com"}],
+		"bodyPatterns": [
+			{
+				"contains": "someone@something.com"
+			}
+		],
 		"url": "/messaging/2281/email"
 	},
 	"response": {

@@ -59,7 +59,7 @@ class BatchResources {
 				description = "Successful operation",
 				useReturnTypeSchema = true)
 		})
-	@PostMapping("/trigger/{date}")
+	@PostMapping(value = "/trigger/{date}")
 	ResponseEntity<Void> triggerBatch(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable("date") final LocalDate date) {

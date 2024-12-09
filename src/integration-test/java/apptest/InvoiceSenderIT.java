@@ -32,13 +32,15 @@ import se.sundsvall.invoicesender.service.util.XmlUtil;
 @WireMockAppTestSuite(files = "classpath:/InvoiceSenderIT/", classes = Application.class)
 class InvoiceSenderIT extends AbstractAppTest {
 
-	private static final String ARCHIVE_PATH = "smb://localhost:1445/files/archive/";
-	private static final String RETURN_PATH = "smb://localhost:1445/files/return/";
-	private static final String MUNICIPALITY_ID = "2281";
 	private static final String SERVICE_PATH = "/2281/batches/trigger";
+	private static final String MUNICIPALITY_ID = "2281";
+
 	private static final String BASE_DIR = "src/integration-test/resources";
 	private static final String SHARE_DIR = BASE_DIR + "/raindance-share";
 	private static final String TEST_DATA_DIR = BASE_DIR + "/testdata";
+	private static final String ARCHIVE_DIR = "smb://localhost:1445/files/archive/";
+	private static final String RETURN_DIR = "smb://localhost:1445/files/return/";
+
 	private static final String ARCHIVE_INDEX_XML = "ArchiveIndex.xml";
 
 	@Autowired
@@ -51,7 +53,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 
 	@AfterAll
 	static void cleanUp() throws IOException {
-		FileUtils.forceDeleteOnExit(new File(SHARE_DIR));
+		FileUtils.cleanDirectory(new File(SHARE_DIR));
 	}
 
 	/**
@@ -76,7 +78,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(RETURN_PATH + inputFile, getCIFSContext())) {
+		try (var outFile = new SmbFile(RETURN_DIR + inputFile, getCIFSContext())) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -84,7 +86,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(ARCHIVE_PATH + inputFile, getCIFSContext())) {
+		try (var archiveFile = new SmbFile(ARCHIVE_DIR + inputFile, getCIFSContext())) {
 			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
@@ -112,7 +114,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(RETURN_PATH + inputFile, getCIFSContext())) {
+		try (var outFile = new SmbFile(RETURN_DIR + inputFile, getCIFSContext())) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -120,7 +122,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(ARCHIVE_PATH + inputFile, getCIFSContext())) {
+		try (var archiveFile = new SmbFile(ARCHIVE_DIR + inputFile, getCIFSContext())) {
 			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
@@ -146,7 +148,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(RETURN_PATH + inputFile, getCIFSContext())) {
+		try (var outFile = new SmbFile(RETURN_DIR + inputFile, getCIFSContext())) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -155,7 +157,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(ARCHIVE_PATH + inputFile, getCIFSContext())) {
+		try (var archiveFile = new SmbFile(ARCHIVE_DIR + inputFile, getCIFSContext())) {
 			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}

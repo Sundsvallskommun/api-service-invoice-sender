@@ -1,10 +1,5 @@
 package se.sundsvall.invoicesender.util;
 
-import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
-
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-
 import static java.util.function.Predicate.not;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
@@ -12,6 +7,10 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SE
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
+
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 public final class Constants {
 
