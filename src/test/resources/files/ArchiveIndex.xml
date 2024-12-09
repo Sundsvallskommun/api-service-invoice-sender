@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<Index>
+	<file>
+		<filename>Faktura_00000001_to_9001011234.pdf</filename>
+		<Reminder>0</Reminder>
+		<CustomerNumber>9001011234</CustomerNumber>
+		<SocSec />
+		<InvoiceType>00</InvoiceType>
+		<InvoiceNo>123</InvoiceNo>
+		<InvoiceDate>2024-02-02</InvoiceDate>
+		<DueDate>2024-03-03</DueDate>
+		<AGF>00</AGF>
+		<PaymentReference>9001011234</PaymentReference>
+		<TotalAmount>1000.00</TotalAmount>
+		<Postage>B</Postage>
+		<BuyerParty_Name>John Doe</BuyerParty_Name>
+		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
+		<BuyerParty_Street />
+		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
+		<BuyerParty_City>Testvall</BuyerParty_City>
+		<BuyerParty_Country />
+		<FUI_name />
+		<PaymentType />
+		<PaymentNo>1234-1234</PaymentNo>
+		<Currency>SEK</Currency>
+	</file>
+	<file>
+		<filename>Faktura_00000002_to_9101011234.pdf</filename>
+		<Reminder>0</Reminder>
+		<CustomerNumber>9101011234</CustomerNumber>
+		<SocSec />
+		<InvoiceType>00</InvoiceType>
+		<InvoiceNo>123</InvoiceNo>
+		<InvoiceDate>2024-02-02</InvoiceDate>
+		<AGF>00</AGF>
+		<PaymentReference>9001011234</PaymentReference>
+		<TotalAmount>1000.00</TotalAmount>
+		<Postage>B</Postage>
+		<BuyerParty_Name>John Doe</BuyerParty_Name>
+		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
+		<BuyerParty_Street />
+		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
+		<BuyerParty_City>Testvall</BuyerParty_City>
+		<BuyerParty_Country />
+		<FUI_name />
+		<PaymentType />
+		<PaymentNo>1234-1234</PaymentNo>
+		<Currency>SEK</Currency>
+	</file>
+	<file>
+		<filename>Faktura_00000003_to_9201011234.pdf</filename>
+		<Reminder>0</Reminder>
+		<CustomerNumber>9201011234</CustomerNumber>
+		<SocSec />
+		<InvoiceType>00</InvoiceType>
+		<InvoiceNo>123</InvoiceNo>
+		<InvoiceDate>2024-02-02</InvoiceDate>
+		<DueDate>2024-03-03</DueDate>
+		<AGF>00</AGF>
+		<PaymentReference>9001011234</PaymentReference>
+		<TotalAmount>1000.00</TotalAmount>
+		<Postage>B</Postage>
+		<BuyerParty_Name>John Doe</BuyerParty_Name>
+		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
+		<BuyerParty_Street />
+		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
+		<BuyerParty_City>Testvall</BuyerParty_City>
+		<BuyerParty_Country />
+		<FUI_name />
+		<PaymentType />
+		<PaymentNo>1234-1234</PaymentNo>
+		<Currency>SEK</Currency>
+	</file>
+	<file>
+		<filename>Faktura_00000004_to_9301011234.pdf</filename>
+		<Reminder>0</Reminder>
+		<CustomerNumber>9301011234</CustomerNumber>
+		<SocSec />
+		<InvoiceType>00</InvoiceType>
+		<InvoiceNo>123</InvoiceNo>
+		<InvoiceDate>2024-02-02</InvoiceDate>
+		<DueDate>2024-03-03</DueDate>
+		<AGF>00</AGF>
+		<PaymentReference>9001011234</PaymentReference>
+		<TotalAmount>1000.00</TotalAmount>
+		<Postage>B</Postage>
+		<BuyerParty_Name>John Doe</BuyerParty_Name>
+		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
+		<BuyerParty_Street />
+		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
+		<BuyerParty_City>Testvall</BuyerParty_City>
+		<BuyerParty_Country />
+		<FUI_name />
+		<PaymentType />
+		<PaymentNo>1234-1234</PaymentNo>
+		<Currency>SEK</Currency>
+	</file>
+</Index>
