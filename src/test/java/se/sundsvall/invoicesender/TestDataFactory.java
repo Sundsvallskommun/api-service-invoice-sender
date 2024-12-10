@@ -23,7 +23,6 @@ public final class TestDataFactory {
 			.withRecipientPartyId(UUID.randomUUID().toString())
 			.withStatus(UNHANDLED)
 			.withType(INVOICE)
-			.withBatch(createBatchEntity())
 			.withMetadata(createMetadata());
 
 		if (modifier != null) {

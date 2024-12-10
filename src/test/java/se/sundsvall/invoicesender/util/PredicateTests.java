@@ -11,11 +11,14 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
-import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_AN_INVOICE;
-import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_A_PDF;
-import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_IGNORED;
-import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_NOT_PROCESSABLE;
-import static se.sundsvall.invoicesender.util.Constants.ITEM_LACKS_METADATA;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.INVOICE_COULD_NOT_BE_SENT;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_AN_INVOICE;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_A_PDF;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_IGNORED;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_NOT_PROCESSABLE;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_LACKS_METADATA;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_LEGAL_ID;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_PARTY_ID;
 
 import org.junit.jupiter.api.Test;
 
@@ -78,8 +81,8 @@ class PredicateTests {
 		var invalidRecipientLegalId = createItemEntity(item -> item.setFilename(DUMMY_DOT_PDF)).withStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 		var validRecipientLegalId = createItemEntity(item -> item.setFilename(DUMMY_DOT_PDF)).withStatus(UNHANDLED);
 
-		assertThat(Constants.RECIPIENT_HAS_INVALID_LEGAL_ID.test(invalidRecipientLegalId)).isTrue();
-		assertThat(Constants.RECIPIENT_HAS_INVALID_LEGAL_ID.test(validRecipientLegalId)).isFalse();
+		assertThat(RECIPIENT_HAS_INVALID_LEGAL_ID.test(invalidRecipientLegalId)).isTrue();
+		assertThat(RECIPIENT_HAS_INVALID_LEGAL_ID.test(validRecipientLegalId)).isFalse();
 	}
 
 	@Test
@@ -87,8 +90,8 @@ class PredicateTests {
 		var invalidRecipientPartyId = createItemEntity(item -> item.setFilename(DUMMY_DOT_PDF)).withStatus(RECIPIENT_PARTY_ID_NOT_FOUND);
 		var validRecipientPartyId = createItemEntity(item -> item.setFilename(DUMMY_DOT_PDF)).withStatus(UNHANDLED);
 
-		assertThat(Constants.RECIPIENT_HAS_INVALID_PARTY_ID.test(invalidRecipientPartyId)).isTrue();
-		assertThat(Constants.RECIPIENT_HAS_INVALID_PARTY_ID.test(validRecipientPartyId)).isFalse();
+		assertThat(RECIPIENT_HAS_INVALID_PARTY_ID.test(invalidRecipientPartyId)).isTrue();
+		assertThat(RECIPIENT_HAS_INVALID_PARTY_ID.test(validRecipientPartyId)).isFalse();
 	}
 
 	@Test
@@ -96,8 +99,8 @@ class PredicateTests {
 		var invoiceCouldNotBeSent = createItemEntity(item -> item.setFilename(DUMMY_DOT_PDF)).withStatus(NOT_SENT);
 		var invoiceSent = createItemEntity(item -> item.setFilename(DUMMY_DOT_PDF)).withStatus(SENT);
 
-		assertThat(Constants.INVOICE_COULD_NOT_BE_SENT.test(invoiceCouldNotBeSent)).isTrue();
-		assertThat(Constants.INVOICE_COULD_NOT_BE_SENT.test(invoiceSent)).isFalse();
+		assertThat(INVOICE_COULD_NOT_BE_SENT.test(invoiceCouldNotBeSent)).isTrue();
+		assertThat(INVOICE_COULD_NOT_BE_SENT.test(invoiceSent)).isFalse();
 	}
 
 }

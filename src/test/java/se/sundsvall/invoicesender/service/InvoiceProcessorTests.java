@@ -527,7 +527,7 @@ class InvoiceProcessorTests {
 		var raindanceIntegrations = Map.of(MUNICIPALITY_ID, raindanceIntegration);
 		ReflectionTestUtils.setField(invoiceProcessor, "raindanceIntegrations", raindanceIntegrations);
 
-		when(raindanceIntegration.readBatches(date, "BatchName")).thenReturn(batches);
+		when(raindanceIntegration.readBatches(date, "BatchName", "2281")).thenReturn(batches);
 		doReturn("mocked-string").when(invoiceProcessor).mapXmlFileToString(anyString());
 		when(dbIntegrationMock.persistBatches(batches)).thenReturn(batches);
 		doNothing().when(raindanceIntegration).writeBatch(batch);

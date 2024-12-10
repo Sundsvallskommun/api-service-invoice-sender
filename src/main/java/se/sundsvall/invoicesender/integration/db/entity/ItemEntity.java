@@ -8,7 +8,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import se.sundsvall.invoicesender.service.model.Metadata;
@@ -32,9 +31,6 @@ public class ItemEntity {
 	@Column(name = "type", nullable = false)
 	private ItemType type;
 
-	@ManyToOne
-	private BatchEntity batch;
-
 	@Transient
 	private Metadata metadata;
 
@@ -55,19 +51,6 @@ public class ItemEntity {
 
 	public void setId(final Integer id) {
 		this.id = id;
-	}
-
-	public BatchEntity getBatch() {
-		return batch;
-	}
-
-	public void setBatch(BatchEntity batch) {
-		this.batch = batch;
-	}
-
-	public ItemEntity withBatch(BatchEntity batch) {
-		this.batch = batch;
-		return this;
 	}
 
 	public String getRecipientPartyId() {
@@ -172,7 +155,6 @@ public class ItemEntity {
 			", filename='" + filename + '\'' +
 			", status=" + status +
 			", type=" + type +
-			", batch=" + batch +
 			", metadata=" + metadata +
 			", recipientPartyId='" + recipientPartyId + '\'' +
 			", recipientLegalId='" + recipientLegalId + '\'' +

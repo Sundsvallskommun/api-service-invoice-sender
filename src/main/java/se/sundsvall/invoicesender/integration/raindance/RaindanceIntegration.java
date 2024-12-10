@@ -2,9 +2,10 @@ package se.sundsvall.invoicesender.integration.raindance;
 
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.UNSENT_ITEMS;
+import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.zip.Deflater;
 import jcifs.CIFSContext;
 import jcifs.config.PropertyConfiguration;
@@ -45,8 +45,6 @@ public class RaindanceIntegration {
 	private static final Logger LOG = LoggerFactory.getLogger(RaindanceIntegration.class);
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
-	private static final Predicate<ItemEntity> UNSENT_ITEMS = item -> item.getStatus() != SENT;
-	private static final String BATCH_FILE_SUFFIX = ".zip.7z";
 
 	private final String host;
 	private final int port;
@@ -85,7 +83,7 @@ public class RaindanceIntegration {
 		}
 	}
 
-	public List<BatchEntity> readBatches(final LocalDate date, final String batchName) throws IOException {
+	public List<BatchEntity> readBatches(final LocalDate date, final String batchName, final String municipalityId) throws IOException {
 		LOG.info("Reading batch(es) for {}", date);
 
 		var datePart = date.format(DATE_FORMATTER);
@@ -120,6 +118,7 @@ public class RaindanceIntegration {
 
 				// Create a batch
 				var batchEntity = new BatchEntity()
+					.withMunicipalityId(municipalityId)
 					.withLocalPath(localBatchWorkDirectory.toString())
 					.withBasename(filename.replaceAll("\\.zip\\.7z$", ""))
 					.withTargetPath(matchingBatchSetup.targetPath())
@@ -175,13 +174,12 @@ public class RaindanceIntegration {
 						batchEntity.getItems().add(new ItemEntity()
 							.withFilename(zipEntryName)
 							.withStatus(UNHANDLED)
-							.withType(UNKNOWN)
-							.withBatch(batchEntity));
+							.withType(UNKNOWN));
 
 						zipEntry = zipArchiveInputStream.getNextEntry();
 					}
 				}
-
+				batchEntity.setTotalItems(batchEntity.getItems().size());
 				batches.add(batchEntity);
 			}
 
@@ -194,7 +192,7 @@ public class RaindanceIntegration {
 	public void writeBatch(final BatchEntity batch) throws IOException {
 		var targetPath = String.format("smb://%s:%d/%s%s", host, port,
 			appendTrailingSlashIfMissing(batch.getTargetPath()),
-			batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix);
+			batch.getBasename() + BATCH_FILE_SUFFIX + outputFileExtraSuffix);
 
 		LOG.info("Storing batch '{}'", targetPath);
 
@@ -223,7 +221,7 @@ public class RaindanceIntegration {
 		var sourcePath = incomingShareUrl + batch.getBasename() + BATCH_FILE_SUFFIX;
 		var targetPath = String.format("smb://%s:%d/%s%s", host, port,
 			appendTrailingSlashIfMissing(batch.getArchivePath()),
-			batch.getBasename() + RaindanceIntegration.BATCH_FILE_SUFFIX + outputFileExtraSuffix);
+			batch.getBasename() + BATCH_FILE_SUFFIX + outputFileExtraSuffix);
 
 		try (var archiveFile = new SmbFile(targetPath, context)) {
 			LOG.info("Archiving batch '{}' to '{}", sourcePath, targetPath);
@@ -275,7 +273,13 @@ public class RaindanceIntegration {
 		try (var zipFileInputStream = new FileInputStream(batchZipFilePath.toFile());
 			var sevenZipFileOutputStream = new FileOutputStream(batchSevenZipFilePath.toFile());
 			var lzmaOutputStream = new LZMACompressorOutputStream(sevenZipFileOutputStream)) {
-			IOUtils.copy(zipFileInputStream, lzmaOutputStream);
+
+			byte[] buffer = new byte[8192];
+			int bytesRead;
+
+			while ((bytesRead = zipFileInputStream.read(buffer)) != -1) {
+				lzmaOutputStream.write(buffer, 0, bytesRead);
+			}
 		}
 	}
 

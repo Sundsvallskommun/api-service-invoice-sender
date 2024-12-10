@@ -14,14 +14,14 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPI
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.INVOICE_COULD_NOT_BE_SENT;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_A_PDF;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_NOT_PROCESSABLE;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_LEGAL_ID;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_PARTY_ID;
 import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
 import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
 import static se.sundsvall.invoicesender.util.Constants.DISABLED_CRON;
-import static se.sundsvall.invoicesender.util.Constants.INVOICE_COULD_NOT_BE_SENT;
-import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_A_PDF;
-import static se.sundsvall.invoicesender.util.Constants.ITEM_IS_NOT_PROCESSABLE;
-import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_HAS_INVALID_LEGAL_ID;
-import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_HAS_INVALID_PARTY_ID;
 import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_PATTERN;
 import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
 import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
@@ -132,7 +132,7 @@ public class InvoiceProcessor {
 		// Get the Raindance integration
 		var raindanceIntegration = raindanceIntegrations.get(municipalityId);
 		// Get the batches from Raindance
-		var batches = raindanceIntegration.readBatches(date, batchName);
+		var batches = raindanceIntegration.readBatches(date, batchName, municipalityId);
 
 		var batchEntities = dbIntegration.persistBatches(batches);
 

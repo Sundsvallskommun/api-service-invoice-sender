@@ -1,17 +1,17 @@
 ALTER TABLE `batch_executions`
-    ADD COLUMN `target_path` VARCHAR(255) NULL;
+    ADD COLUMN `target_path` VARCHAR(255);
 ALTER TABLE `batch_executions`
-    ADD COLUMN `local_path` VARCHAR(255) NULL;
+    ADD COLUMN `local_path` VARCHAR(255);
 ALTER TABLE `batch_executions`
-    ADD COLUMN `archive_path` VARCHAR(255) NULL;
+    ADD COLUMN `archive_path` VARCHAR(255);
 ALTER TABLE `batch_executions`
     ADD COLUMN `processing_enabled` BIT NOT NULL DEFAULT 0;
 ALTER TABLE `batch_executions`
     ADD COLUMN `completed` BIT NOT NULL DEFAULT 1;
 ALTER TABLE `batch_executions`
-    ADD COLUMN `data` LONGBLOB NULL;
+    ADD COLUMN `data` LONGBLOB;
 ALTER TABLE `batch_items`
-    ADD COLUMN `type` VARCHAR(255) NULL;
+    ADD COLUMN `type` VARCHAR(255);
 
 ALTER TABLE `batch_executions`
     ALTER COLUMN `processing_enabled` DROP DEFAULT;

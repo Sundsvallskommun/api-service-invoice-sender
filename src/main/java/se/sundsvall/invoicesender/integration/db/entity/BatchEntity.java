@@ -1,14 +1,16 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
 import static jakarta.persistence.CascadeType.PERSIST;
-import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -49,7 +51,8 @@ public class BatchEntity {
 	@Column(name = "completed_at")
 	private LocalDateTime completedAt;
 
-	@OneToMany(fetch = EAGER, cascade = PERSIST, mappedBy = "batch")
+	@OneToMany(fetch = LAZY, cascade = PERSIST)
+	@JoinColumn(name = "batch_id", nullable = false)
 	private List<ItemEntity> items = new ArrayList<>();
 
 	@Column(name = "total_invoices", nullable = false)
@@ -68,6 +71,7 @@ public class BatchEntity {
 	private boolean completed;
 
 	@Lob
+	@Basic(fetch = LAZY)
 	@Column(name = "data", columnDefinition = "LONGBLOB")
 	private byte[] data;
 
