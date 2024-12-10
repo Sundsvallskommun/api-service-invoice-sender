@@ -1,15 +1,19 @@
 {
 	"emailAddress": "someone@somehost.com",
-	"attachments": [{
-		"name": "test.txt",
-		"contentType": "text/plain",
-		"content": "aGVsbG8gd29ybGQK"
-	}],
+	"attachments": [
+		{
+			"name": "test.txt",
+			"contentType": "text/plain",
+			"content": "aGVsbG8gd29ybGQK"
+		}
+	],
 	"sender": {
 		"address": "sender@someotherhost.com",
 		"name": "Some Sender"
 	},
 	"subject": "Some subject",
 	"message": "This is some e-mail content",
-	"party": {"partyId": "f427952b-247c-4d3b-b081-675a467b3619"}
+	"party": {
+		"partyId": "f427952b-247c-4d3b-b081-675a467b3619"
+	}
 }
