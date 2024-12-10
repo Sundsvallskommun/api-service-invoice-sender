@@ -44,7 +44,6 @@ class ItemEntityTests {
 
 	@Test
 	void testSettersAndGetters() {
-		var batchEntity = new BatchEntity();
 		var metadata = new Metadata();
 
 		var itemEntity = new ItemEntity();
