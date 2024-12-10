@@ -3,18 +3,16 @@ package se.sundsvall.invoicesender.integration.messaging;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.INTEGRATION_NAME;
 
+import feign.Request;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.FeignBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-
 import se.sundsvall.dept44.configuration.feign.FeignConfiguration;
 import se.sundsvall.dept44.configuration.feign.FeignMultiCustomizer;
 import se.sundsvall.dept44.configuration.feign.decoder.ProblemErrorDecoder;
-
-import feign.Request;
 
 @Import(FeignConfiguration.class)
 @EnableConfigurationProperties(MessagingIntegrationProperties.class)

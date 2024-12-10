@@ -16,7 +16,6 @@ import static se.sundsvall.invoicesender.model.ItemType.OTHER;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,7 +25,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.model.Batch;
 import se.sundsvall.invoicesender.model.Item;

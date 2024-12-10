@@ -1,10 +1,8 @@
 package se.sundsvall.invoicesender.api.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
+import java.util.List;
 import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 
 @JsonPropertyOrder({

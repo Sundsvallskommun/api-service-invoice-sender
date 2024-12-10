@@ -9,23 +9,6 @@ import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static se.sundsvall.invoicesender.model.ItemStatus.NOT_SENT;
 import static se.sundsvall.invoicesender.model.ItemStatus.SENT;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.thymeleaf.ITemplateEngine;
-import org.thymeleaf.context.Context;
-
-import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
-import se.sundsvall.invoicesender.model.Item;
-import se.sundsvall.invoicesender.model.ItemStatus;
-
 import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
 import generated.se.sundsvall.messaging.DigitalInvoiceParty;
@@ -33,6 +16,20 @@ import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.EmailSender;
 import generated.se.sundsvall.messaging.MessageStatus;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.util.Base64;
+import java.util.List;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.thymeleaf.ITemplateEngine;
+import org.thymeleaf.context.Context;
+import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
+import se.sundsvall.invoicesender.model.Item;
+import se.sundsvall.invoicesender.model.ItemStatus;
 
 @Component
 public class MessagingIntegration {

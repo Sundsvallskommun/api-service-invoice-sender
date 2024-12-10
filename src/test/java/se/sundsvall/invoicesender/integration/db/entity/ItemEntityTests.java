@@ -3,7 +3,6 @@ package se.sundsvall.invoicesender.integration.db.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-
 import se.sundsvall.invoicesender.model.ItemStatus;
 
 class ItemEntityTests {

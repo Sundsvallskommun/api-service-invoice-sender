@@ -1,15 +1,13 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
