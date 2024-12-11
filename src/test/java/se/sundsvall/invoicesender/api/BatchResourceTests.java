@@ -27,9 +27,9 @@ import org.zalando.problem.Status;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
 import se.sundsvall.invoicesender.Application;
+import se.sundsvall.invoicesender.api.model.BatchDto;
 import se.sundsvall.invoicesender.api.model.BatchesResponse;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
-import se.sundsvall.invoicesender.integration.db.dto.BatchDto;
 import se.sundsvall.invoicesender.service.InvoiceProcessor;
 
 @ActiveProfiles("junit")

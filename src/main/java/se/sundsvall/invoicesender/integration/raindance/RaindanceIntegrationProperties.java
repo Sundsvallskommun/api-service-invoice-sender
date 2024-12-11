@@ -18,7 +18,7 @@ public record RaindanceIntegrationProperties(Map<String, RaindanceEnvironment> e
 
 		@NotBlank String host,
 
-		@DefaultValue("445") int port,
+		@DefaultValue("446") int port,
 
 		@NotBlank String domain,
 
@@ -49,7 +49,8 @@ public record RaindanceIntegrationProperties(Map<String, RaindanceEnvironment> e
 
 			boolean process) {
 
-			public record Scheduling(@NotBlank String cronExpression) {}
+			public record Scheduling(@NotBlank String cronExpression) {
+			}
 		}
 
 		Properties jcifsProperties() {

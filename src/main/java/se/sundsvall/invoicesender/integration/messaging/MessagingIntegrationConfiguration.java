@@ -1,7 +1,6 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.INTEGRATION_NAME;
 
 import feign.Request;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -17,6 +16,8 @@ import se.sundsvall.dept44.configuration.feign.decoder.ProblemErrorDecoder;
 @Import(FeignConfiguration.class)
 @EnableConfigurationProperties(MessagingIntegrationProperties.class)
 class MessagingIntegrationConfiguration {
+
+	static final String INTEGRATION_NAME = "Messaging";
 
 	@Bean
 	FeignBuilderCustomizer feignBuilderCustomizer(final MessagingIntegrationProperties properties) {

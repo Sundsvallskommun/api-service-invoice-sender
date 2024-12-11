@@ -1,8 +1,9 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
 import static jakarta.persistence.CascadeType.PERSIST;
-import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,9 +11,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -32,15 +36,24 @@ public class BatchEntity {
 	@Column(name = "municipality_id")
 	private String municipalityId;
 
+	@Column(name = "local_path")
+	private String localPath;
+
+	@Column(name = "archive_path")
+	private String archivePath;
+
+	@Column(name = "target_path")
+	private String targetPath;
+
 	@Column(name = "started_at", nullable = false)
 	private LocalDateTime startedAt = LocalDateTime.now();
 
-	@Column(name = "completed_at", nullable = false)
+	@Column(name = "completed_at")
 	private LocalDateTime completedAt;
 
-	@OneToMany(fetch = EAGER, cascade = PERSIST)
+	@OneToMany(fetch = LAZY, cascade = PERSIST)
 	@JoinColumn(name = "batch_id", nullable = false)
-	private List<ItemEntity> items;
+	private List<ItemEntity> items = new ArrayList<>();
 
 	@Column(name = "total_invoices", nullable = false)
 	private long totalItems;
@@ -50,6 +63,17 @@ public class BatchEntity {
 
 	@Column(name = "sent_invoices", nullable = false)
 	private long sentItems;
+
+	@Column(name = "processing_enabled", nullable = false)
+	private boolean processingEnabled;
+
+	@Column(name = "completed", nullable = false)
+	private boolean completed;
+
+	@Lob
+	@Basic(fetch = LAZY)
+	@Column(name = "data", columnDefinition = "LONGBLOB")
+	private byte[] data;
 
 	public Integer getId() {
 		return id;
@@ -61,6 +85,45 @@ public class BatchEntity {
 
 	public BatchEntity withId(final Integer id) {
 		this.id = id;
+		return this;
+	}
+
+	public byte[] getData() {
+		return data;
+	}
+
+	public void setData(byte[] data) {
+		this.data = data;
+	}
+
+	public BatchEntity withData(byte[] data) {
+		this.data = data;
+		return this;
+	}
+
+	public boolean isCompleted() {
+		return completed;
+	}
+
+	public void setCompleted(boolean completed) {
+		this.completed = completed;
+	}
+
+	public BatchEntity withCompleted(boolean completed) {
+		this.completed = completed;
+		return this;
+	}
+
+	public String getTargetPath() {
+		return targetPath;
+	}
+
+	public void setTargetPath(String targetPath) {
+		this.targetPath = targetPath;
+	}
+
+	public BatchEntity withTargetPath(String targetPath) {
+		this.targetPath = targetPath;
 		return this;
 	}
 
@@ -77,6 +140,32 @@ public class BatchEntity {
 		return this;
 	}
 
+	public String getArchivePath() {
+		return archivePath;
+	}
+
+	public void setArchivePath(final String archivePath) {
+		this.archivePath = archivePath;
+	}
+
+	public BatchEntity withArchivePath(final String archivePath) {
+		this.archivePath = archivePath;
+		return this;
+	}
+
+	public boolean isProcessingEnabled() {
+		return processingEnabled;
+	}
+
+	public void setProcessingEnabled(final boolean processingEnabled) {
+		this.processingEnabled = processingEnabled;
+	}
+
+	public BatchEntity withProcessingEnabled(final boolean processingEnabled) {
+		this.processingEnabled = processingEnabled;
+		return this;
+	}
+
 	public String getMunicipalityId() {
 		return municipalityId;
 	}
@@ -87,6 +176,19 @@ public class BatchEntity {
 
 	public BatchEntity withMunicipalityId(final String municipalityId) {
 		this.municipalityId = municipalityId;
+		return this;
+	}
+
+	public String getLocalPath() {
+		return localPath;
+	}
+
+	public void setLocalPath(final String localPath) {
+		this.localPath = localPath;
+	}
+
+	public BatchEntity withLocalPath(final String localPath) {
+		this.localPath = localPath;
 		return this;
 	}
 
@@ -168,4 +270,41 @@ public class BatchEntity {
 		return this;
 	}
 
+	@Override
+	public String toString() {
+		return "BatchEntity{" +
+			"id=" + id +
+			", basename='" + basename + '\'' +
+			", municipalityId='" + municipalityId + '\'' +
+			", localPath='" + localPath + '\'' +
+			", archivePath='" + archivePath + '\'' +
+			", targetPath='" + targetPath + '\'' +
+			", startedAt=" + startedAt +
+			", completedAt=" + completedAt +
+			", items=" + items +
+			", totalItems=" + totalItems +
+			", ignoredItems=" + ignoredItems +
+			", sentItems=" + sentItems +
+			", processingEnabled=" + processingEnabled +
+			", completed=" + completed +
+			", data=" + Arrays.toString(data) +
+			'}';
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o instanceof BatchEntity other) {
+			return id != null && id.equals(other.id);
+		}
+
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
+	}
 }

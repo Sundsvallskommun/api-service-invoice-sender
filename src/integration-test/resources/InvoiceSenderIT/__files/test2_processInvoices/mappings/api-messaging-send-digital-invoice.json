@@ -1,0 +1,14 @@
+{
+	"request": {
+		"method": "POST",
+		"urlPath": "/messaging/2281/digital-invoice"
+	},
+	"response": {
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test2_processInvoices/responses/api-messaging-send-digital-invoice.json",
+		"status": 200
+	},
+	"name": "api-messaging-send-digital-invoice"
+}

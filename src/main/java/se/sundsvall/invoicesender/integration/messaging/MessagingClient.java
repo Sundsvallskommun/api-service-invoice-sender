@@ -1,6 +1,6 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
-import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.INTEGRATION_NAME;
+import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegrationConfiguration.INTEGRATION_NAME;
 
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;

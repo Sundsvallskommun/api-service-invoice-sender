@@ -3,10 +3,14 @@ package se.sundsvall.invoicesender.integration.messaging;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
+import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.TEMPLATE_NAME;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
@@ -15,28 +19,32 @@ import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
-import se.sundsvall.invoicesender.model.Item;
-import se.sundsvall.invoicesender.model.ItemStatus;
+import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.ItemStatus;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingIntegrationTests {
 
-	@Mock
-	private MessagingIntegrationProperties mockIntegrationProperties;
+	private static final String MUNICIPALITY_ID = "2281";
+	private static final String HTML_MESSAGE = "someHtmlMessage";
+	private static final String ENCODED_HTML_MESSAGE = "c29tZUh0bWxNZXNzYWdl";
 
 	@Mock
-	private MessagingIntegrationProperties.Invoice mockInvoiceProperties;
+	private MessagingIntegrationProperties mockIntegrationProperties;
 
 	@Mock
 	private MessagingIntegrationProperties.StatusReport mockStatusReportProperties;
@@ -47,92 +55,98 @@ class MessagingIntegrationTests {
 	@Mock
 	private ITemplateEngine mockTemplateEngine;
 
+	@Mock
+	private MessagingMapper messagingMapper;
+
+	@InjectMocks
 	private MessagingIntegration messagingIntegration;
 
 	private String testFilePath;
 
-	private static Item createMockInvoiceItem() {
-		return new Item()
-			.withFilename("test.file")
-			.withRecipientPartyId(UUID.randomUUID().toString())
-			.withMetadata(new Item.Metadata()
-				.withTotalAmount("12.34")
-				.withDueDate("1986-02-26"));
-	}
-
 	@BeforeEach
 	void setUp() throws IOException {
 		testFilePath = new ClassPathResource("files").getFile().getAbsolutePath();
-
-		when(mockInvoiceProperties.subject()).thenReturn("someSubject");
-		when(mockInvoiceProperties.referencePrefix()).thenReturn("somePrefix");
-
-		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(List.of("someRecipientEmailAddress"));
-		when(mockStatusReportProperties.senderName()).thenReturn("someSenderName");
-		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someSenderEmailAddress");
-		when(mockStatusReportProperties.subjectPrefix()).thenReturn("somePrefix");
-
-		when(mockIntegrationProperties.invoice()).thenReturn(mockInvoiceProperties);
-		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
-
-		messagingIntegration = new MessagingIntegration(mockIntegrationProperties, mockClient, mockTemplateEngine);
 	}
 
 	@Test
-	void testSendInvoice() {
+	void testSendInvoice() throws IOException {
+		var invoice = createItemEntity(item -> item.setFilename("test.file"));
+
+		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class)))
 			.thenReturn(new MessageResult()
 				.deliveries(List.of(new DeliveryResult()
 					.status(MessageStatus.SENT))));
 
-		final var invoice = createMockInvoiceItem();
-
-		final var result = messagingIntegration.sendInvoice(testFilePath, invoice, "2281");
+		var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
 		assertThat(result).isEqualTo(ItemStatus.SENT);
 
-		verify(mockClient, times(1)).sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class));
+		verify(mockClient).sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class));
 		verifyNoMoreInteractions(mockClient);
 	}
 
 	@Test
-	void testSendInvoiceWhenExceptionIsThrown() {
-		when(mockClient.sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class)))
-			.thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+	void testSendInvoiceWhenExceptionIsThrown() throws IOException {
+		var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		final var result = messagingIntegration.sendInvoice(testFilePath, createMockInvoiceItem(), "2281");
+		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
+			.thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
+
+		var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
+
 		assertThat(result).isEqualTo(ItemStatus.NOT_SENT);
 
-		verify(mockClient, times(1)).sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class));
+		verify(mockClient).sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class));
 		verifyNoMoreInteractions(mockClient);
 	}
 
 	@Test
 	void testSendStatusReport() {
-		when(mockTemplateEngine.process(any(String.class), any(Context.class)))
-			.thenReturn("someHtmlMessage");
+		List<BatchEntity> batches = emptyList();
+		List<String> recipientEmailAddresses = List.of("Recipeint@test.se");
+		var emailRequest = new EmailRequest();
 
-		messagingIntegration.sendStatusReport(emptyList(), "2281");
+		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
+		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 
-		verify(mockClient, times(1)).sendEmail(any(String.class), any(EmailRequest.class));
-		verifyNoMoreInteractions(mockClient);
-		verify(mockTemplateEngine, times(1)).process(any(String.class), any(Context.class));
-		verifyNoMoreInteractions(mockTemplateEngine);
+		when(mockTemplateEngine.process(eq(TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
+		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE)).thenReturn(emailRequest);
+
+		messagingIntegration.sendStatusReport(batches, MUNICIPALITY_ID);
+
+		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE);
+		verify(mockClient).sendEmail(MUNICIPALITY_ID, emailRequest);
+		verify(mockTemplateEngine).process(eq(TEMPLATE_NAME), any(Context.class));
+		verifyNoMoreInteractions(mockClient, mockTemplateEngine);
 	}
 
-	@Test
-	void testSendStatusReportWhenExceptionIsThrown() {
-		when(mockClient.sendEmail(any(String.class), any(EmailRequest.class)))
-			.thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+	@ParameterizedTest
+	@MethodSource("sendStatusReportArgumentProvider")
+	void testSendStatusReportWhenExceptionIsThrown(List<String> recipientEmailAddresses, int expectedNumberOfCalls) {
+		List<BatchEntity> batches = emptyList();
+		var emailRequest = new EmailRequest();
 
-		when(mockTemplateEngine.process(any(String.class), any(Context.class)))
-			.thenReturn("someHtmlMessage");
+		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
+		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 
-		messagingIntegration.sendStatusReport(emptyList(), "2281");
+		when(mockTemplateEngine.process(eq(TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
+		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE)).thenReturn(emailRequest);
+		when(mockClient.sendEmail(MUNICIPALITY_ID, emailRequest))
+			.thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
 
-		verify(mockClient, times(1)).sendEmail(any(String.class), any(EmailRequest.class));
-		verifyNoMoreInteractions(mockClient);
-		verify(mockTemplateEngine, times(1)).process(any(String.class), any(Context.class));
-		verifyNoMoreInteractions(mockTemplateEngine);
+		messagingIntegration.sendStatusReport(batches, MUNICIPALITY_ID);
+
+		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE);
+		verify(mockClient, times(expectedNumberOfCalls)).sendEmail(MUNICIPALITY_ID, emailRequest);
+		verify(mockTemplateEngine).process(eq(TEMPLATE_NAME), any(Context.class));
+		verifyNoMoreInteractions(mockTemplateEngine, mockClient);
+	}
+
+	private static Stream<Arguments> sendStatusReportArgumentProvider() {
+		return Stream.of(
+			Arguments.of(List.of("Recipient@test.se"), 1),
+			Arguments.of(List.of("Recipient@test.se", "Recipient2@test.se"), 2));
 	}
 
 }
