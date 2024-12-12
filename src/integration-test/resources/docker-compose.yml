@@ -7,7 +7,7 @@ services:
     tmpfs:
       - /tmp
     volumes:
-      - ./raindance-share:/files:rw
+      - ../../../target/test-classes/raindance-share:/files:rw
     command:
       sh -c "
       mkdir -p /files/return /files/archive &&

@@ -273,13 +273,7 @@ public class RaindanceIntegration {
 		try (var zipFileInputStream = new FileInputStream(batchZipFilePath.toFile());
 			var sevenZipFileOutputStream = new FileOutputStream(batchSevenZipFilePath.toFile());
 			var lzmaOutputStream = new LZMACompressorOutputStream(sevenZipFileOutputStream)) {
-
-			byte[] buffer = new byte[8192];
-			int bytesRead;
-
-			while ((bytesRead = zipFileInputStream.read(buffer)) != -1) {
-				lzmaOutputStream.write(buffer, 0, bytesRead);
-			}
+			IOUtils.copy(zipFileInputStream, lzmaOutputStream);
 		}
 	}
 
