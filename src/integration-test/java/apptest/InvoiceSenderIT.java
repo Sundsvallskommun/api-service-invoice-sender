@@ -14,7 +14,6 @@ import java.util.Map;
 import jcifs.CIFSContext;
 import jcifs.smb.SmbFile;
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -36,7 +35,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String MUNICIPALITY_ID = "2281";
 
 	private static final String BASE_DIR = "src/integration-test/resources";
-	private static final String SHARE_DIR = BASE_DIR + "/raindance-share";
+	private static final String SHARE_DIR = "target/test-classes/raindance-share";
 	private static final String TEST_DATA_DIR = BASE_DIR + "/testdata";
 	private static final String ARCHIVE_DIR = "smb://localhost:1445/files/archive/";
 	private static final String RETURN_DIR = "smb://localhost:1445/files/return/";
@@ -50,11 +49,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 	public static final DockerComposeContainer<?> sambaContainer =
 		new DockerComposeContainer<>(new File(BASE_DIR + "/docker-compose.yml"))
 			.withStartupTimeout(Duration.ofSeconds(60));
-
-	@AfterAll
-	static void cleanUp() throws IOException {
-		FileUtils.cleanDirectory(new File(SHARE_DIR));
-	}
 
 	/**
 	 * Tests the scenario where no invoices are sent.
