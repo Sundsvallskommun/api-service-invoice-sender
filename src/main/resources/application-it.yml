@@ -25,7 +25,7 @@ integration:
         domain: SOMEWORKGROUP
         username: user
         password: p4ssw0rd
-        share: files/
+        share: files/incoming
         invoice-filename-prefixes:
           - Faktura
         batch-setup:
