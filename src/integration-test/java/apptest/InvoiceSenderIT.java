@@ -14,7 +14,6 @@ import java.util.Map;
 import jcifs.CIFSContext;
 import jcifs.smb.SmbFile;
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -40,9 +39,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String DOCKER_DIR = BASE_DIR + "/docker-compose.yml";
 	private static final String TEST_DATA_DIR = BASE_DIR + "/testdata";
 	// Local directories
-	private static final String LOCAL_DIR = "target/test-classes/raindance-share";
-	private static final String LOCAL_ARCHIVE_DIR = LOCAL_DIR + "/archive";
-	private static final String LOCAL_RETURN_DIR = LOCAL_DIR + "/return";
+	private static final String LOCAL_DIR = BASE_DIR + "/raindance-share";
 	// Samba directories
 	private static final String SAMBA_ARCHIVE_DIR = "smb://localhost:1445/files/archive/";
 	private static final String SAMBA_RETURN_DIR = "smb://localhost:1445/files/return/";
@@ -54,13 +51,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 	public static final DockerComposeContainer<?> sambaContainer =
 		new DockerComposeContainer<>(new File(DOCKER_DIR))
 			.withStartupTimeout(Duration.ofSeconds(60));
-
-	@BeforeAll
-	static void setUp() throws IOException {
-		FileUtils.forceMkdir(new File(LOCAL_DIR));
-		FileUtils.forceMkdir(new File(LOCAL_ARCHIVE_DIR));
-		FileUtils.forceMkdir(new File(LOCAL_RETURN_DIR));
-	}
 
 	/**
 	 * Tests the scenario where no invoices are sent.
