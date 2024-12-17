@@ -8,12 +8,20 @@ import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSI
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.AclFileAttributeView;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import jcifs.CIFSContext;
 import jcifs.smb.SmbFile;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -51,6 +59,27 @@ class InvoiceSenderIT extends AbstractAppTest {
 	public static final DockerComposeContainer<?> sambaContainer =
 		new DockerComposeContainer<>(new File(DOCKER_DIR))
 			.withStartupTimeout(Duration.ofSeconds(60));
+
+	@BeforeAll
+	static void setup() throws IOException {
+		setWritePermissions(LOCAL_DIR);
+		setWritePermissions(TEST_DATA_DIR);
+	}
+
+	private static void setWritePermissions(final String directoryPath) throws IOException {
+		final Path path = Paths.get(directoryPath);
+		final AclFileAttributeView aclAttr = Files.getFileAttributeView(path, AclFileAttributeView.class);
+		if (aclAttr != null) {
+			final AclEntry entry = AclEntry.newBuilder()
+				.setType(AclEntryType.ALLOW)
+				.setPrincipal(Files.getOwner(path))
+				.setPermissions(AclEntryPermission.READ_DATA, AclEntryPermission.WRITE_DATA, AclEntryPermission.EXECUTE)
+				.build();
+			final List<AclEntry> acl = aclAttr.getAcl();
+			acl.add(entry);
+			aclAttr.setAcl(acl);
+		}
+	}
 
 	/**
 	 * Tests the scenario where no invoices are sent.
