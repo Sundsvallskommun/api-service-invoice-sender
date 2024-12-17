@@ -1,5 +1,6 @@
 package se.sundsvall.invoicesender.integration.db;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 
+@CircuitBreaker(name = "BatchRepository")
 interface BatchRepository extends JpaRepository<BatchEntity, Integer> {
 
 	@Query("""
