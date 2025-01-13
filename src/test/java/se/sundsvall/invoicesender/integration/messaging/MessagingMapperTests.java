@@ -8,6 +8,8 @@ import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
 import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +22,9 @@ import org.springframework.core.io.ClassPathResource;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingMapperTests {
+
+	@Mock
+	private FileSystem mockFileSystem;
 
 	@Mock
 	private MessagingIntegrationProperties properties;
@@ -47,6 +52,7 @@ class MessagingMapperTests {
 		when(properties.invoice()).thenReturn(mockInvoiceProperties);
 		when(mockInvoiceProperties.subject()).thenReturn("someSubject");
 		when(mockInvoiceProperties.referencePrefix()).thenReturn("someReferencePrefix");
+		when(mockFileSystem.getPath(testFilePath)).thenReturn(Paths.get(testFilePath));
 
 		var result = mapper.toDigitalInvoiceRequest(invoice, testFilePath);
 

@@ -27,19 +27,19 @@ import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSI
 import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
@@ -57,6 +57,7 @@ public class InvoiceProcessor {
 	private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
 	private static final String ARCHIVE_INDEX = "ArchiveIndex.xml";
 
+	private final FileSystem fileSystem;
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
 	private final MessagingIntegration messagingIntegration;
@@ -65,12 +66,13 @@ public class InvoiceProcessor {
 	private final Map<String, RaindanceIntegration> raindanceIntegrations = new HashMap<>();
 	private final Map<String, List<String>> invoiceFilenamePrefixes = new HashMap<>();
 
-	public InvoiceProcessor(final TaskScheduler taskScheduler,
+	public InvoiceProcessor(final FileSystem fileSystem, final TaskScheduler taskScheduler,
 		final RaindanceIntegrationProperties properties,
 		final CitizenIntegration citizenIntegration,
 		final PartyIntegration partyIntegration,
 		final MessagingIntegration messagingIntegration,
 		final DbIntegration dbIntegration) {
+		this.fileSystem = fileSystem;
 		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -78,7 +80,7 @@ public class InvoiceProcessor {
 
 		properties.environments().forEach((municipalityId, raindanceEnvironment) -> {
 			// Create a Raindance integration for the given municipality id
-			raindanceIntegrations.put(municipalityId, new RaindanceIntegration(raindanceEnvironment));
+			raindanceIntegrations.put(municipalityId, new RaindanceIntegration(raindanceEnvironment, fileSystem));
 
 			// Get the invoice filename prefixes
 			invoiceFilenamePrefixes.put(municipalityId, raindanceEnvironment.invoiceFilenamePrefixes());
@@ -156,7 +158,7 @@ public class InvoiceProcessor {
 					extractItemMetadata(item, archiveIndex);
 					if (ITEM_IS_NOT_PROCESSABLE.test(item)) {
 						// Stop processing item if it is not processable.
-						LOG.info("Item not processable - skipping item {}", item.getFilename());
+						LOG.info("Item not processable after extracting metadata - skipping item {}", item.getFilename());
 						dbIntegration.persistItem(item);
 						continue;
 					}
@@ -225,7 +227,7 @@ public class InvoiceProcessor {
 				raindanceIntegration.archiveOriginalBatch(batchEntity);
 			}
 			// Clean up
-			FileUtils.deleteDirectory(Paths.get(batchEntity.getLocalPath()).toFile());
+			FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
 		}
 		// Send a status report
 		messagingIntegration.sendStatusReport(batchEntities, municipalityId);
@@ -251,7 +253,7 @@ public class InvoiceProcessor {
 	}
 
 	String mapXmlFileToString(final String localPath) throws IOException {
-		var path = Paths.get(localPath).resolve(ARCHIVE_INDEX);
+		var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
 		return Files.readString(path, ISO_8859_1);
 	}
 
@@ -272,7 +274,7 @@ public class InvoiceProcessor {
 
 	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml, final String localPath) throws IOException {
 		var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
-		var path = Paths.get(localPath).resolve(ARCHIVE_INDEX);
+		var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
 		Files.writeString(path, XmlUtil.XML_DECLARATION.concat("\n").concat(newXml), ISO_8859_1);
 		LOG.info("Removed item {} from ArchiveIndex.xml", item.getFilename());
 		return newXml;

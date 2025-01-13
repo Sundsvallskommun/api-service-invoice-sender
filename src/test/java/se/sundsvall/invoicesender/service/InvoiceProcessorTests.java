@@ -29,6 +29,7 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -65,6 +66,9 @@ import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProp
 class InvoiceProcessorTests {
 
 	private static final String MUNICIPALITY_ID = "2281";
+
+	@Mock
+	private FileSystem mockFileSystem;
 
 	@Mock
 	private CitizenIntegration citizenIntegrationMock;

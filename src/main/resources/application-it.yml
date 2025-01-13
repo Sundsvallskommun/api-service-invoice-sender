@@ -15,13 +15,17 @@ invoice-processor:
     enabled: false
     cron-expression: '-'
 
+# Use in-memory filesystem
+local-file-system:
+  in-memory: true
+
 integration:
   # Raindance integration
   raindance:
     environments:
       2281:
         host: localhost
-        port: 1445
+        port: ${samba.port}
         domain: SOMEWORKGROUP
         username: user
         password: p4ssw0rd
@@ -40,7 +44,7 @@ integration:
               cron-expression: '-'
             process: false
             target-path: files/return/
-        local-work-directory: /tmp/raindance/incoming
+        local-work-directory: /tmp/raindance
         connect-timeout: PT10S
         response-timeout: PT15S
 

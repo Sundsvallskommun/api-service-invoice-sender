@@ -53,7 +53,7 @@ public record RaindanceIntegrationProperties(Map<String, RaindanceEnvironment> e
 			}
 		}
 
-		Properties jcifsProperties() {
+		public Properties jcifsProperties() {
 			var jcifsProperties = new Properties();
 			jcifsProperties.setProperty("jcifs.smb.client.connTimeout", Long.toString(connectTimeout().toMillis()));
 			jcifsProperties.setProperty("jcifs.smb.client.responseTimeout", Long.toString(responseTimeout().toMillis()));
