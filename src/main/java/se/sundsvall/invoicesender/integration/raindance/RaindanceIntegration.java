@@ -7,8 +7,13 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
 import static se.sundsvall.invoicesender.service.model.ItemPredicate.UNSENT_ITEMS;
 import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;

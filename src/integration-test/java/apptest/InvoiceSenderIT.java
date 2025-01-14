@@ -8,11 +8,8 @@ import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSI
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.util.List;
 import java.util.Map;
-
 import jcifs.CIFSContext;
 import jcifs.config.PropertyConfiguration;
 import jcifs.context.BaseContext;
@@ -25,10 +22,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.MountableFile;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.invoicesender.Application;
@@ -54,7 +49,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 
 	private static int smbContainerPort;
 	private static CIFSContext cifsContext;
-	
+
 	@Container
 	public static GenericContainer<?> smbContainer = new GenericContainer<>("dockurr/samba")
 		.withExposedPorts(445)
