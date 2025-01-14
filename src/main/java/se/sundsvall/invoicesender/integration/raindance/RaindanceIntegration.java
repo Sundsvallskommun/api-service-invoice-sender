@@ -128,7 +128,7 @@ public class RaindanceIntegration {
 				file.close();
 
 				// Store the 7z file locally
-				var sevenZipFile = localBatchWorkDirectory.resolve(filename)/* .toFile() */;
+				var sevenZipFile = localBatchWorkDirectory.resolve(filename);
 				try (var out = Files.newOutputStream(sevenZipFile)) {
 					IOUtils.copy(new ByteArrayInputStream(batchEntity.getData()), out);
 				}
@@ -144,7 +144,7 @@ public class RaindanceIntegration {
 				}
 
 				// Process the ZIP file
-				try (var zipFileInputStream = Files.newInputStream(zipFile/* .toFile() */);
+				try (var zipFileInputStream = Files.newInputStream(zipFile);
 					var zipArchiveInputStream = new ZipArchiveInputStream(zipFileInputStream)) {
 
 					var zipEntry = zipArchiveInputStream.getNextEntry();
@@ -161,7 +161,7 @@ public class RaindanceIntegration {
 						LOG.info("  Found file '{}'", zipEntryName);
 
 						// Store the file locally
-						var zipEntryOutFile = localBatchWorkDirectory.resolve(zipEntryName)/* .toFile() */;
+						var zipEntryOutFile = localBatchWorkDirectory.resolve(zipEntryName);
 						try (var zipEntryOutputStream = Files.newOutputStream(zipEntryOutFile)) {
 							IOUtils.copy(zipArchiveInputStream, zipEntryOutputStream);
 						}
@@ -264,8 +264,8 @@ public class RaindanceIntegration {
 		// Compress the ZIP file to a 7z (LZMA) file
 		var batchSevenZipFilePath = batchPath.resolve(batch.getBasename().concat(BATCH_FILE_SUFFIX));
 		LOG.info("Creating 7z file '{}'", batchSevenZipFilePath.getFileName());
-		try (var zipFileInputStream = Files.newInputStream(batchZipFilePath/* .toFile() */);
-			var sevenZipFileOutputStream = Files.newOutputStream(batchSevenZipFilePath/* .toFile() */);
+		try (var zipFileInputStream = Files.newInputStream(batchZipFilePath);
+			var sevenZipFileOutputStream = Files.newOutputStream(batchSevenZipFilePath);
 			var lzmaOutputStream = new LZMACompressorOutputStream(sevenZipFileOutputStream)) {
 			IOUtils.copy(zipFileInputStream, lzmaOutputStream);
 		}
