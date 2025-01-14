@@ -14,8 +14,8 @@ import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.EmailSender;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
@@ -27,13 +27,15 @@ import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 public class MessagingMapper {
 
 	private final MessagingIntegrationProperties properties;
+	private final FileSystem fileSystem;
 
-	MessagingMapper(final MessagingIntegrationProperties properties) {
+	MessagingMapper(final MessagingIntegrationProperties properties, final FileSystem fileSystem) {
 		this.properties = properties;
+		this.fileSystem = fileSystem;
 	}
 
 	public DigitalInvoiceRequest toDigitalInvoiceRequest(final ItemEntity invoice, final String path) throws IOException {
-		final var invoiceContent = Files.readAllBytes(Paths.get(path).resolve(invoice.getFilename()));
+		final var invoiceContent = Files.readAllBytes(fileSystem.getPath(path).resolve(invoice.getFilename()));
 		final var encodedInvoiceContent = new String(Base64.getEncoder().encode(invoiceContent), UTF_8);
 
 		return new DigitalInvoiceRequest()

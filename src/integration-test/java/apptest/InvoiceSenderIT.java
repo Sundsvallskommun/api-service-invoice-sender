@@ -8,31 +8,26 @@ import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSI
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.AclEntry;
-import java.nio.file.attribute.AclEntryPermission;
-import java.nio.file.attribute.AclEntryType;
-import java.nio.file.attribute.AclFileAttributeView;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import jcifs.CIFSContext;
+import jcifs.config.PropertyConfiguration;
+import jcifs.context.BaseContext;
+import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.SmbFile;
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.testcontainers.containers.DockerComposeContainer;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.invoicesender.Application;
-import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
-import se.sundsvall.invoicesender.service.InvoiceProcessor;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
 import se.sundsvall.invoicesender.service.util.XmlUtil;
 
 @Testcontainers
@@ -44,40 +39,44 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String ARCHIVE_INDEX_XML = "ArchiveIndex.xml";
 
 	private static final String BASE_DIR = "src/integration-test/resources";
-	private static final String DOCKER_DIR = BASE_DIR + "/docker-compose.yml";
-	private static final String TEST_DATA_DIR = BASE_DIR + "/testdata";
-	// Local directories
-	private static final String LOCAL_DIR = BASE_DIR + "/raindance-share";
-	// Samba directories
-	private static final String SAMBA_ARCHIVE_DIR = "smb://localhost:1445/files/archive/";
-	private static final String SAMBA_RETURN_DIR = "smb://localhost:1445/files/return/";
+	private static final String TESTDATA_DIR = BASE_DIR + "/testdata";
+
+	private static final String RAINDANCE_ARCHIVE_DIR = "smb://localhost:%d/files/archive/%s";
+	private static final String RAINDANCE_RETURN_DIR = "smb://localhost:%d/files/return/%s";
 
 	@Autowired
-	private InvoiceProcessor invoiceProcessor;
+	private RaindanceIntegrationProperties raindanceIntegrationProperties;
+
+	private static int smbContainerPort;
+	private static CIFSContext cifsContext;
 
 	@Container
-	public static final DockerComposeContainer<?> sambaContainer =
-		new DockerComposeContainer<>(new File(DOCKER_DIR))
-			.withStartupTimeout(Duration.ofSeconds(60));
+	public static GenericContainer<?> smbContainer = new GenericContainer<>("dockurr/samba")
+		.withExposedPorts(445)
+		.withEnv(Map.of(
+			"NAME", "files",
+			"USER", "user",
+			"PASS", "p4ssw0rd"
+		))
+		.withTmpFs(Map.of("/storage/return", "rw", "/storage/archive", "rw"))
+		.withClasspathResourceMapping("testdata", "/storage/incoming", BindMode.READ_WRITE);
 
-	@BeforeAll
-	static void setup() throws IOException {
-		setWritePermissions(LOCAL_DIR);
-		setWritePermissions(TEST_DATA_DIR);
+	@DynamicPropertySource
+	static void afterSambaContainerStarted(final DynamicPropertyRegistry registry) {
+		smbContainerPort = smbContainer.getMappedPort(445);
+
+		registry.add("samba.port", () -> smbContainerPort);
 	}
 
-	private static void setWritePermissions(final String directoryPath) throws IOException {
-		final Path path = Paths.get(directoryPath);
-		final AclFileAttributeView aclAttr = Files.getFileAttributeView(path, AclFileAttributeView.class);
-		if (aclAttr != null) {
-			final AclEntry entry = AclEntry.newBuilder()
-				.setType(AclEntryType.ALLOW)
-				.setPrincipal(Files.getOwner(path))
-				.setPermissions(AclEntryPermission.READ_DATA, AclEntryPermission.WRITE_DATA, AclEntryPermission.EXECUTE)
-				.build();
-			final List<AclEntry> acl = aclAttr.getAcl();
-			acl.add(entry);
-			aclAttr.setAcl(acl);
+	@BeforeEach
+	void setUp() throws Exception {
+		// Initialize the JCIFS context, if needed
+		if (cifsContext == null) {
+			var raindanceEnvironment = raindanceIntegrationProperties.environments().get(MUNICIPALITY_ID);
+			var config = new PropertyConfiguration(raindanceEnvironment.jcifsProperties());
+			cifsContext = new BaseContext(config)
+				.withCredentials(new NtlmPasswordAuthenticator(
+					raindanceEnvironment.domain(), raindanceEnvironment.username(), raindanceEnvironment.password()));
 		}
 	}
 
@@ -87,14 +86,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 	@Test
 	void test1_processInvoices() throws IOException {
 		var inputFile = "Faktura-pdf-200101_000001.zip.7z";
-		FileUtils.copyFileToDirectory(new File(TEST_DATA_DIR + File.separator + inputFile), new File(LOCAL_DIR));
-
-		// Invoices that are part of the ZIP file and the status that we expect.
-		List<Invoice> invoices = List.of(
-			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000001_to_9001011234.pdf"),
-			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000002_to_9101011234.pdf"),
-			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000003_to_9201011234.pdf"),
-			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_9301011234.pdf"));
 
 		setupCall()
 			.withServicePath(SERVICE_PATH + "/2020-01-01")
@@ -102,8 +93,15 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.withExpectedResponseStatus(OK)
 			.sendRequestAndVerifyResponse();
 
+		// Invoices that are part of the ZIP file and the status that we expect.
+		var invoices = List.of(
+			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000001_to_9001011234.pdf"),
+			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000002_to_9101011234.pdf"),
+			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000003_to_9201011234.pdf"),
+			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_9301011234.pdf"));
+
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(SAMBA_RETURN_DIR + inputFile, getCIFSContext())) {
+		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -111,8 +109,8 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(SAMBA_ARCHIVE_DIR + inputFile, getCIFSContext())) {
-			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
+		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+			var originalFile = new File(TESTDATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
 	}
@@ -123,14 +121,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 	@Test
 	void test2_processInvoices() throws IOException {
 		var inputFile = "Faktura-pdf-200102_000002.zip.7z";
-		FileUtils.copyFileToDirectory(new File(TEST_DATA_DIR + File.separator + inputFile), new File(LOCAL_DIR));
-
-		// Invoices that are part of the ZIP file and the status that we expect.
-		List<Invoice> invoices = List.of(
-			new Invoice(Invoice.Status.SENT, "Faktura_00000001_to_202107142388.pdf"),
-			new Invoice(Invoice.Status.SENT, "Faktura_00000002_to_202108022399.pdf"),
-			new Invoice(Invoice.Status.SENT, "Faktura_00000003_to_202108132388.pdf"),
-			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_20323217.pdf"));
 
 		setupCall()
 			.withServicePath(SERVICE_PATH + "/2020-01-02")
@@ -138,8 +128,15 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.withExpectedResponseStatus(OK)
 			.sendRequestAndVerifyResponse();
 
+		// Invoices that are part of the ZIP file and the status that we expect.
+		var invoices = List.of(
+			new Invoice(Invoice.Status.SENT, "Faktura_00000001_to_202107142388.pdf"),
+			new Invoice(Invoice.Status.SENT, "Faktura_00000002_to_202108022399.pdf"),
+			new Invoice(Invoice.Status.SENT, "Faktura_00000003_to_202108132388.pdf"),
+			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_20323217.pdf"));
+
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(SAMBA_RETURN_DIR + inputFile, getCIFSContext())) {
+		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -147,8 +144,8 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(SAMBA_ARCHIVE_DIR + inputFile, getCIFSContext())) {
-			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
+		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+			var originalFile = new File(TESTDATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
 	}
@@ -159,12 +156,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 	@Test
 	void test3_processInvoices() throws IOException {
 		var inputFile = "Faktura-pdf-200103_000003.zip.7z";
-		FileUtils.copyFileToDirectory(new File(TEST_DATA_DIR + File.separator + inputFile), new File(LOCAL_DIR));
-
-		// Invoices that are part of the ZIP file and the status that we expect.
-		List<Invoice> invoices = List.of(
-			new Invoice(Invoice.Status.SENT, "Faktura_00000001_to_202107142388.pdf"),
-			new Invoice(Invoice.Status.SENT, "Faktura_00000002_to_202108022399.pdf"));
 
 		setupCall()
 			.withServicePath(SERVICE_PATH + "/2020-01-03")
@@ -172,8 +163,13 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.withExpectedResponseStatus(OK)
 			.sendRequestAndVerifyResponse();
 
+		// Invoices that are part of the ZIP file and the status that we expect.
+		var invoices = List.of(
+			new Invoice(Invoice.Status.SENT, "Faktura_00000001_to_202107142388.pdf"),
+			new Invoice(Invoice.Status.SENT, "Faktura_00000002_to_202108022399.pdf"));
+
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(SAMBA_RETURN_DIR + inputFile, getCIFSContext())) {
+		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -182,8 +178,8 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(SAMBA_ARCHIVE_DIR + inputFile, getCIFSContext())) {
-			var originalFile = new File(TEST_DATA_DIR + File.separator + inputFile);
+		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+			var originalFile = new File(TESTDATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
 	}
@@ -201,12 +197,11 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.map(invoice -> XmlUtil.find(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(invoice.filename())))
 			.forEach(elements -> assertThat(elements).isNotEmpty());
 
-		//Ensure that the ArchiveIndex.xml does not contain entries for invoices that were sent
+		// Ensure that the ArchiveIndex.xml does not contain entries for invoices that were sent
 		invoices.stream()
 			.filter(invoice -> invoice.status() == Invoice.Status.SENT)
 			.map(invoice -> XmlUtil.find(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(invoice.filename())))
 			.forEach(elements -> assertThat(elements).isEmpty());
-
 	}
 
 	private void assertZipOnlyContainsArchiveIndex(final SmbFile outFile) throws IOException {
@@ -233,11 +228,4 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private record Invoice(Status status, String filename) {
 		private enum Status {SENT, NOT_SENT}
 	}
-
-	private CIFSContext getCIFSContext() {
-		var raindanceIntegrations = (Map<String, RaindanceIntegration>) ReflectionTestUtils.getField(invoiceProcessor, "raindanceIntegrations");
-		var raindanceIntegration = raindanceIntegrations.get(MUNICIPALITY_ID);
-		return (CIFSContext) ReflectionTestUtils.getField(raindanceIntegration, "context");
-	}
-
 }
