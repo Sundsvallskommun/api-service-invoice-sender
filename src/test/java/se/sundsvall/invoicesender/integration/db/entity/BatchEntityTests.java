@@ -2,10 +2,10 @@ package se.sundsvall.invoicesender.integration.db.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,8 +22,9 @@ class BatchEntityTests {
 
 	@Test
 	void testBuilderPattern() {
-		Assertions.assertThat(new BatchEntity().getStartedAt()).isNotNull();
+		assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
+		var date = LocalDate.now();
 		var now = LocalDateTime.now();
 
 		var batchEntity = new BatchEntity()
@@ -38,6 +39,7 @@ class BatchEntityTests {
 			.withIgnoredItems(123L)
 			.withProcessingEnabled(true)
 			.withCompleted(true)
+			.withDate(date)
 			.withData(new byte[] {
 				1, 2, 3
 			})
@@ -45,27 +47,29 @@ class BatchEntityTests {
 			.withLocalPath("someLocalPath")
 			.withTargetPath("someTargetPath");
 
-		Assertions.assertThat(batchEntity.getId()).isEqualTo(12345);
-		Assertions.assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
-		Assertions.assertThat(batchEntity.getMunicipalityId()).isEqualTo("2281");
-		Assertions.assertThat(batchEntity.getStartedAt()).isEqualTo(now);
-		Assertions.assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
-		Assertions.assertThat(batchEntity.getItems()).hasSize(1);
-		Assertions.assertThat(batchEntity.getSentItems()).isEqualTo(456L);
-		Assertions.assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
-		Assertions.assertThat(batchEntity.getIgnoredItems()).isEqualTo(123L);
-		Assertions.assertThat(batchEntity.isProcessingEnabled()).isTrue();
-		Assertions.assertThat(batchEntity.isCompleted()).isTrue();
-		Assertions.assertThat(batchEntity.getData()).containsExactly(1, 2, 3);
-		Assertions.assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
-		Assertions.assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
-		Assertions.assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
+		assertThat(batchEntity.getId()).isEqualTo(12345);
+		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
+		assertThat(batchEntity.getMunicipalityId()).isEqualTo("2281");
+		assertThat(batchEntity.getStartedAt()).isEqualTo(now);
+		assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
+		assertThat(batchEntity.getItems()).hasSize(1);
+		assertThat(batchEntity.getSentItems()).isEqualTo(456L);
+		assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
+		assertThat(batchEntity.getIgnoredItems()).isEqualTo(123L);
+		assertThat(batchEntity.isProcessingEnabled()).isTrue();
+		assertThat(batchEntity.isCompleted()).isTrue();
+		assertThat(batchEntity.getDate()).isEqualTo(date);
+		assertThat(batchEntity.getData()).containsExactly(1, 2, 3);
+		assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
+		assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
+		assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
 	}
 
 	@Test
 	void testSettersAndGetters() {
-		Assertions.assertThat(new BatchEntity().getStartedAt()).isNotNull();
+		assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
+		var date = LocalDate.now();
 		var now = LocalDateTime.now();
 
 		var batchEntity = new BatchEntity();
@@ -78,6 +82,7 @@ class BatchEntityTests {
 		batchEntity.setSentItems(456L);
 		batchEntity.setTotalItems(789L);
 		batchEntity.setIgnoredItems(123L);
+		batchEntity.setDate(date);
 		batchEntity.setProcessingEnabled(true);
 		batchEntity.setCompleted(true);
 		batchEntity.setData(new byte[] {
@@ -87,21 +92,22 @@ class BatchEntityTests {
 		batchEntity.setLocalPath("someLocalPath");
 		batchEntity.setTargetPath("someTargetPath");
 
-		Assertions.assertThat(batchEntity.getId()).isEqualTo(12345);
-		Assertions.assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
-		Assertions.assertThat(batchEntity.getMunicipalityId()).isEqualTo("2281");
-		Assertions.assertThat(batchEntity.getStartedAt()).isEqualTo(now);
-		Assertions.assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
-		Assertions.assertThat(batchEntity.getItems()).hasSize(1);
-		Assertions.assertThat(batchEntity.getSentItems()).isEqualTo(456L);
-		Assertions.assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
-		Assertions.assertThat(batchEntity.getIgnoredItems()).isEqualTo(123L);
-		Assertions.assertThat(batchEntity.isProcessingEnabled()).isTrue();
-		Assertions.assertThat(batchEntity.isCompleted()).isTrue();
-		Assertions.assertThat(batchEntity.getData()).containsExactly(1, 2, 3);
-		Assertions.assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
-		Assertions.assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
-		Assertions.assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
+		assertThat(batchEntity.getId()).isEqualTo(12345);
+		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
+		assertThat(batchEntity.getMunicipalityId()).isEqualTo("2281");
+		assertThat(batchEntity.getStartedAt()).isEqualTo(now);
+		assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
+		assertThat(batchEntity.getItems()).hasSize(1);
+		assertThat(batchEntity.getSentItems()).isEqualTo(456L);
+		assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
+		assertThat(batchEntity.getIgnoredItems()).isEqualTo(123L);
+		assertThat(batchEntity.getDate()).isEqualTo(date);
+		assertThat(batchEntity.isProcessingEnabled()).isTrue();
+		assertThat(batchEntity.isCompleted()).isTrue();
+		assertThat(batchEntity.getData()).containsExactly(1, 2, 3);
+		assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
+		assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
+		assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
 	}
 
 	@ParameterizedTest

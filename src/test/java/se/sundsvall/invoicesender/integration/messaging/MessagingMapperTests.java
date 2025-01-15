@@ -78,6 +78,7 @@ class MessagingMapperTests {
 
 	@Test
 	void toEmailRequest() {
+		var date = LocalDate.now();
 		var htmlMessage = "someHtmlMessage";
 
 		when(properties.statusReport()).thenReturn(mockStatusReportProperties);
@@ -85,7 +86,7 @@ class MessagingMapperTests {
 		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someSenderEmailAddress");
 		when(mockStatusReportProperties.subjectPrefix()).thenReturn("someSubjectPrefix");
 
-		var result = mapper.toEmailRequest(htmlMessage);
+		var result = mapper.toEmailRequest(htmlMessage, date);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getSender()).satisfies(sender -> {

@@ -230,7 +230,7 @@ public class InvoiceProcessor {
 			FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
 		}
 		// Send a status report
-		messagingIntegration.sendStatusReport(batchEntities, municipalityId);
+		messagingIntegration.sendStatusReport(batchEntities, date, municipalityId);
 	}
 
 	void markItems(final ItemEntity item, final String municipalityId) {

@@ -5,6 +5,7 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SE
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 
 import generated.se.sundsvall.messaging.MessageStatus;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import org.slf4j.Logger;
@@ -55,9 +56,9 @@ public class MessagingIntegration {
 		}
 	}
 
-	public void sendStatusReport(final List<BatchEntity> batches, final String municipalityId) {
+	public void sendStatusReport(final List<BatchEntity> batches, final LocalDate date, final String municipalityId) {
 		LOG.info("Sending status report");
-		var request = messagingMapper.toEmailRequest(generateStatusReportMessage(batches));
+		var request = messagingMapper.toEmailRequest(generateStatusReportMessage(batches), date);
 
 		for (var recipientEmailAddress : properties.statusReport().recipientEmailAddresses()) {
 			try {
