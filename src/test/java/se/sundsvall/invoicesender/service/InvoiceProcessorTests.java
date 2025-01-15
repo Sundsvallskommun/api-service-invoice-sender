@@ -538,7 +538,7 @@ class InvoiceProcessorTests {
 		doNothing().when(raindanceIntegration).archiveOriginalBatch(batch);
 		doNothing().when(invoiceProcessor).updateAndPersistBatch(batch);
 		lenient().doReturn("mocked-string").when(invoiceProcessor).removeItemFromArchiveIndex(item, "mocked-string", "mocked-path");
-		doNothing().when(messagingIntegrationMock).sendStatusReport(batches, MUNICIPALITY_ID);
+		doNothing().when(messagingIntegrationMock).sendStatusReport(batches, date, MUNICIPALITY_ID);
 	}
 
 }

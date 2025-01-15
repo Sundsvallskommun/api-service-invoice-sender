@@ -18,7 +18,7 @@ public record RaindanceIntegrationProperties(Map<String, RaindanceEnvironment> e
 
 		@NotBlank String host,
 
-		@DefaultValue("446") int port,
+		@DefaultValue("445") int port,
 
 		@NotBlank String domain,
 

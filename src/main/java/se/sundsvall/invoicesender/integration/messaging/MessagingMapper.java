@@ -57,12 +57,12 @@ public class MessagingMapper {
 				.content(encodedInvoiceContent)));
 	}
 
-	public EmailRequest toEmailRequest(final String htmlMessage) {
+	public EmailRequest toEmailRequest(final String htmlMessage, final LocalDate date) {
 		return new EmailRequest()
 			.sender(new EmailSender()
 				.name(properties.statusReport().senderName())
 				.address(properties.statusReport().senderEmailAddress()))
-			.subject(properties.statusReport().subjectPrefix().trim().concat(" ") + ISO_DATE.format(LocalDate.now()))
+			.subject(properties.statusReport().subjectPrefix().trim().concat(" ") + ISO_DATE.format(date))
 			.htmlMessage(htmlMessage);
 	}
 

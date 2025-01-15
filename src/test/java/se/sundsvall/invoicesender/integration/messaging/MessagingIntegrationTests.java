@@ -18,6 +18,7 @@ import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,6 +104,7 @@ class MessagingIntegrationTests {
 
 	@Test
 	void testSendStatusReport() {
+		var date = LocalDate.now();
 		List<BatchEntity> batches = emptyList();
 		List<String> recipientEmailAddresses = List.of("Recipeint@test.se");
 		var emailRequest = new EmailRequest();
@@ -111,11 +113,11 @@ class MessagingIntegrationTests {
 		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 
 		when(mockTemplateEngine.process(eq(TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
-		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE)).thenReturn(emailRequest);
+		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(emailRequest);
 
-		messagingIntegration.sendStatusReport(batches, MUNICIPALITY_ID);
+		messagingIntegration.sendStatusReport(batches, date, MUNICIPALITY_ID);
 
-		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE);
+		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE, date);
 		verify(mockClient).sendEmail(MUNICIPALITY_ID, emailRequest);
 		verify(mockTemplateEngine).process(eq(TEMPLATE_NAME), any(Context.class));
 		verifyNoMoreInteractions(mockClient, mockTemplateEngine);
@@ -124,6 +126,7 @@ class MessagingIntegrationTests {
 	@ParameterizedTest
 	@MethodSource("sendStatusReportArgumentProvider")
 	void testSendStatusReportWhenExceptionIsThrown(List<String> recipientEmailAddresses, int expectedNumberOfCalls) {
+		var date = LocalDate.now();
 		List<BatchEntity> batches = emptyList();
 		var emailRequest = new EmailRequest();
 
@@ -131,13 +134,13 @@ class MessagingIntegrationTests {
 		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 
 		when(mockTemplateEngine.process(eq(TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
-		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE)).thenReturn(emailRequest);
+		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(emailRequest);
 		when(mockClient.sendEmail(MUNICIPALITY_ID, emailRequest))
 			.thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
 
-		messagingIntegration.sendStatusReport(batches, MUNICIPALITY_ID);
+		messagingIntegration.sendStatusReport(batches, date, MUNICIPALITY_ID);
 
-		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE);
+		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE, date);
 		verify(mockClient, times(expectedNumberOfCalls)).sendEmail(MUNICIPALITY_ID, emailRequest);
 		verify(mockTemplateEngine).process(eq(TEMPLATE_NAME), any(Context.class));
 		verifyNoMoreInteractions(mockTemplateEngine, mockClient);
