@@ -76,7 +76,7 @@ public class RaindanceIntegration {
 				.withCredentials(new NtlmPasswordAuthenticator(
 					environment.domain(), environment.username(), environment.password()));
 
-			incomingShareUrl = String.format("smb://%s:%d//%s", host, port, appendTrailingSlashIfMissing(environment.share()));
+			incomingShareUrl = String.format("smb://%s:%d/%s", host, port, appendTrailingSlashIfMissing(environment.share()));
 
 			LOG.info("Raindance will be reading from {}", incomingShareUrl);
 		} catch (IOException e) {
