@@ -2,6 +2,7 @@ package se.sundsvall.invoicesender.integration.db.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
@@ -24,6 +25,7 @@ class BatchEntityTests {
 	void testBuilderPattern() {
 		Assertions.assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
+		var date = LocalDate.now();
 		var now = LocalDateTime.now();
 
 		var batchEntity = new BatchEntity()
@@ -38,6 +40,7 @@ class BatchEntityTests {
 			.withIgnoredItems(123L)
 			.withProcessingEnabled(true)
 			.withCompleted(true)
+			.withDate(date)
 			.withData(new byte[] {
 				1, 2, 3
 			})
@@ -56,6 +59,7 @@ class BatchEntityTests {
 		Assertions.assertThat(batchEntity.getIgnoredItems()).isEqualTo(123L);
 		Assertions.assertThat(batchEntity.isProcessingEnabled()).isTrue();
 		Assertions.assertThat(batchEntity.isCompleted()).isTrue();
+		Assertions.assertThat(batchEntity.getDate()).isEqualTo(date);
 		Assertions.assertThat(batchEntity.getData()).containsExactly(1, 2, 3);
 		Assertions.assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
 		Assertions.assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
@@ -66,6 +70,7 @@ class BatchEntityTests {
 	void testSettersAndGetters() {
 		Assertions.assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
+		var date = LocalDate.now();
 		var now = LocalDateTime.now();
 
 		var batchEntity = new BatchEntity();
@@ -78,6 +83,7 @@ class BatchEntityTests {
 		batchEntity.setSentItems(456L);
 		batchEntity.setTotalItems(789L);
 		batchEntity.setIgnoredItems(123L);
+		batchEntity.setDate(date);
 		batchEntity.setProcessingEnabled(true);
 		batchEntity.setCompleted(true);
 		batchEntity.setData(new byte[] {
@@ -96,6 +102,7 @@ class BatchEntityTests {
 		Assertions.assertThat(batchEntity.getSentItems()).isEqualTo(456L);
 		Assertions.assertThat(batchEntity.getTotalItems()).isEqualTo(789L);
 		Assertions.assertThat(batchEntity.getIgnoredItems()).isEqualTo(123L);
+		Assertions.assertThat(batchEntity.getDate()).isEqualTo(date);
 		Assertions.assertThat(batchEntity.isProcessingEnabled()).isTrue();
 		Assertions.assertThat(batchEntity.isCompleted()).isTrue();
 		Assertions.assertThat(batchEntity.getData()).containsExactly(1, 2, 3);

@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +45,9 @@ public class BatchEntity {
 
 	@Column(name = "target_path")
 	private String targetPath;
+
+	@Column(name = "date")
+	private LocalDate date;
 
 	@Column(name = "started_at", nullable = false)
 	private LocalDateTime startedAt = LocalDateTime.now();
@@ -85,6 +89,19 @@ public class BatchEntity {
 
 	public BatchEntity withId(final Integer id) {
 		this.id = id;
+		return this;
+	}
+
+	public LocalDate getDate() {
+		return date;
+	}
+
+	public void setDate(LocalDate date) {
+		this.date = date;
+	}
+
+	public BatchEntity withDate(LocalDate date) {
+		this.date = date;
 		return this;
 	}
 

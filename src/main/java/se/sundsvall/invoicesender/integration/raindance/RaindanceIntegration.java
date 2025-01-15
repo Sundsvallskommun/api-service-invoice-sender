@@ -119,6 +119,7 @@ public class RaindanceIntegration {
 
 				// Create a batch
 				var batchEntity = new BatchEntity()
+					.withDate(date)
 					.withMunicipalityId(municipalityId)
 					.withLocalPath(localBatchWorkDirectory.toString())
 					.withBasename(filename.replaceAll("\\.zip\\.7z$", ""))
