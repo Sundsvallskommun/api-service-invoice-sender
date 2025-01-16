@@ -130,7 +130,6 @@ public class InvoiceProcessor {
 	}
 
 	public void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
-
 		// Get the Raindance integration
 		var raindanceIntegration = raindanceIntegrations.get(municipalityId);
 		// Get the batches from Raindance
@@ -181,20 +180,20 @@ public class InvoiceProcessor {
 						continue;
 					}
 
-					// Remove any items where the recipient has a protected identity
-					markProtectedIdentityItems(item);
-					if (RECIPIENT_HAS_INVALID_LEGAL_ID.test(item)) {
-						// Stop processing item if the recipient has a protected identity.
-						LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
-						dbIntegration.persistItem(item);
-						continue;
-					}
-
 					// Get the recipient party id from the invoices that are left and where the recipient legal id is set
 					fetchInvoiceRecipientPartyIds(item, municipalityId);
 					if (RECIPIENT_HAS_INVALID_PARTY_ID.test(item)) {
 						// Stop processing item if the recipient party id is invalid.
 						LOG.info("Invalid recipient party id - skipping item {}", item.getFilename());
+						dbIntegration.persistItem(item);
+						continue;
+					}
+
+					// Remove any items where the recipient has a protected identity
+					markProtectedIdentityItems(item);
+					if (RECIPIENT_HAS_INVALID_LEGAL_ID.test(item)) {
+						// Stop processing item if the recipient has a protected identity.
+						LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
 						dbIntegration.persistItem(item);
 						continue;
 					}
@@ -258,7 +257,6 @@ public class InvoiceProcessor {
 	}
 
 	void extractInvoiceRecipientLegalId(final ItemEntity item) {
-
 		// Try to extract the recipient's legal id from the invoice PDF filename and update
 		// the invoice accordingly
 		var matcher = RECIPIENT_PATTERN.matcher(item.getFilename());
@@ -321,17 +319,18 @@ public class InvoiceProcessor {
 	}
 
 	void markProtectedIdentityItems(final ItemEntity item) {
-		if (citizenIntegration.hasProtectedIdentity(item.getRecipientLegalId())) {
+		if (citizenIntegration.hasProtectedIdentity(item.getRecipientPartyId())) {
 			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 		}
 	}
 
 	void fetchInvoiceRecipientPartyIds(final ItemEntity item, final String municipalityId) {
 		partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
-			.ifPresentOrElse(partyId -> {
+			.ifPresentOrElse(legalIdAndPartyId -> {
 				LOG.info("Fetched recipient party id for item {}", item.getFilename());
 
-				item.setRecipientPartyId(partyId);
+				item.setRecipientLegalId(legalIdAndPartyId.legalId());
+				item.setRecipientPartyId(legalIdAndPartyId.partyId());
 				item.setStatus(RECIPIENT_PARTY_ID_FOUND);
 			}, () -> {
 				LOG.info("Failed to fetch recipient party id for item {}", item.getFilename());

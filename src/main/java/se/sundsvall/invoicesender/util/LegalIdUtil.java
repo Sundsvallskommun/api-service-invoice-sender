@@ -1,8 +1,8 @@
 package se.sundsvall.invoicesender.util;
 
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.stream.Stream;
 import org.apache.commons.validator.routines.checkdigit.CheckDigitException;
 import org.apache.commons.validator.routines.checkdigit.LuhnCheckDigit;
 
@@ -13,47 +13,37 @@ public final class LegalIdUtil {
 
 	private LegalIdUtil() {}
 
-	public static String addCenturyDigitsToLegalId(final String legalId) {
+	public static boolean isValidLegalId(final String legalId) {
 		// Strip everything but digits from the legal id
 		var legalIdWithDigitsOnly = legalId.replaceAll("\\D", "");
 
-		// Do nothing if we already have a legal id with century digits
-		if (legalIdWithDigitsOnly.startsWith("19") || legalIdWithDigitsOnly.startsWith("20")) {
-			return legalIdWithDigitsOnly;
+		// We should have 10 digits
+		if (legalIdWithDigitsOnly.length() != 10) {
+			return false;
 		}
 
-		// Naively validate
-		var thisYear = LocalDate.now().getYear() % 2000;
-		var legalIdYear = Integer.parseInt(legalIdWithDigitsOnly.substring(0, 2));
-
-		return (legalIdYear <= thisYear ? "20" : "19") + legalIdWithDigitsOnly;
+		return Stream.of("19", "20")
+			.map(centuryDigit -> centuryDigit + legalIdWithDigitsOnly)
+			.anyMatch(legalIdWithCenturyDigits -> validateLegalIdDatePart(legalIdWithCenturyDigits) && validateLegalIdCheckDigit(legalIdWithCenturyDigits));
 	}
 
-	public static boolean isValidLegalId(final String legalId) {
+	static boolean validateLegalIdDatePart(final String legalId) {
 		try {
-			// Strip everything but digits from the legal id
-			var legalIdWithDigitsOnly = legalId.replaceAll("\\D", "");
-
-			// Add the century digits if they're missing
-			if (legalIdWithDigitsOnly.length() == 10) {
-				var thisYear = LocalDate.now().getYear() % 2000;
-				var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
-
-				legalIdWithDigitsOnly = (legalIdYear <= thisYear ? "20" : "19") + legalIdWithDigitsOnly;
-			}
-
-			// At this point, we should have a legal id with 12 digits
-			if (legalIdWithDigitsOnly.length() != 12) {
-				return false;
-			}
-
 			// "Validate" the date part (YYYYMMDD) by trying to parse it into a LocalDate
-			DATE_PART_FORMAT.parse(legalIdWithDigitsOnly.substring(0, 8));
+			DATE_PART_FORMAT.parse(legalId.substring(0, 8));
 
+			return true;
+		} catch (DateTimeParseException e) {
+			return false;
+		}
+	}
+
+	static boolean validateLegalIdCheckDigit(final String legalId) {
+		try {
 			// Calculate and validate the check digit
-			var checkDigit = LUHN.calculate(legalIdWithDigitsOnly.substring(2, legalIdWithDigitsOnly.length() - 1));
-			return checkDigit.equals(legalIdWithDigitsOnly.substring(legalIdWithDigitsOnly.length() - 1));
-		} catch (DateTimeParseException | CheckDigitException e) {
+			var checkDigit = LUHN.calculate(legalId.substring(2, legalId.length() - 1));
+			return checkDigit.equals(legalId.substring(legalId.length() - 1));
+		} catch (CheckDigitException e) {
 			return false;
 		}
 	}

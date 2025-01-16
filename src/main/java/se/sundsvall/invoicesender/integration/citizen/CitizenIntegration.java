@@ -2,7 +2,6 @@ package se.sundsvall.invoicesender.integration.citizen;
 
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
-import static se.sundsvall.invoicesender.util.LegalIdUtil.addCenturyDigitsToLegalId;
 
 import org.springframework.stereotype.Component;
 
@@ -17,17 +16,12 @@ public class CitizenIntegration {
 		this.citizenClient = citizenClient;
 	}
 
-	public boolean hasProtectedIdentity(final String personalNumber) {
-		var personalNumberWithCenturyDigits = addCenturyDigitsToLegalId(personalNumber);
-
+	public boolean hasProtectedIdentity(final String partyId) {
 		try {
-			// Get the person id
-			var personId = citizenClient.getPersonId(personalNumberWithCenturyDigits);
-			// Remove the quotation marks that exist for whatever reason from the person id
-			var cleanPersonId = strip(personId, "\"");
+			var cleanPartyId = strip(partyId, "\"");
 			// Get the person data, or rather just the HTTP status code for it - a request for data for
 			// a protected identity person yields a 204 No Content
-			var personResponse = citizenClient.getPerson(cleanPersonId);
+			var personResponse = citizenClient.getPerson(cleanPartyId);
 
 			return personResponse.getStatusCode().isSameCodeAs(NO_CONTENT);
 		} catch (Exception e) {
