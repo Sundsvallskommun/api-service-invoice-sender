@@ -25,3 +25,11 @@ logbook:
     jsonPath:
       - key: '$.files[*].content'
         value: '[base64]'
+
+# Ignore ClientProblem exceptions in circuitbreaker.
+# There are cases where a 4xx response is normal behaviour and should not open the circuitbreaker.
+resilience4j.circuitbreaker:
+  instances:
+    Messaging:
+      ignore-exceptions:
+        - se.sundsvall.dept44.exception.ClientProblem
