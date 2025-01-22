@@ -1,7 +1,6 @@
 package se.sundsvall.invoicesender.integration.party;
 
 import static generated.se.sundsvall.party.PartyType.PRIVATE;
-import static se.sundsvall.invoicesender.util.LegalIdUtil.addCenturyDigitsToLegalId;
 
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -21,14 +20,22 @@ public class PartyIntegration {
 		this.partyClient = partyClient;
 	}
 
-	public Optional<String> getPartyId(final String legalId, final String municipalityId) {
-		// Only handle "PRIVATE" legal id:s for now
-		var legalIdWithCenturyDigits = addCenturyDigitsToLegalId(legalId);
+	public Optional<LegalIdAndPartyId> getPartyId(final String legalId, final String municipalityId) {
+		// Strip everything but digits from the legal id
+		var legalIdWithDigitsOnly = legalId.replaceAll("\\D", "");
+
+		// Use the stripped legal id as-is, if it already starts with 19 or 20
+		if (legalIdWithDigitsOnly.startsWith("19") || legalIdWithDigitsOnly.startsWith("20")) {
+			return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithDigitsOnly).map(partyId -> new LegalIdAndPartyId(legalIdWithDigitsOnly, partyId));
+		}
 
 		try {
-			return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithCenturyDigits);
+			return partyClient.getPartyId(municipalityId, PRIVATE, "19" + legalIdWithDigitsOnly)
+				.map(partyId -> new LegalIdAndPartyId("19" + legalIdWithDigitsOnly, partyId))
+				.or(() -> partyClient.getPartyId(municipalityId, PRIVATE, "20" + legalIdWithDigitsOnly)
+					.map(partyId -> new LegalIdAndPartyId("20" + legalId, partyId)));
 		} catch (final Exception e) {
-			LOG.info("Unable to get party id for legal id {}: {}", legalIdWithCenturyDigits, e.getMessage());
+			LOG.info("Unable to get party id for legal id [19|20]{}: {}", legalIdWithDigitsOnly, e.getMessage());
 
 			return Optional.empty();
 		}

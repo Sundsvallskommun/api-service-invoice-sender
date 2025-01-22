@@ -28,37 +28,31 @@ class CitizenIntegrationTests {
 
 	@Test
 	void hasProtectedIdentity() {
-		var personalNumber1 = "190000000001";
-		var personId1 = "personId1";
-		var personalNumber2 = "190000000002";
-		var personId2 = "personId2";
+		var partyId1 = "personId1";
+		var partyId2 = "personId2";
 
 		when(mockPersonIdResponse.getStatusCode()).thenReturn(NO_CONTENT).thenReturn(OK);
-		when(mockCitizenClient.getPersonId(personalNumber1)).thenReturn(personId1);
-		when(mockCitizenClient.getPerson(personId1)).thenReturn(mockPersonIdResponse);
-		when(mockCitizenClient.getPersonId(personalNumber2)).thenReturn(personId2);
-		when(mockCitizenClient.getPerson(personId2)).thenReturn(mockPersonIdResponse);
+		when(mockCitizenClient.getPerson(partyId1)).thenReturn(mockPersonIdResponse);
+		when(mockCitizenClient.getPerson(partyId2)).thenReturn(mockPersonIdResponse);
 
-		assertThat(citizenIntegration.hasProtectedIdentity(personalNumber1)).isTrue();
-		assertThat(citizenIntegration.hasProtectedIdentity(personalNumber2)).isFalse();
+		assertThat(citizenIntegration.hasProtectedIdentity(partyId1)).isTrue();
+		assertThat(citizenIntegration.hasProtectedIdentity(partyId2)).isFalse();
 
-		verify(mockCitizenClient).getPersonId(personalNumber1);
-		verify(mockCitizenClient).getPerson(personId1);
-		verify(mockCitizenClient).getPersonId(personalNumber2);
-		verify(mockCitizenClient).getPerson(personId2);
+		verify(mockCitizenClient).getPerson(partyId1);
+		verify(mockCitizenClient).getPerson(partyId2);
 		verify(mockPersonIdResponse, times(2)).getStatusCode();
 		verifyNoMoreInteractions(mockCitizenClient, mockPersonIdResponse);
 	}
 
 	@Test
 	void hasProtectedIdentityWhenCitizenClientThrowsException() {
-		var personalNumber = "190000000001";
+		var partyId = "partyId";
 
-		when(mockCitizenClient.getPersonId(personalNumber)).thenThrow(new NullPointerException());
+		when(mockCitizenClient.getPerson(partyId)).thenThrow(new NullPointerException());
 
-		assertThat(citizenIntegration.hasProtectedIdentity(personalNumber)).isFalse();
+		assertThat(citizenIntegration.hasProtectedIdentity(partyId)).isFalse();
 
-		verify(mockCitizenClient).getPersonId(personalNumber);
+		verify(mockCitizenClient).getPerson(partyId);
 		verifyNoMoreInteractions(mockCitizenClient);
 	}
 }

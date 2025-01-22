@@ -32,11 +32,30 @@ class PartyIntegrationTests {
 		when(mockPartyClient.getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class)))
 			.thenReturn(Optional.of("somePartyId"));
 
-		final var partyId = partyIntegration.getPartyId("5505158888", "2281");
+		var legalIdAndPartyId = partyIntegration.getPartyId("5505158888", "2281");
 
-		assertThat(partyId).hasValue("somePartyId");
+		assertThat(legalIdAndPartyId).isPresent().hasValueSatisfying(actualValue -> {
+			assertThat(actualValue.legalId()).isEqualTo("195505158888");
+			assertThat(actualValue.partyId()).isEqualTo("somePartyId");
+		});
 
-		verify(mockPartyClient, times(1)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
+		verify(mockPartyClient).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
+		verifyNoMoreInteractions(mockPartyClient);
+	}
+
+	@Test
+	void testGetPartyIdWhenNothingIsFoundForFirstAttempt() {
+		when(mockPartyClient.getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class)))
+			.thenReturn(Optional.empty()).thenReturn(Optional.of("somePartyId"));
+
+		var legalIdAndPartyId = partyIntegration.getPartyId("2505158888", "2281");
+
+		assertThat(legalIdAndPartyId).isPresent().hasValueSatisfying(actualValue -> {
+			assertThat(actualValue.legalId()).isEqualTo("202505158888");
+			assertThat(actualValue.partyId()).isEqualTo("somePartyId");
+		});
+
+		verify(mockPartyClient, times(2)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
 		verifyNoMoreInteractions(mockPartyClient);
 	}
 
@@ -49,7 +68,7 @@ class PartyIntegrationTests {
 
 		assertThat(partyId).isEmpty();
 
-		verify(mockPartyClient, times(1)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
+		verify(mockPartyClient, times(2)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
 		verifyNoMoreInteractions(mockPartyClient);
 	}
 
@@ -62,7 +81,7 @@ class PartyIntegrationTests {
 
 		assertThat(partyId).isEmpty();
 
-		verify(mockPartyClient, times(1)).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
+		verify(mockPartyClient).getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class));
 		verifyNoMoreInteractions(mockPartyClient);
 	}
 }

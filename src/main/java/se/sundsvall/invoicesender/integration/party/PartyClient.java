@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(
 	name = INTEGRATION_NAME,
 	configuration = PartyIntegrationConfiguration.class,
-	url = "${integration.party.url}")
+	url = "${integration.party.url}",
+	dismiss404 = true)
 @CircuitBreaker(name = INTEGRATION_NAME)
 interface PartyClient {
 
