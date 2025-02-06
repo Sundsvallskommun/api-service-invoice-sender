@@ -29,7 +29,6 @@ public class PartyIntegration {
 			if (legalIdWithDigitsOnly.startsWith("19") || legalIdWithDigitsOnly.startsWith("20")) {
 				return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithDigitsOnly).map(partyId -> new LegalIdAndPartyId(legalIdWithDigitsOnly, partyId));
 			}
-
 			return partyClient.getPartyId(municipalityId, PRIVATE, "19" + legalIdWithDigitsOnly)
 				.map(partyId -> new LegalIdAndPartyId("19" + legalIdWithDigitsOnly, partyId))
 				.or(() -> partyClient.getPartyId(municipalityId, PRIVATE, "20" + legalIdWithDigitsOnly)
