@@ -24,12 +24,12 @@ public class PartyIntegration {
 		// Strip everything but digits from the legal id
 		var legalIdWithDigitsOnly = legalId.replaceAll("\\D", "");
 
-		// Use the stripped legal id as-is, if it already starts with 19 or 20
-		if (legalIdWithDigitsOnly.startsWith("19") || legalIdWithDigitsOnly.startsWith("20")) {
-			return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithDigitsOnly).map(partyId -> new LegalIdAndPartyId(legalIdWithDigitsOnly, partyId));
-		}
-
 		try {
+			// Use the stripped legal id as-is, if it already starts with 19 or 20
+			if (legalIdWithDigitsOnly.startsWith("19") || legalIdWithDigitsOnly.startsWith("20")) {
+				return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithDigitsOnly).map(partyId -> new LegalIdAndPartyId(legalIdWithDigitsOnly, partyId));
+			}
+
 			return partyClient.getPartyId(municipalityId, PRIVATE, "19" + legalIdWithDigitsOnly)
 				.map(partyId -> new LegalIdAndPartyId("19" + legalIdWithDigitsOnly, partyId))
 				.or(() -> partyClient.getPartyId(municipalityId, PRIVATE, "20" + legalIdWithDigitsOnly)

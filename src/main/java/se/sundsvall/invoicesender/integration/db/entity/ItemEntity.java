@@ -2,6 +2,7 @@ package se.sundsvall.invoicesender.integration.db.entity;
 
 import static jakarta.persistence.EnumType.STRING;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -14,6 +15,7 @@ import se.sundsvall.invoicesender.service.model.Metadata;
 
 @Entity
 @Table(name = "batch_items")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ItemEntity {
 
 	@Id
