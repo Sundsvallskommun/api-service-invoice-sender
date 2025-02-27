@@ -28,31 +28,33 @@ class CitizenIntegrationTests {
 
 	@Test
 	void hasProtectedIdentity() {
-		var partyId1 = "personId1";
-		var partyId2 = "personId2";
+		final var partyId1 = "personId1";
+		final var partyId2 = "personId2";
+		final var municipalityId = "municipalityId";
 
 		when(mockPersonIdResponse.getStatusCode()).thenReturn(NO_CONTENT).thenReturn(OK);
-		when(mockCitizenClient.getPerson(partyId1)).thenReturn(mockPersonIdResponse);
-		when(mockCitizenClient.getPerson(partyId2)).thenReturn(mockPersonIdResponse);
+		when(mockCitizenClient.getPerson(municipalityId, partyId1)).thenReturn(mockPersonIdResponse);
+		when(mockCitizenClient.getPerson(municipalityId, partyId2)).thenReturn(mockPersonIdResponse);
 
-		assertThat(citizenIntegration.hasProtectedIdentity(partyId1)).isTrue();
-		assertThat(citizenIntegration.hasProtectedIdentity(partyId2)).isFalse();
+		assertThat(citizenIntegration.hasProtectedIdentity(partyId1, municipalityId)).isTrue();
+		assertThat(citizenIntegration.hasProtectedIdentity(partyId2, municipalityId)).isFalse();
 
-		verify(mockCitizenClient).getPerson(partyId1);
-		verify(mockCitizenClient).getPerson(partyId2);
+		verify(mockCitizenClient).getPerson(municipalityId, partyId1);
+		verify(mockCitizenClient).getPerson(municipalityId, partyId2);
 		verify(mockPersonIdResponse, times(2)).getStatusCode();
 		verifyNoMoreInteractions(mockCitizenClient, mockPersonIdResponse);
 	}
 
 	@Test
 	void hasProtectedIdentityWhenCitizenClientThrowsException() {
-		var partyId = "partyId";
+		final var partyId = "partyId";
+		final var municipalityId = "municipalityId";
 
-		when(mockCitizenClient.getPerson(partyId)).thenThrow(new NullPointerException());
+		when(mockCitizenClient.getPerson(municipalityId, partyId)).thenThrow(new NullPointerException());
 
-		assertThat(citizenIntegration.hasProtectedIdentity(partyId)).isFalse();
+		assertThat(citizenIntegration.hasProtectedIdentity(partyId, municipalityId)).isFalse();
 
-		verify(mockCitizenClient).getPerson(partyId);
+		verify(mockCitizenClient).getPerson(municipalityId, partyId);
 		verifyNoMoreInteractions(mockCitizenClient);
 	}
 }

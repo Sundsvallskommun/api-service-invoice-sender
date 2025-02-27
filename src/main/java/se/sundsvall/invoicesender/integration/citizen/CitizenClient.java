@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 @CircuitBreaker(name = INTEGRATION_NAME)
 interface CitizenClient {
 
-	@GetMapping(path = "/{personId}", produces = ALL_VALUE)
-	ResponseEntity<Void> getPerson(@PathVariable("personId") String personId);
+	@GetMapping(path = "/{municipalityId}/{personId}", produces = ALL_VALUE)
+	ResponseEntity<Void> getPerson(
+		@PathVariable("municipalityId") String municipalityId,
+		@PathVariable("personId") String personId);
 }
