@@ -16,15 +16,15 @@ public class CitizenIntegration {
 		this.citizenClient = citizenClient;
 	}
 
-	public boolean hasProtectedIdentity(final String partyId) {
+	public boolean hasProtectedIdentity(final String partyId, final String municipalityId) {
 		try {
-			var cleanPartyId = strip(partyId, "\"");
+			final var cleanPartyId = strip(partyId, "\"");
 			// Get the person data, or rather just the HTTP status code for it - a request for data for
 			// a protected identity person yields a 204 No Content
-			var personResponse = citizenClient.getPerson(cleanPartyId);
+			final var personResponse = citizenClient.getPerson(municipalityId, cleanPartyId);
 
 			return personResponse.getStatusCode().isSameCodeAs(NO_CONTENT);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			// If anything goes wrong - assume that the recipient doesn't have a protected identity
 			return false;
 		}
