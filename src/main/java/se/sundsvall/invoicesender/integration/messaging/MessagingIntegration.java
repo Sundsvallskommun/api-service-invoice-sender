@@ -3,6 +3,7 @@ package se.sundsvall.invoicesender.integration.messaging;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 
 import generated.se.sundsvall.messaging.MessageStatus;
 import java.time.LocalDate;
@@ -79,4 +80,30 @@ public class MessagingIntegration {
 		return Base64.getEncoder().encodeToString(htmlMessage.getBytes(UTF_8));
 	}
 
+	public void sendSlackMessage(final BatchEntity batch, final LocalDate date, final String municipalityId) {
+		LOG.info("Sending slack message");
+		var request = messagingMapper.toSlackRequest(generateSlackMessage(batch, date));
+
+		try {
+			client.sendSlackMessage(municipalityId, request);
+			LOG.info("Status report sent to {}", request.getChannel());
+		} catch (final Exception e) {
+			LOG.warn("Unable to send slack message to {}", request.getChannel());
+		}
+	}
+
+	String generateSlackMessage(final BatchEntity batch, LocalDate date) {
+		var numberOfSentInvoices = batch.getSentItems();
+		var numberOfNotSentInvoices = batch.getItems().stream()
+			.filter(invoices -> invoices.getType() == INVOICE)
+			.filter(invoices -> invoices.getStatus() != SENT)
+			.count();
+
+		return """
+			Batch: %s
+			Date: %s
+			Invoices sent: %s
+			Invoices not sent: %s
+			""".formatted(batch.getBasename(), date, numberOfSentInvoices, numberOfNotSentInvoices);
+	}
 }

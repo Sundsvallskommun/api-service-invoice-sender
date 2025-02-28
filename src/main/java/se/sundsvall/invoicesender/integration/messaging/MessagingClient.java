@@ -5,6 +5,7 @@ import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegrat
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.MessageResult;
+import generated.se.sundsvall.messaging.SlackRequest;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,4 +25,6 @@ interface MessagingClient {
 	@PostMapping("/{municipalityId}/email")
 	MessageResult sendEmail(@PathVariable("municipalityId") String municipalityId, @RequestBody EmailRequest request);
 
+	@PostMapping("/{municipalityId}/slack")
+	MessageResult sendSlackMessage(@PathVariable("municipalityId") String municipalityId, @RequestBody SlackRequest slackRequest);
 }

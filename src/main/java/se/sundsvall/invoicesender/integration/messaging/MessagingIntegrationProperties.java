@@ -16,6 +16,10 @@ import se.sundsvall.invoicesender.integration.Oauth2;
 @ConfigurationProperties("integration.messaging")
 record MessagingIntegrationProperties(
 
+	@NotBlank String channel,
+
+	@NotBlank String token,
+
 	@NotBlank String url,
 
 	@DefaultValue("PT10S") Duration connectTimeout,
@@ -32,7 +36,8 @@ record MessagingIntegrationProperties(
 
 		@NotBlank String subject,
 
-		@DefaultValue("Faktura #") String referencePrefix) {}
+		@DefaultValue("Faktura #") String referencePrefix) {
+	}
 
 	record StatusReport(
 
@@ -42,5 +47,6 @@ record MessagingIntegrationProperties(
 
 		@NotEmpty List<@Email @NotBlank String> recipientEmailAddresses,
 
-		@DefaultValue("Utskick av fakturor") String subjectPrefix) {}
+		@DefaultValue("Utskick av fakturor") String subjectPrefix) {
+	}
 }
