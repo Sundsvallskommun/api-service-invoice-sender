@@ -67,6 +67,8 @@ integration:
   # Messaging
   messaging:
     url: http://localhost:${wiremock.server.port}/messaging
+    token: someToken
+    channel: someChannel
     oauth2:
       token-url: http://localhost:${wiremock.server.port}/token
       client-id: someClientId

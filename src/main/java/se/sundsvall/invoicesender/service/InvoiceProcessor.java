@@ -227,6 +227,7 @@ public class InvoiceProcessor {
 			}
 			// Clean up
 			FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
+			messagingIntegration.sendSlackMessage(batchEntity, date, municipalityId);
 		}
 		// Send a status report
 		messagingIntegration.sendStatusReport(batchEntities, date, municipalityId);

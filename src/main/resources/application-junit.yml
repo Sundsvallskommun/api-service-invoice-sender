@@ -62,6 +62,8 @@ integration:
   # Messaging
   messaging:
     url: http://something.com/messaging
+    token: someToken
+    channel: someChannel
     oauth2:
       token-url: http://something.com/token
       client-id: someClientId

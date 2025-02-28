@@ -13,6 +13,7 @@ import generated.se.sundsvall.messaging.DigitalInvoiceParty;
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.EmailSender;
+import generated.se.sundsvall.messaging.SlackRequest;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -66,4 +67,10 @@ public class MessagingMapper {
 			.htmlMessage(htmlMessage);
 	}
 
+	public SlackRequest toSlackRequest(String message) {
+		return new SlackRequest()
+			.message(message)
+			.token(properties.token())
+			.channel(properties.channel());
+	}
 }

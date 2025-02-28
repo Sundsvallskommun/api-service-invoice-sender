@@ -96,4 +96,20 @@ class MessagingMapperTests {
 		assertThat(result.getSubject()).isEqualTo("someSubjectPrefix " + ISO_DATE.format(LocalDate.now()));
 		assertThat(result.getHtmlMessage()).isEqualTo(htmlMessage);
 	}
+
+	@Test
+	void toSlackRequest() {
+		var message = "someMessage";
+
+		when(properties.token()).thenReturn("someToken");
+		when(properties.channel()).thenReturn("someChannel");
+
+		var result = mapper.toSlackRequest(message);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getToken()).isEqualTo("someToken");
+		assertThat(result.getChannel()).isEqualTo("someChannel");
+		assertThat(result.getMessage()).isEqualTo("someMessage");
+		assertThat(result).hasNoNullFieldsOrProperties();
+	}
 }
