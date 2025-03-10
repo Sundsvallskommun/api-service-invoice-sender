@@ -68,8 +68,7 @@ class DbIntegrationTests {
 
 		var actualBatch = dbIntegration.getBatchesByStatus(ready);
 
-		assertThat(expectedBatch).isEqualTo(actualBatch);
-		assertThat(expectedBatch).hasSize(2);
+		assertThat(expectedBatch).isEqualTo(actualBatch).hasSize(2);
 	}
 
 	@Test
@@ -84,8 +83,7 @@ class DbIntegrationTests {
 
 		var actualBatch = dbIntegration.getBatchesByStatus(managed);
 
-		assertThat(expectedBatch).isEqualTo(actualBatch);
-		assertThat(expectedBatch).hasSize(2);
+		assertThat(expectedBatch).isEqualTo(actualBatch).hasSize(2);
 	}
 
 	@Test

@@ -26,17 +26,14 @@ class BatchRepositoryTest {
 	void testFindAllByBatchStatusReady() {
 		var result = batchRepositoryMock.findAllByBatchStatus(READY);
 
-		assertThat(result).hasSize(2);
-
-		assertThat(result).allSatisfy(batch -> assertThat(batch.getBatchStatus()).isEqualTo(READY));
+		assertThat(result).allSatisfy(batch -> assertThat(batch.getBatchStatus()).isEqualTo(READY)).hasSize(2);
 	}
 
 	@Test
 	void testFindAllByBatchStatusManaged() {
 		var result = batchRepositoryMock.findAllByBatchStatus(MANAGED);
 
-		assertThat(result).hasSize(2);
-		assertThat(result).allSatisfy(batch -> assertThat(batch.getBatchStatus()).isEqualTo(MANAGED));
+		assertThat(result).allSatisfy(batch -> assertThat(batch.getBatchStatus()).isEqualTo(MANAGED)).hasSize(2);
 	}
 
 }
