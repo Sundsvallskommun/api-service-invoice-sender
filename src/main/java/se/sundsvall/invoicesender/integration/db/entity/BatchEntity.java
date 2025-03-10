@@ -6,6 +6,8 @@ import static jakarta.persistence.FetchType.LAZY;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -73,6 +75,10 @@ public class BatchEntity {
 
 	@Column(name = "completed", nullable = false)
 	private boolean completed;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "batch_status")
+	private BatchStatus batchStatus;
 
 	@Lob
 	@Basic(fetch = LAZY)
@@ -287,6 +293,19 @@ public class BatchEntity {
 		return this;
 	}
 
+	public BatchStatus getBatchStatus() {
+		return batchStatus;
+	}
+
+	public void setBatchStatus(BatchStatus batchStatus) {
+		this.batchStatus = batchStatus;
+	}
+
+	public BatchEntity withBatchStatus(final BatchStatus batchStatus) {
+		this.batchStatus = batchStatus;
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return "BatchEntity{" +
@@ -296,6 +315,7 @@ public class BatchEntity {
 			", localPath='" + localPath + '\'' +
 			", archivePath='" + archivePath + '\'' +
 			", targetPath='" + targetPath + '\'' +
+			", date=" + date +
 			", startedAt=" + startedAt +
 			", completedAt=" + completedAt +
 			", items=" + items +
@@ -304,6 +324,7 @@ public class BatchEntity {
 			", sentItems=" + sentItems +
 			", processingEnabled=" + processingEnabled +
 			", completed=" + completed +
+			", batchStatus=" + batchStatus +
 			", data=" + Arrays.toString(data) +
 			'}';
 	}

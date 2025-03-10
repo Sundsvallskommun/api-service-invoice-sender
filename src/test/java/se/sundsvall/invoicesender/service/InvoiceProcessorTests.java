@@ -18,6 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
 import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
+import static se.sundsvall.invoicesender.integration.db.entity.BatchStatus.READY;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IN_PROGRESS;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
@@ -90,6 +91,9 @@ class InvoiceProcessorTests {
 	@Mock
 	private RaindanceIntegrationProperties.RaindanceEnvironment environmentMock;
 
+	@Mock
+	private RaindanceIntegration raindanceIntegrationMock;
+
 	@InjectMocks
 	private InvoiceProcessor invoiceProcessor;
 
@@ -102,6 +106,8 @@ class InvoiceProcessorTests {
 	@BeforeEach
 	void setup() {
 		lenient().when(propertiesMock.environments()).thenReturn(Map.of(MUNICIPALITY_ID, environmentMock));
+
+		ReflectionTestUtils.setField(invoiceProcessor, "raindanceIntegrations", Map.of(MUNICIPALITY_ID, raindanceIntegrationMock));
 	}
 
 	/**
@@ -303,7 +309,6 @@ class InvoiceProcessorTests {
 			createItemEntity(itemBeingModified -> itemBeingModified.setStatus(SENT)),
 			createItemEntity(itemBeingModified -> itemBeingModified.setStatus(IGNORED)));
 		batch.setItems(items);
-		doNothing().when(dbIntegrationMock).persistBatch(batch);
 
 		invoiceProcessor.updateAndPersistBatch(batch);
 
@@ -311,8 +316,6 @@ class InvoiceProcessorTests {
 		assertThat(batch.getCompletedAt()).isCloseTo(LocalDateTime.now(), within(5, ChronoUnit.SECONDS));
 		assertThat(batch.getIgnoredItems()).isEqualTo(1);
 		assertThat(batch.getSentItems()).isEqualTo(1);
-
-		verify(dbIntegrationMock).persistBatch(batch);
 	}
 
 	/**
@@ -501,6 +504,24 @@ class InvoiceProcessorTests {
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
+	@Test
+	void testWriteAndArchiveBatch() throws IOException {
+		var batchEntity = createBatchEntity();
+		var batches = List.of(batchEntity);
+
+		when(dbIntegrationMock.getBatchesByStatus(READY)).thenReturn(batches);
+
+		invoiceProcessor.writeAndArchiveBatch();
+
+		verify(dbIntegrationMock).getBatchesByStatus(READY);
+		verify(raindanceIntegrationMock).writeBatch(batchEntity);
+		verify(raindanceIntegrationMock).archiveOriginalBatch(batchEntity);
+		verify(dbIntegrationMock).persistBatch(batchEntity);
+
+		assertThat(batches).isNotNull();
+		assertThat(batchEntity.getMunicipalityId()).isEqualTo("2281");
+	}
+
 	/**
 	 * Some methods update the ItemType and ItemStatus of the item
 	 */
@@ -542,9 +563,6 @@ class InvoiceProcessorTests {
 		when(raindanceIntegration.readBatches(date, "BatchName", "2281")).thenReturn(batches);
 		doReturn("mocked-string").when(invoiceProcessor).mapXmlFileToString(anyString());
 		when(dbIntegrationMock.persistBatches(batches)).thenReturn(batches);
-		doNothing().when(raindanceIntegration).writeBatch(batch);
-		doNothing().when(raindanceIntegration).archiveOriginalBatch(batch);
-		doNothing().when(invoiceProcessor).updateAndPersistBatch(batch);
 		lenient().doReturn("mocked-string").when(invoiceProcessor).removeItemFromArchiveIndex(item, "mocked-string", "mocked-path");
 		doNothing().when(messagingIntegrationMock).sendStatusReport(batches, date, MUNICIPALITY_ID);
 	}

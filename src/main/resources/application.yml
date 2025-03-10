@@ -33,3 +33,13 @@ resilience4j.circuitbreaker:
     Messaging:
       ignore-exceptions:
         - se.sundsvall.dept44.exception.ClientProblem
+
+scheduler:
+  move-files:
+    name: writeAndArchiveBatch
+    # Every 5 minutes between 03:00-08:00 Monday-Friday
+    cron: '* */5 3-8 ? * MON-FRI'
+  shedlock-lock-at-most-for: PT2M
+  maximum-execution-time: PT2M
+
+

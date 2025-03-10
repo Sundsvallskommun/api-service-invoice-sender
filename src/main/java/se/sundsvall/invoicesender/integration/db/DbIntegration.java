@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import se.sundsvall.invoicesender.api.model.BatchDto;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.BatchStatus;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 @Component
@@ -33,6 +34,10 @@ public class DbIntegration {
 		return new PageImpl<>(result.getContent().stream()
 			.map(this::mapToBatchDto)
 			.toList(), pageRequest, result.getTotalElements());
+	}
+
+	public List<BatchEntity> getBatchesByStatus(BatchStatus batchStatus) {
+		return batchRepository.findAllByBatchStatus(batchStatus);
 	}
 
 	public void persistItem(final ItemEntity itemEntity) {

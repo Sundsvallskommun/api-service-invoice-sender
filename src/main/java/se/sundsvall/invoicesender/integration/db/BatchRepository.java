@@ -2,12 +2,14 @@ package se.sundsvall.invoicesender.integration.db;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.BatchStatus;
 
 @CircuitBreaker(name = "BatchRepository")
 interface BatchRepository extends JpaRepository<BatchEntity, Integer> {
@@ -23,5 +25,7 @@ interface BatchRepository extends JpaRepository<BatchEntity, Integer> {
 		@Param("to") LocalDateTime to,
 		@Param("municipalityId") String municipalityId,
 		Pageable pageRequest);
+
+	List<BatchEntity> findAllByBatchStatus(BatchStatus batchStatus);
 
 }

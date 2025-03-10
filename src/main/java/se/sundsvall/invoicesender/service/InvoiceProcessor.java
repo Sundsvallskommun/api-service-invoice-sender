@@ -4,6 +4,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static se.sundsvall.invoicesender.integration.db.entity.BatchStatus.MANAGED;
+import static se.sundsvall.invoicesender.integration.db.entity.BatchStatus.READY;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IN_PROGRESS;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
@@ -40,6 +42,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
+import se.sundsvall.dept44.scheduling.Dept44Scheduled;
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
@@ -214,6 +217,30 @@ public class InvoiceProcessor {
 			} else {
 				LOG.info("Batch processing is disabled for {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
 			}
+			messagingIntegration.sendSlackMessage(batchEntity, batchEntity.getDate(), batchEntity.getMunicipalityId());
+			batchEntity.setBatchStatus(READY);
+			dbIntegration.persistBatch(batchEntity);
+		}
+		// Send a status report
+		messagingIntegration.sendStatusReport(batchEntities, date, municipalityId);
+	}
+
+	@Dept44Scheduled(
+		cron = "${scheduler.move-files.cron}",
+		name = "${scheduler.move-files.name}",
+		lockAtMostFor = "${scheduler.shedlock-at-most-for}",
+		maximumExecutionTime = "${scheduler.maximum-execution-time}")
+	void writeAndArchiveBatch() throws IOException {
+		var batches = dbIntegration.getBatchesByStatus(READY);
+
+		if (batches == null || batches.isEmpty()) {
+			LOG.info("No batches were ready to be handled");
+			return;
+		}
+
+		for (var batchEntity : batches) {
+			LOG.info("Writing batch to Raindance {}", batchEntity.getBasename());
+			final var raindanceIntegration = raindanceIntegrations.get(batchEntity.getMunicipalityId());
 
 			// Write the batch back to Raindance
 			raindanceIntegration.writeBatch(batchEntity);
@@ -222,15 +249,14 @@ public class InvoiceProcessor {
 
 			// Archive the batch
 			if (isNotBlank(batchEntity.getArchivePath())) {
-				LOG.info("Archiving batch {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
+				LOG.info("Archiving batch {}", batchEntity.getBasename());
 				raindanceIntegration.archiveOriginalBatch(batchEntity);
 			}
 			// Clean up
 			FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
-			messagingIntegration.sendSlackMessage(batchEntity, date, municipalityId);
+			batchEntity.setBatchStatus(MANAGED);
+			dbIntegration.persistBatch(batchEntity);
 		}
-		// Send a status report
-		messagingIntegration.sendStatusReport(batchEntities, date, municipalityId);
 	}
 
 	void markItems(final ItemEntity item, final String municipalityId) {
@@ -357,8 +383,6 @@ public class InvoiceProcessor {
 		batchEntity.setSentItems(batchEntity.getItems().stream()
 			.filter(item -> item.getStatus() == SENT)
 			.count());
-
-		dbIntegration.persistBatch(batchEntity);
 	}
 
 }

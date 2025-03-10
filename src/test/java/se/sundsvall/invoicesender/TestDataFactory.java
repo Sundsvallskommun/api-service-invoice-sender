@@ -51,7 +51,7 @@ public final class TestDataFactory {
 			.withLocalPath("someLocalPath")
 			.withArchivePath("someArchivePath")
 			.withBasename("someBasename")
-			.withMunicipalityId("someMunicipalityId")
+			.withMunicipalityId("2281")
 			.withProcessingEnabled(true);
 
 		if (modifier != null) {

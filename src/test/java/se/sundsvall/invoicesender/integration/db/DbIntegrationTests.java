@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
 import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
+import static se.sundsvall.invoicesender.integration.db.entity.BatchStatus.MANAGED;
+import static se.sundsvall.invoicesender.integration.db.entity.BatchStatus.READY;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -52,6 +54,38 @@ class DbIntegrationTests {
 		verify(batchRepositoryMock).findAllByCompletedAtBetweenAndMunicipalityId(
 			any(LocalDateTime.class), any(LocalDateTime.class), any(String.class), any(Pageable.class));
 		verifyNoMoreInteractions(batchRepositoryMock);
+	}
+
+	@Test
+	void testGetBatchesByStatusReady() {
+		var ready = READY;
+
+		var batchEntity = createBatchEntity();
+		var batchEntity2 = createBatchEntity();
+		var expectedBatch = List.of(batchEntity, batchEntity2);
+
+		when(batchRepositoryMock.findAllByBatchStatus(ready)).thenReturn(expectedBatch);
+
+		var actualBatch = dbIntegration.getBatchesByStatus(ready);
+
+		assertThat(expectedBatch).isEqualTo(actualBatch);
+		assertThat(expectedBatch).hasSize(2);
+	}
+
+	@Test
+	void testGetBatchesByStatusManaged() {
+		var managed = MANAGED;
+
+		var batchEntity = createBatchEntity();
+		var batchEntity2 = createBatchEntity();
+		var expectedBatch = List.of(batchEntity, batchEntity2);
+
+		when(batchRepositoryMock.findAllByBatchStatus(managed)).thenReturn(expectedBatch);
+
+		var actualBatch = dbIntegration.getBatchesByStatus(managed);
+
+		assertThat(expectedBatch).isEqualTo(actualBatch);
+		assertThat(expectedBatch).hasSize(2);
 	}
 
 	@Test

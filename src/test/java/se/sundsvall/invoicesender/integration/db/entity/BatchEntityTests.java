@@ -1,6 +1,8 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static se.sundsvall.invoicesender.integration.db.entity.BatchStatus.MANAGED;
+import static se.sundsvall.invoicesender.integration.db.entity.BatchStatus.READY;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,7 +47,8 @@ class BatchEntityTests {
 			})
 			.withArchivePath("someArchivePath")
 			.withLocalPath("someLocalPath")
-			.withTargetPath("someTargetPath");
+			.withTargetPath("someTargetPath")
+			.withBatchStatus(MANAGED);
 
 		assertThat(batchEntity.getId()).isEqualTo(12345);
 		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
@@ -63,6 +66,7 @@ class BatchEntityTests {
 		assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
 		assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
 		assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
+		assertThat(batchEntity.getBatchStatus()).isEqualTo(MANAGED);
 	}
 
 	@Test
@@ -91,6 +95,7 @@ class BatchEntityTests {
 		batchEntity.setArchivePath("someArchivePath");
 		batchEntity.setLocalPath("someLocalPath");
 		batchEntity.setTargetPath("someTargetPath");
+		batchEntity.setBatchStatus(READY);
 
 		assertThat(batchEntity.getId()).isEqualTo(12345);
 		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
@@ -108,6 +113,7 @@ class BatchEntityTests {
 		assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
 		assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
 		assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
+		assertThat(batchEntity.getBatchStatus()).isEqualTo(READY);
 	}
 
 	@ParameterizedTest
