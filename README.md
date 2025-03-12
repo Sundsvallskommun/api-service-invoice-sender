@@ -52,12 +52,10 @@ This microservice depends on the following services:
 
 - **Citizen**
   - **Purpose:** Used to check if a citizen have protected identity.
-
 - **Messaging**
   - **Purpose:** Is used for sending the Kivra requests and also status reports.
   - **Repository:** [https://github.com/Sundsvallskommun/api-service-messaging](https://github.com/Sundsvallskommun/api-service-messaging.git)
   - **Setup Instructions:** See documentation in repository above for installation and configuration steps.
-
 - **Party**
   - **Purpose:** Is used to convert the personal number of the citizens to a partyId.
   - **Repository:** [https://github.com/Sundsvallskommun/api-service-party](https://github.com/Sundsvallskommun/api-service-party.git)
@@ -148,7 +146,6 @@ Contributions are welcome! Please see [CONTRIBUTING.md](https://github.com/Sunds
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
 
 ## Status
 
