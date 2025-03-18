@@ -36,7 +36,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +46,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import se.sundsvall.dept44.test.annotation.resource.Load;
 import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
@@ -91,7 +89,7 @@ class InvoiceProcessorTests {
 
 	@BeforeAll
 	static void setupStaticMock() {
-		final var fileUtilsMock = mockStatic(FileUtils.class);
+		var fileUtilsMock = mockStatic(FileUtils.class);
 		fileUtilsMock.when(() -> FileUtils.deleteDirectory(any())).thenAnswer(invocation -> null);
 	}
 
@@ -105,9 +103,9 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void markItems_1() {
-		final var invoiceFilenamePrefixes = Map.of("2281", List.of("faktura"));
+		var invoiceFilenamePrefixes = Map.of("2281", List.of("faktura"));
 		ReflectionTestUtils.setField(invoiceProcessor, "invoiceFilenamePrefixes", invoiceFilenamePrefixes);
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("faktura123.pdf"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("faktura123.pdf"));
 
 		invoiceProcessor.markItems(item, MUNICIPALITY_ID);
 
@@ -120,9 +118,9 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void markItems_2() {
-		final var invoiceFilenamePrefixes = Map.of(MUNICIPALITY_ID, List.of("faktura"));
+		var invoiceFilenamePrefixes = Map.of(MUNICIPALITY_ID, List.of("faktura"));
 		ReflectionTestUtils.setField(invoiceProcessor, "invoiceFilenamePrefixes", invoiceFilenamePrefixes);
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("should-be-ignored.pdf"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("should-be-ignored.pdf"));
 
 		invoiceProcessor.markItems(item, MUNICIPALITY_ID);
 
@@ -135,7 +133,7 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void markItems_3() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("should-be-ignored.jpeg"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("should-be-ignored.jpeg"));
 
 		invoiceProcessor.markItems(item, MUNICIPALITY_ID);
 
@@ -148,7 +146,7 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void extractItemMetadata_1(@Load("/files/ArchiveIndex.xml") final String xml) {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
 
 		invoiceProcessor.extractItemMetadata(item, xml);
 
@@ -176,12 +174,12 @@ class InvoiceProcessorTests {
 		invoiceProcessor.extractItemMetadata(item, xml);
 
 		assertThat(item.getStatus()).isEqualTo(METADATA_INCOMPLETE);
-	}
+	} 
 
 	@Test
 	void validateLegalId() {
-		final var item1 = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("9001011234"));
-		final var item2 = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("2104142399"));
+		var item1 = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("9001011234"));
+		var item2 = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("2104142399"));
 
 		invoiceProcessor.validateLegalId(item1);
 		assertThat(item1.getStatus()).isEqualTo(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
@@ -194,8 +192,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void markProtectedIdentityItems_1() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("somePartyId"));
-		final var municipalityId = "someMunicipalityId";
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("somePartyId"));
+		var municipalityId = "someMunicipalityId";
 		when(citizenIntegrationMock.hasProtectedIdentity(item.getRecipientPartyId(), municipalityId)).thenReturn(true);
 
 		invoiceProcessor.markProtectedIdentityItems(item, municipalityId);
@@ -208,8 +206,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void markProtectedIdentityItems_2() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("somePartyId"));
-		final var municipalityId = "someMunicipalityId";
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("somePartyId"));
+		var municipalityId = "someMunicipalityId";
 		when(citizenIntegrationMock.hasProtectedIdentity(item.getRecipientPartyId(), municipalityId)).thenReturn(false);
 
 		invoiceProcessor.markProtectedIdentityItems(item, municipalityId);
@@ -222,7 +220,7 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void fetchInvoiceRecipientPartyIds_1() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("202104142399"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("202104142399"));
 		when(partyIntegrationMock.getPartyId(item.getRecipientLegalId(), MUNICIPALITY_ID)).thenReturn(Optional.of(new LegalIdAndPartyId("1234", "5678")));
 
 		invoiceProcessor.fetchInvoiceRecipientPartyIds(item, MUNICIPALITY_ID);
@@ -237,7 +235,7 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void fetchInvoiceRecipientPartyIds_2() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("202104142399"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientLegalId("202104142399"));
 		when(partyIntegrationMock.getPartyId(item.getRecipientLegalId(), MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		invoiceProcessor.fetchInvoiceRecipientPartyIds(item, MUNICIPALITY_ID);
@@ -250,11 +248,11 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void sendDigitalInvoices_1() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("1234"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("1234"));
 
 		when(messagingIntegrationMock.sendInvoice(MUNICIPALITY_ID, item)).thenReturn(SENT);
 
-		invoiceProcessor.sendDigitalInvoices(MUNICIPALITY_ID, item);
+		invoiceProcessor.sendDigitalInvoice(MUNICIPALITY_ID, item);
 
 		assertThat(item.getStatus()).isEqualTo(SENT);
 	}
@@ -264,18 +262,18 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void sendDigitalInvoices_2() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("1234"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setRecipientPartyId("1234"));
 
 		when(messagingIntegrationMock.sendInvoice(MUNICIPALITY_ID, item)).thenReturn(NOT_SENT);
 
-		invoiceProcessor.sendDigitalInvoices(MUNICIPALITY_ID, item);
+		invoiceProcessor.sendDigitalInvoice(MUNICIPALITY_ID, item);
 
 		assertThat(item.getStatus()).isEqualTo(NOT_SENT);
 	}
 
 	@Test
 	void extractInvoiceRecipientLegalId_1() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
 
 		invoiceProcessor.extractInvoiceRecipientLegalId(item);
 
@@ -285,7 +283,7 @@ class InvoiceProcessorTests {
 
 	@Test
 	void extractInvoiceRecipientLegalId_2() {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_.pdf"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_.pdf"));
 
 		invoiceProcessor.extractInvoiceRecipientLegalId(item);
 
@@ -294,8 +292,8 @@ class InvoiceProcessorTests {
 
 	@Test
 	void updateAndPersistBatch() {
-		final var batch = createBatchEntity();
-		final var items = List.of(
+		var batch = createBatchEntity();
+		var items = List.of(
 			createItemEntity(itemBeingModified -> itemBeingModified.setStatus(SENT)),
 			createItemEntity(itemBeingModified -> itemBeingModified.setStatus(IGNORED)));
 		batch.setItems(items);
@@ -316,8 +314,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void run_1() throws IOException {
-		final var item = createItemEntity();
-		final var invoiceProcessorSpy = spy(invoiceProcessor);
+		var item = createItemEntity();
+		var invoiceProcessorSpy = spy(invoiceProcessor);
 
 		runMethodCommonStubs(item, invoiceProcessorSpy);
 
@@ -331,7 +329,7 @@ class InvoiceProcessorTests {
 		verify(invoiceProcessorSpy, never()).validateLegalId(any());
 		verify(invoiceProcessorSpy, never()).markProtectedIdentityItems(any(), eq(MUNICIPALITY_ID));
 		verify(invoiceProcessorSpy, never()).fetchInvoiceRecipientPartyIds(any(), any());
-		verify(invoiceProcessorSpy, never()).sendDigitalInvoices(any(), any());
+		verify(invoiceProcessorSpy, never()).sendDigitalInvoice(any(), any());
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
@@ -340,8 +338,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void run_2() throws IOException {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
-		final var invoiceProessorSpy = spy(invoiceProcessor);
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var invoiceProessorSpy = spy(invoiceProcessor);
 		runMethodCommonStubs(item, invoiceProessorSpy);
 
 		doAnswer(updateItem(INVOICE, IN_PROGRESS)).when(invoiceProessorSpy).markItems(item, MUNICIPALITY_ID);
@@ -355,7 +353,7 @@ class InvoiceProcessorTests {
 		verify(invoiceProessorSpy, never()).validateLegalId(any());
 		verify(invoiceProessorSpy, never()).markProtectedIdentityItems(any(), eq(MUNICIPALITY_ID));
 		verify(invoiceProessorSpy, never()).fetchInvoiceRecipientPartyIds(any(), any());
-		verify(invoiceProessorSpy, never()).sendDigitalInvoices(any(), any());
+		verify(invoiceProessorSpy, never()).sendDigitalInvoice(any(), any());
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
@@ -364,8 +362,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void run_3() throws IOException {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
-		final var invoiceProcessorSpy = spy(invoiceProcessor);
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var invoiceProcessorSpy = spy(invoiceProcessor);
 
 		runMethodCommonStubs(item, invoiceProcessorSpy);
 
@@ -381,7 +379,7 @@ class InvoiceProcessorTests {
 		verify(invoiceProcessorSpy, never()).validateLegalId(any());
 		verify(invoiceProcessorSpy, never()).markProtectedIdentityItems(any(), eq(MUNICIPALITY_ID));
 		verify(invoiceProcessorSpy, never()).fetchInvoiceRecipientPartyIds(any(), any());
-		verify(invoiceProcessorSpy, never()).sendDigitalInvoices(any(), any());
+		verify(invoiceProcessorSpy, never()).sendDigitalInvoice(any(), any());
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
@@ -390,8 +388,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void run_4() throws IOException {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
-		final var invoiceProcessorSpy = spy(invoiceProcessor);
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var invoiceProcessorSpy = spy(invoiceProcessor);
 
 		runMethodCommonStubs(item, invoiceProcessorSpy);
 
@@ -408,7 +406,7 @@ class InvoiceProcessorTests {
 		verify(invoiceProcessorSpy).validateLegalId(item);
 		verify(invoiceProcessorSpy, never()).markProtectedIdentityItems(any(), eq(MUNICIPALITY_ID));
 		verify(invoiceProcessorSpy, never()).fetchInvoiceRecipientPartyIds(any(), any());
-		verify(invoiceProcessorSpy, never()).sendDigitalInvoices(any(), any());
+		verify(invoiceProcessorSpy, never()).sendDigitalInvoice(any(), any());
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
@@ -418,8 +416,8 @@ class InvoiceProcessorTests {
 	@Test
 	void run_5() throws IOException {
 
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
-		final var invoiceProcessorSpy = spy(invoiceProcessor);
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var invoiceProcessorSpy = spy(invoiceProcessor);
 		runMethodCommonStubs(item, invoiceProcessorSpy);
 
 		doAnswer(updateItem(INVOICE, IN_PROGRESS)).when(invoiceProcessorSpy).markItems(item, MUNICIPALITY_ID);
@@ -437,7 +435,7 @@ class InvoiceProcessorTests {
 		verify(invoiceProcessorSpy).validateLegalId(item);
 		verify(invoiceProcessorSpy).fetchInvoiceRecipientPartyIds(any(), any());
 		verify(invoiceProcessorSpy).markProtectedIdentityItems(item, MUNICIPALITY_ID);
-		verify(invoiceProcessorSpy, never()).sendDigitalInvoices(any(), any());
+		verify(invoiceProcessorSpy, never()).sendDigitalInvoice(any(), any());
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
@@ -446,8 +444,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void run_6() throws IOException {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
-		final var invoiceProcessorSpy = spy(invoiceProcessor);
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var invoiceProcessorSpy = spy(invoiceProcessor);
 		runMethodCommonStubs(item, invoiceProcessorSpy);
 
 		doAnswer(updateItem(INVOICE, IN_PROGRESS)).when(invoiceProcessorSpy).markItems(item, MUNICIPALITY_ID);
@@ -464,7 +462,7 @@ class InvoiceProcessorTests {
 		verify(invoiceProcessorSpy).validateLegalId(item);
 		verify(invoiceProcessorSpy).fetchInvoiceRecipientPartyIds(item, MUNICIPALITY_ID);
 		verify(invoiceProcessorSpy, never()).markProtectedIdentityItems(item, MUNICIPALITY_ID);
-		verify(invoiceProcessorSpy, never()).sendDigitalInvoices(any(), any());
+		verify(invoiceProcessorSpy, never()).sendDigitalInvoice(any(), any());
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
@@ -473,8 +471,8 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void run_7() throws IOException {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
-		final var invoiceProcessorSpy = spy(invoiceProcessor);
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		var invoiceProcessorSpy = spy(invoiceProcessor);
 		runMethodCommonStubs(item, invoiceProcessorSpy);
 
 		doAnswer(updateItem(INVOICE, IN_PROGRESS)).when(invoiceProcessorSpy).markItems(item, MUNICIPALITY_ID);
@@ -483,7 +481,7 @@ class InvoiceProcessorTests {
 		doAnswer(doNotUpdate()).when(invoiceProcessorSpy).validateLegalId(item);
 		doAnswer(doNotUpdate()).when(invoiceProcessorSpy).markProtectedIdentityItems(item, MUNICIPALITY_ID);
 		doAnswer(updateItem(RECIPIENT_PARTY_ID_FOUND)).when(invoiceProcessorSpy).fetchInvoiceRecipientPartyIds(item, MUNICIPALITY_ID);
-		doAnswer(updateItem(NOT_SENT)).when(invoiceProcessorSpy).sendDigitalInvoices(MUNICIPALITY_ID, item);
+		doAnswer(updateItem(NOT_SENT)).when(invoiceProcessorSpy).sendDigitalInvoice(MUNICIPALITY_ID, item);
 
 		invoiceProcessorSpy.run(LocalDate.now(), MUNICIPALITY_ID, "BatchName");
 
@@ -493,7 +491,7 @@ class InvoiceProcessorTests {
 		verify(invoiceProcessorSpy).validateLegalId(item);
 		verify(invoiceProcessorSpy).markProtectedIdentityItems(item, MUNICIPALITY_ID);
 		verify(invoiceProcessorSpy).fetchInvoiceRecipientPartyIds(item, MUNICIPALITY_ID);
-		verify(invoiceProcessorSpy).sendDigitalInvoices(MUNICIPALITY_ID, item);
+		verify(invoiceProcessorSpy).sendDigitalInvoice(MUNICIPALITY_ID, item);
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
@@ -502,7 +500,7 @@ class InvoiceProcessorTests {
 	 */
 	private Answer<ItemEntity> updateItem(final ItemType type, final ItemStatus status) {
 		return invocation -> {
-			final var invocationArgument = (ItemEntity) invocation.getArgument(0);
+			var invocationArgument = (ItemEntity) invocation.getArgument(0);
 			ofNullable(type).ifPresent(invocationArgument::setType);
 			ofNullable(status).ifPresent(invocationArgument::setStatus);
 			return null;
@@ -527,12 +525,12 @@ class InvoiceProcessorTests {
 	 * Common stubs for the run(LocalDate, String, String) method tests
 	 */
 	private void runMethodCommonStubs(final ItemEntity item, final InvoiceProcessor invoiceProcessor) throws IOException {
-		final var date = LocalDate.now();
-		final var batch = createBatchEntity(batchBeingModified -> batchBeingModified.withItems(List.of(item)));
-		final var batches = List.of(batch);
+		var date = LocalDate.now();
+		var batch = createBatchEntity(batchBeingModified -> batchBeingModified.withItems(List.of(item)));
+		var batches = List.of(batch);
 
-		final var raindanceIntegration = mock(RaindanceIntegration.class);
-		final var raindanceIntegrations = Map.of(MUNICIPALITY_ID, raindanceIntegration);
+		var raindanceIntegration = mock(RaindanceIntegration.class);
+		var raindanceIntegrations = Map.of(MUNICIPALITY_ID, raindanceIntegration);
 		ReflectionTestUtils.setField(invoiceProcessor, "raindanceIntegrations", raindanceIntegrations);
 
 		when(raindanceIntegration.readBatches(date, "BatchName", "2281")).thenReturn(batches);

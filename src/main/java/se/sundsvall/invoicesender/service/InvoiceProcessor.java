@@ -1,6 +1,7 @@
 package se.sundsvall.invoicesender.service;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.util.function.Predicate.not;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -149,12 +150,21 @@ public class InvoiceProcessor {
 				final var archiveIndexItem = batchEntity.getItems().stream()
 					.filter(item -> item.getFilename().equalsIgnoreCase(ARCHIVE_INDEX))
 					.findFirst()
-					.orElseThrow(); // TODO: handle - how ???
+					.orElse(null);
+				// If we don't have any archive index item - bail out
+				if (archiveIndexItem == null) {
+					LOG.info("Unable to process batch {}, since it contains no ArchiveIndex.xml item", batchEntity.getFilename());
+
+					continue;
+				}
+				archiveIndexItem.setStatus(IGNORED);
+
+				// Get the actual XML from the ArchiveIndex
 				var archiveIndex = new String(archiveIndexItem.getData(), ISO_8859_1);
 
 				for (final var item : batchEntity.getItems()) {
 					// Mark invoice items
-					markItems(item, municipalityId);
+					markItem(item, municipalityId);
 					if (ITEM_IS_NOT_PROCESSABLE.test(item)) {
 						// Stop processing item if it is not processable.
 						LOG.info("Item not processable - skipping item {}", item.getFilename());
@@ -190,7 +200,7 @@ public class InvoiceProcessor {
 					}
 
 					// Get the recipient party id from the invoices that are left and where the recipient legal id is set
-					fetchInvoiceRecipientPartyIds(item, municipalityId);
+					fetchInvoiceRecipientPartyId(item, municipalityId);
 					if (RECIPIENT_HAS_INVALID_PARTY_ID.test(item)) {
 						// Stop processing item if the recipient party id is invalid.
 						LOG.info("Invalid recipient party id - skipping item {}", item.getFilename());
@@ -199,7 +209,7 @@ public class InvoiceProcessor {
 					}
 
 					// Remove any items where the recipient has a protected identity
-					markProtectedIdentityItems(item, municipalityId);
+					markProtectedIdentityItem(item, municipalityId);
 					if (RECIPIENT_HAS_INVALID_LEGAL_ID.test(item)) {
 						// Stop processing item if the recipient has a protected identity.
 						LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
@@ -239,8 +249,7 @@ public class InvoiceProcessor {
 				raindanceIntegration.archiveOriginalBatch(batchEntity);
 			}
 			// Clean up
-			// TODO: maybe clear out item data in the db ???
-			// FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
+			// TODO: maybe clear out item data for sent items in the db ???
 			messagingIntegration.sendSlackMessage(batchEntity, date, municipalityId);
 		}
 		// Send a status report
@@ -263,25 +272,15 @@ public class InvoiceProcessor {
 
 			if (isNotEmpty(invoiceFilenamePrefixesForMunicipality) && invoiceFilenamePrefixesForMunicipality.stream().noneMatch(prefix -> item.getFilename().startsWith(prefix))) {
 				LOG.info("Setting item {} status to IGNORED", item.getFilename());
+
 				item.setStatus(IGNORED);
 			}
 		} else {
 			LOG.info("Setting item {} type to OTHER and status to IGNORED", item.getFilename());
+
 			item.setType(OTHER);
 			item.setStatus(IGNORED);
 		}
-	}
-
-	/**
-	 * Maps the XML file to a string. The XML file is read from the local path and returned as a string.
-	 *
-	 * @param  localPath   the local path to the file
-	 * @return             the XML file as a string
-	 * @throws IOException if an I/O error occurs
-	 */
-	String mapXmlFileToString(final String localPath) throws IOException {
-		final var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
-		return Files.readString(path, ISO_8859_1);
 	}
 
 	/**
@@ -417,8 +416,8 @@ public class InvoiceProcessor {
 	void sendDigitalInvoices(final String municipalityId, final ItemEntity item) {
 		final var status = messagingIntegration.sendInvoice(municipalityId, item);
 		item.setStatus(status);
-		LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
 
+		LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
 	}
 
 	void updateAndPersistBatch(final BatchEntity batchEntity) {
