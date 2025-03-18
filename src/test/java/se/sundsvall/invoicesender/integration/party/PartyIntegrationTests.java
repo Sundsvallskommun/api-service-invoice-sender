@@ -64,7 +64,7 @@ class PartyIntegrationTests {
 		when(mockPartyClient.getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class)))
 			.thenReturn(Optional.empty());
 
-		final var partyId = partyIntegration.getPartyId("5505158888", "2281");
+		var partyId = partyIntegration.getPartyId("5505158888", "2281");
 
 		assertThat(partyId).isEmpty();
 
@@ -77,7 +77,7 @@ class PartyIntegrationTests {
 		when(mockPartyClient.getPartyId(any(String.class), eq(PartyType.PRIVATE), any(String.class)))
 			.thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
 
-		final var partyId = partyIntegration.getPartyId("5505158888", "2281");
+		var partyId = partyIntegration.getPartyId("5505158888", "2281");
 
 		assertThat(partyId).isEmpty();
 

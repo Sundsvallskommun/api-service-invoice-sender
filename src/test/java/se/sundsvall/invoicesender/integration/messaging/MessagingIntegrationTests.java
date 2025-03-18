@@ -81,13 +81,13 @@ class MessagingIntegrationTests {
 	void testSendInvoice() throws IOException {
 		var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(messagingMapper.toDigitalInvoiceRequest(invoice)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class)))
 			.thenReturn(new MessageResult()
 				.deliveries(List.of(new DeliveryResult()
 					.status(MessageStatus.SENT))));
 
-		var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
+		var result = messagingIntegration.sendInvoice(MUNICIPALITY_ID, invoice);
 		assertThat(result).isEqualTo(SENT);
 
 		verify(mockClient).sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class));
@@ -98,11 +98,11 @@ class MessagingIntegrationTests {
 	void testSendInvoiceWhenExceptionIsThrown() throws IOException {
 		var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(messagingMapper.toDigitalInvoiceRequest(invoice)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
 			.thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
 
-		var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
+		var result = messagingIntegration.sendInvoice(MUNICIPALITY_ID, invoice);
 
 		assertThat(result).isEqualTo(NOT_SENT);
 
@@ -198,7 +198,7 @@ class MessagingIntegrationTests {
 	@Test
 	void testGenerateSlackMessage() {
 		var batch = new BatchEntity()
-			.withBasename("testBasename")
+			.withFilename("testBasename")
 			.withItems(List.of(
 				new ItemEntity().withType(OTHER).withStatus(IGNORED), // Check that ArchiveIndex.xml is not counted as an invoice.
 				new ItemEntity().withType(INVOICE).withStatus(SENT),

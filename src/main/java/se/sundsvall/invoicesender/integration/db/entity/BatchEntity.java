@@ -31,14 +31,11 @@ public class BatchEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@Column(name = "basename", nullable = false)
-	private String basename;
+	@Column(name = "filename", nullable = false)
+	private String filename;
 
 	@Column(name = "municipality_id")
 	private String municipalityId;
-
-	@Column(name = "local_path")
-	private String localPath;
 
 	@Column(name = "archive_path")
 	private String archivePath;
@@ -144,16 +141,16 @@ public class BatchEntity {
 		return this;
 	}
 
-	public String getBasename() {
-		return basename;
+	public String getFilename() {
+		return filename;
 	}
 
-	public void setBasename(final String basename) {
-		this.basename = basename;
+	public void setFilename(final String filename) {
+		this.filename = filename;
 	}
 
-	public BatchEntity withBasename(final String basename) {
-		this.basename = basename;
+	public BatchEntity withFilename(final String filename) {
+		this.filename = filename;
 		return this;
 	}
 
@@ -193,19 +190,6 @@ public class BatchEntity {
 
 	public BatchEntity withMunicipalityId(final String municipalityId) {
 		this.municipalityId = municipalityId;
-		return this;
-	}
-
-	public String getLocalPath() {
-		return localPath;
-	}
-
-	public void setLocalPath(final String localPath) {
-		this.localPath = localPath;
-	}
-
-	public BatchEntity withLocalPath(final String localPath) {
-		this.localPath = localPath;
 		return this;
 	}
 
@@ -291,9 +275,8 @@ public class BatchEntity {
 	public String toString() {
 		return "BatchEntity{" +
 			"id=" + id +
-			", basename='" + basename + '\'' +
+			", filename='" + filename + '\'' +
 			", municipalityId='" + municipalityId + '\'' +
-			", localPath='" + localPath + '\'' +
 			", archivePath='" + archivePath + '\'' +
 			", targetPath='" + targetPath + '\'' +
 			", startedAt=" + startedAt +

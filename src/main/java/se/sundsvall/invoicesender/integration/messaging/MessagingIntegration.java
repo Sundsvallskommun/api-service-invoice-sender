@@ -40,9 +40,9 @@ public class MessagingIntegration {
 		this.properties = properties;
 	}
 
-	public ItemStatus sendInvoice(final String path, final ItemEntity invoice, final String municipalityId) {
+	public ItemStatus sendInvoice(final String municipalityId, final ItemEntity invoice) {
 		try {
-			var request = messagingMapper.toDigitalInvoiceRequest(invoice, path);
+			var request = messagingMapper.toDigitalInvoiceRequest(invoice);
 
 			var response = client.sendDigitalInvoice(municipalityId, request);
 
@@ -104,6 +104,6 @@ public class MessagingIntegration {
 			Date: %s
 			Invoices sent: %s
 			Invoices not sent: %s
-			""".formatted(batch.getBasename(), date, numberOfSentInvoices, numberOfNotSentInvoices);
+			""".formatted(batch.getFilename(), date, numberOfSentInvoices, numberOfNotSentInvoices);
 	}
 }

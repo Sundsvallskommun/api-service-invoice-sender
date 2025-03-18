@@ -20,15 +20,12 @@ import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_NOT
 import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_LEGAL_ID;
 import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_PARTY_ID;
 import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
-import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
 import static se.sundsvall.invoicesender.util.Constants.DISABLED_CRON;
 import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_PATTERN;
 import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
 import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
 
 import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -39,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
@@ -57,7 +53,6 @@ public class InvoiceProcessor {
 	private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
 	private static final String ARCHIVE_INDEX = "ArchiveIndex.xml";
 
-	private final FileSystem fileSystem;
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
 	private final MessagingIntegration messagingIntegration;
@@ -66,13 +61,12 @@ public class InvoiceProcessor {
 	private final Map<String, RaindanceIntegration> raindanceIntegrations = new HashMap<>();
 	private final Map<String, List<String>> invoiceFilenamePrefixes = new HashMap<>();
 
-	public InvoiceProcessor(final FileSystem fileSystem, final TaskScheduler taskScheduler,
+	public InvoiceProcessor(final TaskScheduler taskScheduler,
 		final RaindanceIntegrationProperties properties,
 		final CitizenIntegration citizenIntegration,
 		final PartyIntegration partyIntegration,
 		final MessagingIntegration messagingIntegration,
 		final DbIntegration dbIntegration) {
-		this.fileSystem = fileSystem;
 		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -80,13 +74,13 @@ public class InvoiceProcessor {
 
 		properties.environments().forEach((municipalityId, raindanceEnvironment) -> {
 			// Create a Raindance integration for the given municipality id
-			raindanceIntegrations.put(municipalityId, new RaindanceIntegration(raindanceEnvironment, fileSystem));
+			raindanceIntegrations.put(municipalityId, new RaindanceIntegration(raindanceEnvironment));
 
 			// Get the invoice filename prefixes
 			invoiceFilenamePrefixes.put(municipalityId, raindanceEnvironment.invoiceFilenamePrefixes());
 
 			raindanceEnvironment.batchSetup().forEach((batchName, batchSetup) -> {
-				final var cronExpression = batchSetup.scheduling().cronExpression();
+				var cronExpression = batchSetup.scheduling().cronExpression();
 
 				// Check if the batch is disabled
 				if (DISABLED_CRON.equals(cronExpression)) {
@@ -94,11 +88,11 @@ public class InvoiceProcessor {
 					return;
 				}
 
-				final var parsedCronExpression = parseCronExpression(cronExpression);
+				var parsedCronExpression = parseCronExpression(cronExpression);
 				LOG.info("Scheduling run for batches with prefix {} {}", batchName, parsedCronExpression);
 
 				// Create the cron trigger
-				final var cronTrigger = new CronTrigger(cronExpression);
+				var cronTrigger = new CronTrigger(cronExpression);
 				// Schedule it
 				taskScheduler.schedule(() -> {
 					try {
@@ -131,19 +125,23 @@ public class InvoiceProcessor {
 
 	public void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
 		// Get the Raindance integration
-		final var raindanceIntegration = raindanceIntegrations.get(municipalityId);
+		var raindanceIntegration = raindanceIntegrations.get(municipalityId);
 		// Get the batches from Raindance
-		final var batches = raindanceIntegration.readBatches(date, batchName, municipalityId);
+		var batches = raindanceIntegration.readBatches(date, batchName, municipalityId);
 
-		final var batchEntities = dbIntegration.persistBatches(batches);
+		var batchEntities = dbIntegration.persistBatches(batches);
 
-		for (final var batchEntity : batchEntities) {
+		for (var batchEntity : batchEntities) {
 			if (batchEntity.isProcessingEnabled()) {
-				LOG.info("Processing batch {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
-				final var localPath = batchEntity.getLocalPath();
-				var archiveIndex = mapXmlFileToString(localPath);
-				for (final var item : batchEntity.getItems()) {
+				LOG.info("Processing batch {}", batchEntity.getFilename());
+				// Extract the ArchiveIndex.xml item
+				var archiveIndexItem = batchEntity.getItems().stream()
+					.filter(item -> item.getFilename().equalsIgnoreCase(ARCHIVE_INDEX))
+					.findFirst()
+					.orElseThrow(); // TODO: handle - how ???
+				var archiveIndex = new String(archiveIndexItem.getData(), ISO_8859_1);
 
+				for (var item : batchEntity.getItems()) {
 					// Mark invoice items
 					markItems(item, municipalityId);
 					if (ITEM_IS_NOT_PROCESSABLE.test(item)) {
@@ -199,7 +197,7 @@ public class InvoiceProcessor {
 					}
 
 					// Send digital mail for the invoices where the recipient party id is set
-					sendDigitalInvoices(item, localPath, municipalityId);
+					sendDigitalInvoice(municipalityId, item);
 					if (INVOICE_COULD_NOT_BE_SENT.test(item)) {
 						// Stop processing item if the invoice could not be sent.
 						LOG.info("Invoice could not be sent - skipping item {}", item.getFilename());
@@ -208,11 +206,15 @@ public class InvoiceProcessor {
 					}
 
 					dbIntegration.persistItem(item);
-					// Update the archive index - ArchiveIndex.xml
-					archiveIndex = removeItemFromArchiveIndex(item, archiveIndex, localPath);
+					// Remove the item from ArchiveIndex.xml
+					archiveIndex = removeItemFromArchiveIndex(item, archiveIndex);
+
 				}
+				// Update the ArchiveIndex.xml item
+				archiveIndex = XmlUtil.XML_DECLARATION.concat("\n").concat(archiveIndex);
+				archiveIndexItem.setData(archiveIndex.getBytes(ISO_8859_1));
 			} else {
-				LOG.info("Batch processing is disabled for {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
+				LOG.info("Batch processing is disabled for {}", batchEntity.getFilename());
 			}
 
 			// Write the batch back to Raindance
@@ -222,11 +224,12 @@ public class InvoiceProcessor {
 
 			// Archive the batch
 			if (isNotBlank(batchEntity.getArchivePath())) {
-				LOG.info("Archiving batch {}", batchEntity.getBasename() + BATCH_FILE_SUFFIX);
+				LOG.info("Archiving batch {}", batchEntity.getFilename());
 				raindanceIntegration.archiveOriginalBatch(batchEntity);
 			}
 			// Clean up
-			FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
+			// TODO: maybe clear out item data in the db ???
+			// FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
 			messagingIntegration.sendSlackMessage(batchEntity, date, municipalityId);
 		}
 		// Send a status report
@@ -239,7 +242,7 @@ public class InvoiceProcessor {
 			item.setType(INVOICE);
 			item.setStatus(IN_PROGRESS);
 
-			final var invoiceFilenamePrefixesForMunicipality = invoiceFilenamePrefixes.get(municipalityId);
+			var invoiceFilenamePrefixesForMunicipality = invoiceFilenamePrefixes.get(municipalityId);
 
 			if (isNotEmpty(invoiceFilenamePrefixesForMunicipality) && invoiceFilenamePrefixesForMunicipality.stream().noneMatch(prefix -> item.getFilename().startsWith(prefix))) {
 				LOG.info("Setting item {} status to IGNORED", item.getFilename());
@@ -252,15 +255,10 @@ public class InvoiceProcessor {
 		}
 	}
 
-	String mapXmlFileToString(final String localPath) throws IOException {
-		final var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
-		return Files.readString(path, ISO_8859_1);
-	}
-
 	void extractInvoiceRecipientLegalId(final ItemEntity item) {
 		// Try to extract the recipient's legal id from the invoice PDF filename and update
 		// the invoice accordingly
-		final var matcher = RECIPIENT_PATTERN.matcher(item.getFilename());
+		var matcher = RECIPIENT_PATTERN.matcher(item.getFilename());
 		if (matcher.matches()) {
 			LOG.info("Extracted recipient legal id for item {}", item.getFilename());
 			item.setStatus(RECIPIENT_LEGAL_ID_FOUND);
@@ -271,10 +269,8 @@ public class InvoiceProcessor {
 		}
 	}
 
-	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml, final String localPath) throws IOException {
-		final var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
-		final var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
-		Files.writeString(path, XmlUtil.XML_DECLARATION.concat("\n").concat(newXml), ISO_8859_1);
+	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml) throws IOException {
+		var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
 		LOG.info("Removed item {} from ArchiveIndex.xml", item.getFilename());
 		return newXml;
 	}
@@ -283,16 +279,16 @@ public class InvoiceProcessor {
 		LOG.info("Extracting metadata for item {}", item.getFilename());
 
 		// Evaluate
-		final var result = XmlUtil.find(archiveIndex, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
+		var result = XmlUtil.find(archiveIndex, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
 		// Extract the item metadata
-		final var invoiceNumber = result.select("InvoiceNo").text();
-		final var invoiceDate = result.select("InvoiceDate").text();
-		final var dueDate = result.select("DueDate").text();
-		final var payable = !"01".equals(result.select("AGF").text().trim());
-		final var reminder = "1".equals(result.select("Reminder").text());
-		final var accountNumber = result.select("PaymentNo").text();
-		final var paymentReference = result.select("PaymentReference").text();
-		final var totalAmount = result.select("TotalAmount").text();
+		var invoiceNumber = result.select("InvoiceNo").text();
+		var invoiceDate = result.select("InvoiceDate").text();
+		var dueDate = result.select("DueDate").text();
+		var payable = !"01".equals(result.select("AGF").text().trim());
+		var reminder = "1".equals(result.select("Reminder").text());
+		var accountNumber = result.select("PaymentNo").text();
+		var paymentReference = result.select("PaymentReference").text();
+		var totalAmount = result.select("TotalAmount").text();
 
 		// Check if we've managed to extract all required metadata fields. If not - mark it as incomplete and
 		// bail out early since we won't do any further processing on the item
@@ -340,8 +336,8 @@ public class InvoiceProcessor {
 			});
 	}
 
-	void sendDigitalInvoices(final ItemEntity item, final String localPath, final String municipalityId) {
-		final var status = messagingIntegration.sendInvoice(localPath, item, municipalityId);
+	void sendDigitalInvoice(final String municipalityId, final ItemEntity item) {
+		var status = messagingIntegration.sendInvoice(municipalityId, item);
 		item.setStatus(status);
 		LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
 
@@ -360,5 +356,4 @@ public class InvoiceProcessor {
 
 		dbIntegration.persistBatch(batchEntity);
 	}
-
 }
