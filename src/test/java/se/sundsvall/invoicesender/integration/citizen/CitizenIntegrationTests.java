@@ -28,9 +28,9 @@ class CitizenIntegrationTests {
 
 	@Test
 	void hasProtectedIdentity() {
-		final var partyId1 = "personId1";
-		final var partyId2 = "personId2";
-		final var municipalityId = "municipalityId";
+		var partyId1 = "personId1";
+		var partyId2 = "personId2";
+		var municipalityId = "municipalityId";
 
 		when(mockPersonIdResponse.getStatusCode()).thenReturn(NO_CONTENT).thenReturn(OK);
 		when(mockCitizenClient.getPerson(municipalityId, partyId1)).thenReturn(mockPersonIdResponse);
@@ -47,8 +47,8 @@ class CitizenIntegrationTests {
 
 	@Test
 	void hasProtectedIdentityWhenCitizenClientThrowsException() {
-		final var partyId = "partyId";
-		final var municipalityId = "municipalityId";
+		var partyId = "partyId";
+		var municipalityId = "municipalityId";
 
 		when(mockCitizenClient.getPerson(municipalityId, partyId)).thenThrow(new NullPointerException());
 

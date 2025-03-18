@@ -1,5 +1,6 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -10,8 +11,8 @@ import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
 import java.io.IOException;
 import java.nio.file.FileSystem;
-import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,32 +52,31 @@ class MessagingMapperTests {
 
 	@Test
 	void toDigitalInvoiceRequest() throws IOException {
-		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
+		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("test.file"));
 
 		when(mockProperties.invoice()).thenReturn(mockInvoiceProperties);
 		when(mockInvoiceProperties.subject()).thenReturn("someSubject");
 		when(mockInvoiceProperties.referencePrefix()).thenReturn("someReferencePrefix");
-		when(mockFileSystem.getPath(testFilePath)).thenReturn(Paths.get(testFilePath));
 
-		final var result = mapper.toDigitalInvoiceRequest(invoice, testFilePath);
+		var result = mapper.toDigitalInvoiceRequest(item);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getSubject()).isEqualTo("someSubject");
-		assertThat(result.getParty().getPartyId()).isEqualTo(UUID.fromString(invoice.getRecipientPartyId()));
-		assertThat(result.getReference()).isEqualTo("someReferencePrefix" + invoice.getMetadata().getInvoiceNumber());
-		assertThat(result.getPayable()).isEqualTo(invoice.getMetadata().isPayable());
+		assertThat(result.getParty().getPartyId()).isEqualTo(UUID.fromString(item.getRecipientPartyId()));
+		assertThat(result.getReference()).isEqualTo("someReferencePrefix" + item.getMetadata().getInvoiceNumber());
+		assertThat(result.getPayable()).isEqualTo(item.getMetadata().isPayable());
 		assertThat(result.getDetails()).satisfies(detail -> {
-			assertThat(detail.getAmount()).isEqualTo(Float.valueOf(invoice.getMetadata().getTotalAmount()));
-			assertThat(detail.getDueDate()).isEqualTo(invoice.getMetadata().getDueDate());
+			assertThat(detail.getAmount()).isEqualTo(Float.valueOf(item.getMetadata().getTotalAmount()));
+			assertThat(detail.getDueDate()).isEqualTo(item.getMetadata().getDueDate());
 			assertThat(detail.getPaymentReferenceType()).isEqualTo(Details.PaymentReferenceTypeEnum.SE_OCR);
-			assertThat(detail.getPaymentReference()).isEqualTo(invoice.getMetadata().getPaymentReference());
+			assertThat(detail.getPaymentReference()).isEqualTo(item.getMetadata().getPaymentReference());
 			assertThat(detail.getAccountType()).isEqualTo(Details.AccountTypeEnum.BANKGIRO);
-			assertThat(detail.getAccountNumber()).isEqualTo(invoice.getMetadata().getAccountNumber());
+			assertThat(detail.getAccountNumber()).isEqualTo(item.getMetadata().getAccountNumber());
 		});
 		assertThat(result.getFiles()).hasSize(1).first().satisfies(file -> {
-			assertThat(file.getFilename()).isEqualTo(invoice.getFilename());
+			assertThat(file.getFilename()).isEqualTo(item.getFilename());
 			assertThat(file.getContentType()).isEqualTo(DigitalInvoiceFile.ContentTypeEnum.APPLICATION_PDF);
-			assertThat(file.getContent()).isBlank();
+			assertThat(file.getContent()).isEqualTo(Base64.getEncoder().encodeToString("someData".getBytes(UTF_8)));
 		});
 
 		verify(mockInvoiceProperties).subject();

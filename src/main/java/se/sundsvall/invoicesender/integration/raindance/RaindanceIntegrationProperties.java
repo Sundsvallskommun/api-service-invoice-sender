@@ -35,9 +35,7 @@ public record RaindanceIntegrationProperties(Map<String, RaindanceEnvironment> e
 		@DefaultValue("PT30S") Duration connectTimeout,
 		@DefaultValue("PT30S") Duration responseTimeout,
 
-		@NotBlank String localWorkDirectory,
-
-		@DefaultValue("") String outputFileExtraSuffix) {
+		@NotBlank String localWorkDirectory) {
 
 		public record BatchSetup(
 

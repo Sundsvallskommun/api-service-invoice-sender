@@ -29,8 +29,8 @@ class BatchEntityTests {
 
 		var batchEntity = new BatchEntity()
 			.withId(12345)
-			.withBasename("someBasename")
 			.withMunicipalityId("2281")
+			.withFilename("someBasename")
 			.withStartedAt(now)
 			.withCompletedAt(now.plusSeconds(30L))
 			.withItems(List.of(new ItemEntity()))
@@ -44,11 +44,10 @@ class BatchEntityTests {
 				1, 2, 3
 			})
 			.withArchivePath("someArchivePath")
-			.withLocalPath("someLocalPath")
 			.withTargetPath("someTargetPath");
 
 		assertThat(batchEntity.getId()).isEqualTo(12345);
-		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
+		assertThat(batchEntity.getFilename()).isEqualTo("someBasename");
 		assertThat(batchEntity.getMunicipalityId()).isEqualTo("2281");
 		assertThat(batchEntity.getStartedAt()).isEqualTo(now);
 		assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
@@ -61,7 +60,6 @@ class BatchEntityTests {
 		assertThat(batchEntity.getDate()).isEqualTo(date);
 		assertThat(batchEntity.getData()).containsExactly(1, 2, 3);
 		assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
-		assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
 		assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
 	}
 
@@ -74,7 +72,7 @@ class BatchEntityTests {
 
 		var batchEntity = new BatchEntity();
 		batchEntity.setId(12345);
-		batchEntity.setBasename("someBasename");
+		batchEntity.setFilename("someBasename");
 		batchEntity.setMunicipalityId("2281");
 		batchEntity.setStartedAt(now);
 		batchEntity.setCompletedAt(now.plusSeconds(30L));
@@ -89,11 +87,10 @@ class BatchEntityTests {
 			1, 2, 3
 		});
 		batchEntity.setArchivePath("someArchivePath");
-		batchEntity.setLocalPath("someLocalPath");
 		batchEntity.setTargetPath("someTargetPath");
 
 		assertThat(batchEntity.getId()).isEqualTo(12345);
-		assertThat(batchEntity.getBasename()).isEqualTo("someBasename");
+		assertThat(batchEntity.getFilename()).isEqualTo("someBasename");
 		assertThat(batchEntity.getMunicipalityId()).isEqualTo("2281");
 		assertThat(batchEntity.getStartedAt()).isEqualTo(now);
 		assertThat(batchEntity.getCompletedAt()).isEqualTo(now.plusSeconds(30L));
@@ -106,7 +103,6 @@ class BatchEntityTests {
 		assertThat(batchEntity.isCompleted()).isTrue();
 		assertThat(batchEntity.getData()).containsExactly(1, 2, 3);
 		assertThat(batchEntity.getArchivePath()).isEqualTo("someArchivePath");
-		assertThat(batchEntity.getLocalPath()).isEqualTo("someLocalPath");
 		assertThat(batchEntity.getTargetPath()).isEqualTo("someTargetPath");
 	}
 
@@ -133,9 +129,9 @@ class BatchEntityTests {
 			return Stream.of(
 				Arguments.of(new BatchEntity(), new BatchEntity(), false),
 				Arguments.of(new BatchEntity().withId(123), new BatchEntity().withId(123), true),
-				Arguments.of(new BatchEntity().withBasename("123"), new BatchEntity().withBasename("321"), false),
+				Arguments.of(new BatchEntity().withFilename("123"), new BatchEntity().withFilename("321"), false),
 				Arguments.of(new BatchEntity(), "someString", false),
-				Arguments.of(new BatchEntity().withId(321).withBasename("baseName1"), new BatchEntity().withId(321).withBasename("baseName2"), true));
+				Arguments.of(new BatchEntity().withId(321).withFilename("baseName1"), new BatchEntity().withId(321).withFilename("baseName2"), true));
 		}
 	}
 }

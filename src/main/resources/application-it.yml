@@ -44,7 +44,6 @@ integration:
               cron-expression: '-'
             process: false
             target-path: files/return/
-        local-work-directory: /tmp/raindance
         connect-timeout: PT10S
         response-timeout: PT15S
 

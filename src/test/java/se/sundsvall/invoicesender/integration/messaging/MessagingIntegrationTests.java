@@ -102,13 +102,13 @@ class MessagingIntegrationTests {
 	void testSendInvoiceSuccessful() throws IOException {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(messagingMapper.toDigitalInvoiceRequest(invoice)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class)))
 			.thenReturn(new MessageResult()
 				.deliveries(List.of(new DeliveryResult()
 					.status(MessageStatus.SENT))));
 
-		final var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
+		final var result = messagingIntegration.sendInvoice(MUNICIPALITY_ID, invoice);
 		assertThat(result).isEqualTo(SENT);
 
 		verify(mockClient).sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class));
@@ -137,7 +137,7 @@ class MessagingIntegrationTests {
 	void testSendInvoiceWhenExceptionIsThrown() throws IOException {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(messagingMapper.toDigitalInvoiceRequest(invoice)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
 			.thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
 
@@ -171,11 +171,11 @@ class MessagingIntegrationTests {
 	void testSendInvoiceWhenOtherProblemIsThrown(String message) throws IOException {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(messagingMapper.toDigitalInvoiceRequest(invoice)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
 			.thenThrow(Problem.valueOf(Status.BAD_GATEWAY, message));
 
-		final var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
+		final var result = messagingIntegration.sendInvoice(MUNICIPALITY_ID, invoice);
 
 		assertThat(result).isEqualTo(NOT_SENT);
 
@@ -336,7 +336,7 @@ class MessagingIntegrationTests {
 	@Test
 	void testGenerateSlackMessage() {
 		final var batch = new BatchEntity()
-			.withBasename("testBasename")
+			.withFilename("testBasename")
 			.withItems(List.of(
 				new ItemEntity().withType(OTHER).withStatus(IGNORED), // Check that ArchiveIndex.xml is not counted as an invoice.
 				new ItemEntity().withType(INVOICE).withStatus(SENT),

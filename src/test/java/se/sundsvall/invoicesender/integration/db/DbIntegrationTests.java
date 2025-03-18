@@ -36,12 +36,12 @@ class DbIntegrationTests {
 
 	@Test
 	void testGetBatches() {
-		final var batchEntities = List.of(new BatchEntity(), new BatchEntity(), new BatchEntity());
+		var batchEntities = List.of(new BatchEntity(), new BatchEntity(), new BatchEntity());
 		when(batchRepositoryMock.findAllByCompletedAtBetweenAndMunicipalityId(
 			any(LocalDateTime.class), any(LocalDateTime.class), any(String.class), any(Pageable.class)))
 			.thenReturn(new PageImpl<>(batchEntities));
 
-		final var result = dbIntegration.getBatches(LocalDate.now(), LocalDate.now(), PageRequest.of(0, 2), "2281");
+		var result = dbIntegration.getBatches(LocalDate.now(), LocalDate.now(), PageRequest.of(0, 2), "2281");
 
 		assertThat(result).isNotNull();
 		assertThat(result.getTotalElements()).isEqualTo(3L);
