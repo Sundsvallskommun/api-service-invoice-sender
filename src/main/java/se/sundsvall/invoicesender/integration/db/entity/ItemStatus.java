@@ -3,9 +3,9 @@ package se.sundsvall.invoicesender.integration.db.entity;
 public enum ItemStatus {
 	/** Initial status */
 	UNHANDLED,
-	/** Indicates that an invoice should be ignored */
+	/** Indicates that an item should be ignored */
 	IGNORED,
-	/** Indicates that an invoice lacks required metadata */
+	/** Indicates that an (invoice) item lacks required metadata */
 	METADATA_INCOMPLETE,
 	/** Indicates that a valid legal id was found in the filename */
 	RECIPIENT_LEGAL_ID_FOUND,
@@ -15,10 +15,10 @@ public enum ItemStatus {
 	RECIPIENT_PARTY_ID_FOUND,
 	/** Indicates that no party id could be found */
 	RECIPIENT_PARTY_ID_NOT_FOUND,
-	/** Indicates that the item/invoice was sent */
+	/** Indicates that the (invoice) item was sent */
 	SENT,
-	/** Indicates that the item/invoice was not sent */
+	/** Indicates that the (invoice) item was not sent */
 	NOT_SENT,
-	/** Indicates that the item/invoice is being processed */
+	/** Indicates that the (invoice9 item is being processed */
 	IN_PROGRESS
 }

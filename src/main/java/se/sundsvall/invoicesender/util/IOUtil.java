@@ -48,6 +48,7 @@ public final class IOUtil {
 			var lzmaOutputStream = new LZMACompressorOutputStream(byteArrayOutputStream)) {
 
 			copy(in, lzmaOutputStream);
+			lzmaOutputStream.finish();
 
 			return byteArrayOutputStream.toByteArray();
 		}
@@ -92,6 +93,7 @@ public final class IOUtil {
 				}
 				zipOutputStream.closeArchiveEntry();
 			}
+			zipOutputStream.finish();
 
 			return byteArrayOutputStream.toByteArray();
 		}

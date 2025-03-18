@@ -1,6 +1,7 @@
 package se.sundsvall.invoicesender.service;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.util.function.Predicate.not;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -51,7 +52,8 @@ import se.sundsvall.invoicesender.service.util.XmlUtil;
 public class InvoiceProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
-	private static final String ARCHIVE_INDEX = "ArchiveIndex.xml";
+
+	static final String ARCHIVE_INDEX_XML = "ArchiveIndex.xml";
 
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
@@ -112,15 +114,14 @@ public class InvoiceProcessor {
 	 * @param municipalityId the municipality id.
 	 */
 	public void run(final LocalDate date, final String municipalityId) {
-		raindanceIntegrations.get(municipalityId).getBatchSetups()
-			.forEach(batchName -> {
-				LOG.info("Running batch with prefix {} for municipality {}", batchName, municipalityId);
-				try {
-					run(date, municipalityId, batchName);
-				} catch (final IOException e) {
-					LOG.error("Failed to process invoice batch with prefix {} for municipality {}", batchName, municipalityId, e);
-				}
-			});
+		raindanceIntegrations.get(municipalityId).getBatchSetups().forEach(batchName -> {
+			LOG.info("Running batch with prefix {} for municipality {}", batchName, municipalityId);
+			try {
+				run(date, municipalityId, batchName);
+			} catch (final IOException e) {
+				LOG.error("Failed to process invoice batch with prefix {} for municipality {}", batchName, municipalityId, e);
+			}
+		});
 	}
 
 	public void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
@@ -134,16 +135,31 @@ public class InvoiceProcessor {
 		for (var batchEntity : batchEntities) {
 			if (batchEntity.isProcessingEnabled()) {
 				LOG.info("Processing batch {}", batchEntity.getFilename());
-				// Extract the ArchiveIndex.xml item
+
+				// Extract the archive index item
 				var archiveIndexItem = batchEntity.getItems().stream()
-					.filter(item -> item.getFilename().equalsIgnoreCase(ARCHIVE_INDEX))
+					.filter(item -> item.getFilename().equalsIgnoreCase(ARCHIVE_INDEX_XML))
 					.findFirst()
-					.orElseThrow(); // TODO: handle - how ???
+					.orElse(null);
+				// If we don't have any archive index item - bail out
+				if (archiveIndexItem == null) {
+					LOG.info("Unable to process batch {}, since it contains no ArchiveIndex.xml item", batchEntity.getFilename());
+
+					continue;
+				}
+				archiveIndexItem.setStatus(IGNORED);
+
+				// Get the actual XML from the ArchiveIndex
 				var archiveIndex = new String(archiveIndexItem.getData(), ISO_8859_1);
 
-				for (var item : batchEntity.getItems()) {
+				// Skip the archive index item
+				var processableItems = batchEntity.getItems().stream()
+					.filter(not(item -> item.getFilename().equalsIgnoreCase(ARCHIVE_INDEX_XML)))
+					.toList();
+
+				for (var item : processableItems) {
 					// Mark invoice items
-					markItems(item, municipalityId);
+					markItem(item, municipalityId);
 					if (ITEM_IS_NOT_PROCESSABLE.test(item)) {
 						// Stop processing item if it is not processable.
 						LOG.info("Item not processable - skipping item {}", item.getFilename());
@@ -179,7 +195,7 @@ public class InvoiceProcessor {
 					}
 
 					// Get the recipient party id from the invoices that are left and where the recipient legal id is set
-					fetchInvoiceRecipientPartyIds(item, municipalityId);
+					fetchInvoiceRecipientPartyId(item, municipalityId);
 					if (RECIPIENT_HAS_INVALID_PARTY_ID.test(item)) {
 						// Stop processing item if the recipient party id is invalid.
 						LOG.info("Invalid recipient party id - skipping item {}", item.getFilename());
@@ -188,7 +204,7 @@ public class InvoiceProcessor {
 					}
 
 					// Remove any items where the recipient has a protected identity
-					markProtectedIdentityItems(item, municipalityId);
+					markProtectedIdentityItem(item, municipalityId);
 					if (RECIPIENT_HAS_INVALID_LEGAL_ID.test(item)) {
 						// Stop processing item if the recipient has a protected identity.
 						LOG.info("Recipient has protected identity - skipping item {}", item.getFilename());
@@ -228,15 +244,14 @@ public class InvoiceProcessor {
 				raindanceIntegration.archiveOriginalBatch(batchEntity);
 			}
 			// Clean up
-			// TODO: maybe clear out item data in the db ???
-			// FileSystemUtils.deleteRecursively(fileSystem.getPath(batchEntity.getLocalPath()));
+			// TODO: maybe clear out item data for sent items in the db ???
 			messagingIntegration.sendSlackMessage(batchEntity, date, municipalityId);
 		}
 		// Send a status report
 		messagingIntegration.sendStatusReport(batchEntities, date, municipalityId);
 	}
 
-	void markItems(final ItemEntity item, final String municipalityId) {
+	void markItem(final ItemEntity item, final String municipalityId) {
 		if (ITEM_IS_A_PDF.test(item)) {
 			LOG.info("Setting item {} type to INVOICE", item.getFilename());
 			item.setType(INVOICE);
@@ -246,10 +261,12 @@ public class InvoiceProcessor {
 
 			if (isNotEmpty(invoiceFilenamePrefixesForMunicipality) && invoiceFilenamePrefixesForMunicipality.stream().noneMatch(prefix -> item.getFilename().startsWith(prefix))) {
 				LOG.info("Setting item {} status to IGNORED", item.getFilename());
+
 				item.setStatus(IGNORED);
 			}
 		} else {
 			LOG.info("Setting item {} type to OTHER and status to IGNORED", item.getFilename());
+
 			item.setType(OTHER);
 			item.setStatus(IGNORED);
 		}
@@ -269,7 +286,7 @@ public class InvoiceProcessor {
 		}
 	}
 
-	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml) throws IOException {
+	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml) {
 		var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
 		LOG.info("Removed item {} from ArchiveIndex.xml", item.getFilename());
 		return newXml;
@@ -315,13 +332,13 @@ public class InvoiceProcessor {
 		}
 	}
 
-	void markProtectedIdentityItems(final ItemEntity item, final String municipalityId) {
+	void markProtectedIdentityItem(final ItemEntity item, final String municipalityId) {
 		if (citizenIntegration.hasProtectedIdentity(item.getRecipientPartyId(), municipalityId)) {
 			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 		}
 	}
 
-	void fetchInvoiceRecipientPartyIds(final ItemEntity item, final String municipalityId) {
+	void fetchInvoiceRecipientPartyId(final ItemEntity item, final String municipalityId) {
 		partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
 			.ifPresentOrElse(legalIdAndPartyId -> {
 				LOG.info("Fetched recipient party id for item {}", item.getFilename());
@@ -339,8 +356,8 @@ public class InvoiceProcessor {
 	void sendDigitalInvoice(final String municipalityId, final ItemEntity item) {
 		var status = messagingIntegration.sendInvoice(municipalityId, item);
 		item.setStatus(status);
-		LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
 
+		LOG.info("{} invoice {}", status == SENT ? "Sent" : "Couldn't send", item.getFilename());
 	}
 
 	void updateAndPersistBatch(final BatchEntity batchEntity) {

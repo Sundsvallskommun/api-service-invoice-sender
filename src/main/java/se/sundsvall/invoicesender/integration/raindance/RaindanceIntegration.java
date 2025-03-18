@@ -6,6 +6,7 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
 import static se.sundsvall.invoicesender.service.model.ItemPredicate.UNSENT_ITEMS;
 import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
 import static se.sundsvall.invoicesender.util.IOUtil.compressLzma;
+import static se.sundsvall.invoicesender.util.IOUtil.copy;
 import static se.sundsvall.invoicesender.util.IOUtil.decompressLzma;
 import static se.sundsvall.invoicesender.util.IOUtil.readFile;
 import static se.sundsvall.invoicesender.util.IOUtil.unzip;
@@ -24,7 +25,6 @@ import jcifs.config.PropertyConfiguration;
 import jcifs.context.BaseContext;
 import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.SmbFile;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
@@ -140,14 +140,14 @@ public class RaindanceIntegration {
 			try (var file = new SmbFile(targetPath, context);
 				var out = file.getOutputStream();
 				var in = new ByteArrayInputStream(sevenZipFileBytes)) {
-				IOUtils.copy(in, out);
+				copy(in, out);
 			}
 		} else {
 			// No processing - just write the original file to the Samba share
 			try (var file = new SmbFile(targetPath, context);
 				var out = file.getOutputStream();
 				var in = new ByteArrayInputStream(batch.getData())) {
-				IOUtils.copy(in, out);
+				copy(in, out);
 			}
 		}
 	}
@@ -162,7 +162,7 @@ public class RaindanceIntegration {
 			LOG.info("Archiving batch '{}' to '{}", sourcePath, targetPath);
 
 			try (var out = archiveFile.getOutputStream(); var in = new ByteArrayInputStream(batch.getData())) {
-				IOUtils.copy(in, out);
+				copy(in, out);
 			}
 		}
 
@@ -178,9 +178,9 @@ public class RaindanceIntegration {
 		var unsentItems = batch.getItems().stream()
 			.filter(UNSENT_ITEMS)
 			.collect(toMap(ItemEntity::getFilename, ItemEntity::getData));
-
 		// Zip the items
 		var zipFileBytes = zip(unsentItems);
+
 		// Compress the ZIP file to a 7z (LZMA) file and return it
 		return compressLzma(new ByteArrayInputStream(zipFileBytes));
 	}
@@ -190,6 +190,6 @@ public class RaindanceIntegration {
 	}
 
 	public Set<String> getBatchSetups() {
-		return this.batchSetup.keySet();
+		return batchSetup.keySet();
 	}
 }
