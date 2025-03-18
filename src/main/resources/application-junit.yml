@@ -39,7 +39,6 @@ integration:
               cron-expression: '-'
             process: false
             target-path: mnt/PN/
-        local-work-directory: /tmp/raindance/incoming
         connect-timeout: PT10S
         response-timeout: PT15S
 

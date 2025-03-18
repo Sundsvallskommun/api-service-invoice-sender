@@ -1,5 +1,6 @@
 package se.sundsvall.invoicesender;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 
@@ -18,6 +19,7 @@ public final class TestDataFactory {
 	public static ItemEntity createItemEntity(final Consumer<ItemEntity> modifier) {
 		var itemEntity = new ItemEntity()
 			.withId(123)
+			.withData("someData".getBytes(UTF_8))
 			.withFilename("someFilename.jpeg")
 			.withRecipientLegalId(UUID.randomUUID().toString())
 			.withRecipientPartyId(UUID.randomUUID().toString())
@@ -47,11 +49,10 @@ public final class TestDataFactory {
 	public static BatchEntity createBatchEntity(final Consumer<BatchEntity> modifier) {
 		var batch = new BatchEntity()
 			.withId(123)
-			.withTargetPath("someTargetPath")
-			.withLocalPath("someLocalPath")
-			.withArchivePath("someArchivePath")
-			.withBasename("someBasename")
 			.withMunicipalityId("someMunicipalityId")
+			.withFilename("someBasename")
+			.withTargetPath("someTargetPath")
+			.withArchivePath("someArchivePath")
 			.withProcessingEnabled(true);
 
 		if (modifier != null) {

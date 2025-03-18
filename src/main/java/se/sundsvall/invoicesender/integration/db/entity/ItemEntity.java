@@ -1,13 +1,16 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
 import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.LAZY;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import se.sundsvall.invoicesender.service.model.Metadata;
@@ -22,6 +25,11 @@ public class ItemEntity {
 
 	@Column(name = "filename", nullable = false)
 	private String filename;
+
+	@Lob
+	@Basic(fetch = LAZY)
+	@Column(name = "data", columnDefinition = "LONGBLOB")
+	private byte[] data;
 
 	@Enumerated(STRING)
 	@Column(name = "status", nullable = false)
@@ -53,58 +61,6 @@ public class ItemEntity {
 		this.id = id;
 	}
 
-	public String getRecipientPartyId() {
-		return recipientPartyId;
-	}
-
-	public void setRecipientPartyId(String recipientPartyId) {
-		this.recipientPartyId = recipientPartyId;
-	}
-
-	public ItemEntity withRecipientPartyId(String recipientPartyId) {
-		this.recipientPartyId = recipientPartyId;
-		return this;
-	}
-
-	public String getRecipientLegalId() {
-		return recipientLegalId;
-	}
-
-	public void setRecipientLegalId(String recipientLegalId) {
-		this.recipientLegalId = recipientLegalId;
-	}
-
-	public ItemEntity withRecipientLegalId(String recipientLegalId) {
-		this.recipientLegalId = recipientLegalId;
-		return this;
-	}
-
-	public Metadata getMetadata() {
-		return metadata;
-	}
-
-	public void setMetadata(Metadata metadata) {
-		this.metadata = metadata;
-	}
-
-	public ItemEntity withMetadata(Metadata metadata) {
-		this.metadata = metadata;
-		return this;
-	}
-
-	public ItemType getType() {
-		return type;
-	}
-
-	public void setType(ItemType type) {
-		this.type = type;
-	}
-
-	public ItemEntity withType(ItemType type) {
-		this.type = type;
-		return this;
-	}
-
 	public String getFilename() {
 		return filename;
 	}
@@ -118,6 +74,19 @@ public class ItemEntity {
 		this.filename = filename;
 	}
 
+	public byte[] getData() {
+		return data;
+	}
+
+	public ItemEntity withData(final byte[] data) {
+		this.data = data;
+		return this;
+	}
+
+	public void setData(final byte[] data) {
+		this.data = data;
+	}
+
 	public ItemStatus getStatus() {
 		return status;
 	}
@@ -129,6 +98,58 @@ public class ItemEntity {
 
 	public void setStatus(final ItemStatus status) {
 		this.status = status;
+	}
+
+	public ItemType getType() {
+		return type;
+	}
+
+	public ItemEntity withType(final ItemType type) {
+		this.type = type;
+		return this;
+	}
+
+	public void setType(final ItemType type) {
+		this.type = type;
+	}
+
+	public Metadata getMetadata() {
+		return metadata;
+	}
+
+	public ItemEntity withMetadata(final Metadata metadata) {
+		this.metadata = metadata;
+		return this;
+	}
+
+	public void setMetadata(final Metadata metadata) {
+		this.metadata = metadata;
+	}
+
+	public String getRecipientPartyId() {
+		return recipientPartyId;
+	}
+
+	public ItemEntity withRecipientPartyId(final String recipientPartyId) {
+		this.recipientPartyId = recipientPartyId;
+		return this;
+	}
+
+	public void setRecipientPartyId(final String recipientPartyId) {
+		this.recipientPartyId = recipientPartyId;
+	}
+
+	public String getRecipientLegalId() {
+		return recipientLegalId;
+	}
+
+	public void setRecipientLegalId(final String recipientLegalId) {
+		this.recipientLegalId = recipientLegalId;
+	}
+
+	public ItemEntity withRecipientLegalId(final String recipientLegalId) {
+		this.recipientLegalId = recipientLegalId;
+		return this;
 	}
 
 	@Override
