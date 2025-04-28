@@ -1,8 +1,8 @@
 package se.sundsvall.invoicesender.integration.party;
 
 import static generated.se.sundsvall.party.PartyType.PRIVATE;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.guessLegalIdCenturyDigits;
 
-import java.time.LocalDate;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,24 +25,11 @@ public class PartyIntegration {
 		// Strip everything but digits from the legal id
 		var legalIdWithDigitsOnly = legalId.replaceAll("\\D", "");
 
-		var currentYear = LocalDate.now().getYear();
-		// Example legal id : 900101-1234. Birth year is the first two digits of the legal id.
-		var birthYear = Integer.parseInt(legalIdWithDigitsOnly.substring(0, 2));
-
-		// Example currentYear : 2023. 2023 % 100 = 23. If birthYear is greater than currentYear % 100, then the birth year is
-		// in the 1900s.
-		// This solution is flawed for people older than 100.
-		String legalIdWithBirthYear;
-		if (birthYear > currentYear % 100) {
-			legalIdWithBirthYear = "19".concat(legalIdWithDigitsOnly);
-		} else {
-			legalIdWithBirthYear = "20".concat(legalIdWithDigitsOnly);
-		}
-
 		try {
+			var legalIdWithBirthYear = guessLegalIdCenturyDigits(legalIdWithDigitsOnly);
 			return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithBirthYear).map(partyId -> new LegalIdAndPartyId(legalIdWithBirthYear, partyId));
 		} catch (final Exception e) {
-			LOG.info("Unable to get party id for legal id {}: {}", legalIdWithBirthYear, e.getMessage());
+			LOG.info("Unable to get party id for legal id: {}, {}", legalIdWithDigitsOnly, e.getMessage());
 			return Optional.empty();
 		}
 	}

@@ -1,5 +1,6 @@
 package se.sundsvall.invoicesender.util;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.stream.Stream;
@@ -45,6 +46,21 @@ public final class LegalIdUtil {
 			return checkDigit.equals(legalId.substring(legalId.length() - 1));
 		} catch (CheckDigitException e) {
 			return false;
+		}
+	}
+
+	static Integer getBirthYear(final String legalIdWithDigitsOnly) {
+		return Integer.parseInt(legalIdWithDigitsOnly.substring(0, 2));
+	}
+
+	public static String guessLegalIdCenturyDigits(final String legalIdWithDigitsOnly) {
+		var currentYear = LocalDate.now().getYear();
+		var birthYear = getBirthYear(legalIdWithDigitsOnly);
+
+		if (birthYear > currentYear % 100) {
+			return "19".concat(legalIdWithDigitsOnly);
+		} else {
+			return "20".concat(legalIdWithDigitsOnly);
 		}
 	}
 }

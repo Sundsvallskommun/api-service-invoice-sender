@@ -64,7 +64,7 @@ class BatchResourceTests {
 	}
 
 	@Test
-	void triggerBatch() throws Exception {
+	void triggerBatch() {
 		final var date = LocalDate.of(2019, 2, 28);
 
 		webTestClient.post()
