@@ -61,7 +61,7 @@ class BatchResources {
 		})
 	@PostMapping(value = "/trigger/{date}")
 	ResponseEntity<Void> triggerBatch(
-		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable(name = "municipalityId") final String municipalityId,
 		@PathVariable("date") final LocalDate date) {
 		invoiceProcessor.run(date, municipalityId);
 
@@ -81,7 +81,7 @@ class BatchResources {
 		})
 	@GetMapping(produces = APPLICATION_JSON_VALUE)
 	ResponseEntity<BatchesResponse> getAll(
-		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable(name = "municipalityId") final String municipalityId,
 
 		@Parameter(description = "Completed from-date (inclusive). Format: yyyy-MM-dd") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam(required = false) final LocalDate from,
 
