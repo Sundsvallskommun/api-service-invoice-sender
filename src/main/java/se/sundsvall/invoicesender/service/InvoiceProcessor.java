@@ -233,6 +233,12 @@ public class InvoiceProcessor {
 		messagingIntegration.sendStatusReport(batchEntities, date, municipalityId);
 	}
 
+	/**
+	 * Mark items as either INVOICE or OTHER and set the status to IN_PROGRESS or IGNORED.
+	 *
+	 * @param item           the item to mark
+	 * @param municipalityId the municipality id
+	 */
 	void markItems(final ItemEntity item, final String municipalityId) {
 		if (ITEM_IS_A_PDF.test(item)) {
 			LOG.info("Setting item {} type to INVOICE", item.getFilename());
@@ -252,11 +258,23 @@ public class InvoiceProcessor {
 		}
 	}
 
+	/**
+	 * Maps the XML file to a string. The XML file is read from the local path and returned as a string.
+	 *
+	 * @param  localPath   the local path to the file
+	 * @return             the XML file as a string
+	 * @throws IOException if an I/O error occurs
+	 */
 	String mapXmlFileToString(final String localPath) throws IOException {
 		final var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
 		return Files.readString(path, ISO_8859_1);
 	}
 
+	/**
+	 * Extracts the recipient legal id from the invoice PDF filename and updates the invoice accordingly.
+	 *
+	 * @param item the item to extract the legal id from
+	 */
 	void extractInvoiceRecipientLegalId(final ItemEntity item) {
 		// Try to extract the recipient's legal id from the invoice PDF filename and update
 		// the invoice accordingly
@@ -271,6 +289,15 @@ public class InvoiceProcessor {
 		}
 	}
 
+	/**
+	 * Removes the item from the archive index XML file. The XML file is updated and written back to the local path.
+	 *
+	 * @param  item            the item to remove
+	 * @param  archiveIndexXml the archive index XML file as a string
+	 * @param  localPath       the local path to the file
+	 * @return                 the updated XML file as a string
+	 * @throws IOException     if an I/O error occurs
+	 */
 	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml, final String localPath) throws IOException {
 		final var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
 		final var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
@@ -279,6 +306,13 @@ public class InvoiceProcessor {
 		return newXml;
 	}
 
+	/**
+	 * Extracts metadata from the archive index for the given item. The metadata is extracted from the XML file and set on
+	 * the item.
+	 *
+	 * @param item         the item to extract metadata for
+	 * @param archiveIndex the archive index XML file as a string
+	 */
 	void extractItemMetadata(final ItemEntity item, final String archiveIndex) {
 		LOG.info("Extracting metadata for item {}", item.getFilename());
 
@@ -313,18 +347,37 @@ public class InvoiceProcessor {
 			.withTotalAmount(totalAmount));
 	}
 
+	/**
+	 * Validates that the legal id is 10 digits and also validates that the check digit is correct. If the validation fails,
+	 * we set a status to indicate the failure.
+	 *
+	 * @param item the item to check
+	 */
 	void validateLegalId(final ItemEntity item) {
 		if (!isValidLegalId(item.getRecipientLegalId())) {
 			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 		}
 	}
 
+	/**
+	 * Mark items with protected identities as invalid.
+	 *
+	 * @param item           the item to check
+	 * @param municipalityId the municipality id
+	 */
 	void markProtectedIdentityItems(final ItemEntity item, final String municipalityId) {
 		if (citizenIntegration.hasProtectedIdentity(item.getRecipientPartyId(), municipalityId)) {
 			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 		}
 	}
 
+	/**
+	 * Fetch the recipient party id from the party integration. Tries to set the party id on the item, sets a status which
+	 * indicates success or failure.
+	 *
+	 * @param item           the item to check
+	 * @param municipalityId the municipality id
+	 */
 	void fetchInvoiceRecipientPartyIds(final ItemEntity item, final String municipalityId) {
 		partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
 			.ifPresentOrElse(legalIdAndPartyId -> {
@@ -340,6 +393,13 @@ public class InvoiceProcessor {
 			});
 	}
 
+	/**
+	 * Tries to send the invoice with messaging. Sets a status which indicates success or failure.
+	 *
+	 * @param item           the item to send
+	 * @param localPath      the local path to the file
+	 * @param municipalityId the municipality id
+	 */
 	void sendDigitalInvoices(final ItemEntity item, final String localPath, final String municipalityId) {
 		final var status = messagingIntegration.sendInvoice(localPath, item, municipalityId);
 		item.setStatus(status);

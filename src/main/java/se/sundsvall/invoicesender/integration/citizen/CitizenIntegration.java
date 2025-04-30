@@ -16,6 +16,13 @@ public class CitizenIntegration {
 		this.citizenClient = citizenClient;
 	}
 
+	/**
+	 * Check if a person has a protected identity. If citizen returns 404, the person has a protected identity.
+	 *
+	 * @param  partyId        the party id of the individual
+	 * @param  municipalityId the municipality id
+	 * @return                true if the person has a protected identity, false otherwise
+	 */
 	public boolean hasProtectedIdentity(final String partyId, final String municipalityId) {
 		try {
 			final var cleanPartyId = strip(partyId, "\"");

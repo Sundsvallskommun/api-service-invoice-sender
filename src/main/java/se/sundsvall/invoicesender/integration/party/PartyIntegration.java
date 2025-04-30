@@ -21,15 +21,24 @@ public class PartyIntegration {
 		this.partyClient = partyClient;
 	}
 
+	/**
+	 * Get party id for a legal id. The legal id is expected to be a personal number.
+	 *
+	 * @param  legalId        the legal id to search for
+	 * @param  municipalityId the municipality id
+	 * @return                Optional of LegalIdAndPartyId which is a key-value pair of legal id and party id.
+	 */
 	public Optional<LegalIdAndPartyId> getPartyId(final String legalId, final String municipalityId) {
 		// Strip everything but digits from the legal id
 		var legalIdWithDigitsOnly = legalId.replaceAll("\\D", "");
+		String legalIdWithCentury = "";
 
 		try {
-			var legalIdWithBirthYear = guessLegalIdCenturyDigits(legalIdWithDigitsOnly);
-			return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithBirthYear).map(partyId -> new LegalIdAndPartyId(legalIdWithBirthYear, partyId));
+			legalIdWithCentury = guessLegalIdCenturyDigits(legalIdWithDigitsOnly);
+			var finalLegalId = legalIdWithCentury;
+			return partyClient.getPartyId(municipalityId, PRIVATE, legalIdWithCentury).map(partyId -> new LegalIdAndPartyId(finalLegalId, partyId));
 		} catch (final Exception e) {
-			LOG.info("Unable to get party id for legal id: {}, {}", legalIdWithDigitsOnly, e.getMessage());
+			LOG.info("Unable to get party id for legal id: {} (calculated to {}), {}", legalIdWithDigitsOnly, legalIdWithCentury, e.getMessage());
 			return Optional.empty();
 		}
 	}
