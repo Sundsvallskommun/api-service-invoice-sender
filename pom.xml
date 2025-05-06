@@ -124,6 +124,7 @@
 					<output>${generated-sources-path}</output>
 					<generatorName>spring</generatorName>
 					<generateApis>false</generateApis>
+					<generateSupportingFiles>false</generateSupportingFiles>
 					<configOptions>
 						<sourceFolder>${generated-sources-java-path}</sourceFolder>
 						<generateSupportingFiles>false</generateSupportingFiles>
