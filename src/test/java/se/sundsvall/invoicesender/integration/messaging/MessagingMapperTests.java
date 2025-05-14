@@ -2,6 +2,7 @@ package se.sundsvall.invoicesender.integration.messaging;
 
 import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
 
@@ -29,13 +30,16 @@ class MessagingMapperTests {
 	private FileSystem mockFileSystem;
 
 	@Mock
-	private MessagingIntegrationProperties properties;
+	private MessagingIntegrationProperties mockProperties;
 
 	@Mock
 	private MessagingIntegrationProperties.Invoice mockInvoiceProperties;
 
 	@Mock
 	private MessagingIntegrationProperties.StatusReport mockStatusReportProperties;
+
+	@Mock
+	private MessagingIntegrationProperties.ErrorReport mockErrorReportProperties;
 
 	@InjectMocks
 	private MessagingMapper mapper;
@@ -51,7 +55,7 @@ class MessagingMapperTests {
 	void toDigitalInvoiceRequest() throws IOException {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		when(properties.invoice()).thenReturn(mockInvoiceProperties);
+		when(mockProperties.invoice()).thenReturn(mockInvoiceProperties);
 		when(mockInvoiceProperties.subject()).thenReturn("someSubject");
 		when(mockInvoiceProperties.referencePrefix()).thenReturn("someReferencePrefix");
 		when(mockFileSystem.getPath(testFilePath)).thenReturn(Paths.get(testFilePath));
@@ -76,59 +80,71 @@ class MessagingMapperTests {
 			assertThat(file.getContentType()).isEqualTo(DigitalInvoiceFile.ContentTypeEnum.APPLICATION_PDF);
 			assertThat(file.getContent()).isBlank();
 		});
+
+		verify(mockInvoiceProperties).subject();
+		verify(mockInvoiceProperties).referencePrefix();
+		verify(mockFileSystem).getPath(testFilePath);
 	}
 
 	@Test
-	void toEmailRequest() {
+	void toStatusEmailRequest() {
 		final var date = LocalDate.now();
-		final var htmlMessage = "someHtmlMessage";
+		final var htmlMessage = "someStatusHtmlMessage";
 
-		when(properties.statusReport()).thenReturn(mockStatusReportProperties);
-		when(mockStatusReportProperties.senderName()).thenReturn("someSenderName");
-		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someSenderEmailAddress");
-		when(mockStatusReportProperties.subjectPrefix()).thenReturn("someSubjectPrefix");
+		when(mockProperties.statusReport()).thenReturn(mockStatusReportProperties);
+		when(mockStatusReportProperties.senderName()).thenReturn("someStatusSenderName");
+		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someStatusSenderEmailAddress");
+		when(mockStatusReportProperties.subjectPrefix()).thenReturn("someStatusSubjectPrefix");
 
-		final var result = mapper.toEmailRequest(htmlMessage, date);
+		final var result = mapper.toStatusEmailRequest(htmlMessage, date);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getSender()).satisfies(sender -> {
-			assertThat(sender.getName()).isEqualTo("someSenderName");
-			assertThat(sender.getAddress()).isEqualTo("someSenderEmailAddress");
+			assertThat(sender.getName()).isEqualTo("someStatusSenderName");
+			assertThat(sender.getAddress()).isEqualTo("someStatusSenderEmailAddress");
 		});
-		assertThat(result.getSubject()).isEqualTo("someSubjectPrefix " + ISO_DATE.format(LocalDate.now()));
+		assertThat(result.getSubject()).isEqualTo("someStatusSubjectPrefix " + ISO_DATE.format(LocalDate.now()));
 		assertThat(result.getHtmlMessage()).isEqualTo(htmlMessage);
 		assertThat(result.getHeaders()).isNull();
+
+		verify(mockStatusReportProperties).senderName();
+		verify(mockStatusReportProperties).senderEmailAddress();
+		verify(mockStatusReportProperties).subjectPrefix();
 	}
 
 	@Test
-	void toEmailRequestWithHeaders() {
+	void toErrorEmailRequest() {
 		final var date = LocalDate.now();
-		final var htmlMessage = "someHtmlMessage";
-		final var subject = "subject";
-		final var headers = Map.of("header", List.of("value1", "value2"));
+		final var htmlMessage = "someErrorHtmlMessage";
+		final var headers = Map.of("X-Priority", List.of("1"));
 
-		when(properties.statusReport()).thenReturn(mockStatusReportProperties);
-		when(mockStatusReportProperties.senderName()).thenReturn("someSenderName");
-		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someSenderEmailAddress");
+		when(mockProperties.errorReport()).thenReturn(mockErrorReportProperties);
+		when(mockErrorReportProperties.senderName()).thenReturn("someErrorSenderName");
+		when(mockErrorReportProperties.senderEmailAddress()).thenReturn("someErrorSenderEmailAddress");
+		when(mockErrorReportProperties.subjectPrefix()).thenReturn("someErrorSubjectPrefix");
 
-		final var result = mapper.toEmailRequest(htmlMessage, subject, date, headers);
+		final var result = mapper.toErrorEmailRequest(htmlMessage, date);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getSender()).satisfies(sender -> {
-			assertThat(sender.getName()).isEqualTo("someSenderName");
-			assertThat(sender.getAddress()).isEqualTo("someSenderEmailAddress");
+			assertThat(sender.getName()).isEqualTo("someErrorSenderName");
+			assertThat(sender.getAddress()).isEqualTo("someErrorSenderEmailAddress");
 		});
-		assertThat(result.getSubject()).isEqualTo("subject " + ISO_DATE.format(LocalDate.now()));
+		assertThat(result.getSubject()).isEqualTo("someErrorSubjectPrefix " + ISO_DATE.format(LocalDate.now()));
 		assertThat(result.getHtmlMessage()).isEqualTo(htmlMessage);
 		assertThat(result.getHeaders()).isEqualTo(headers);
+
+		verify(mockErrorReportProperties).senderName();
+		verify(mockErrorReportProperties).senderEmailAddress();
+		verify(mockErrorReportProperties).subjectPrefix();
 	}
 
 	@Test
 	void toSlackRequest() {
 		final var message = "someMessage";
 
-		when(properties.token()).thenReturn("someToken");
-		when(properties.channel()).thenReturn("someChannel");
+		when(mockProperties.token()).thenReturn("someToken");
+		when(mockProperties.channel()).thenReturn("someChannel");
 
 		final var result = mapper.toSlackRequest(message);
 
@@ -137,5 +153,8 @@ class MessagingMapperTests {
 		assertThat(result.getChannel()).isEqualTo("someChannel");
 		assertThat(result.getMessage()).isEqualTo("someMessage");
 		assertThat(result).hasNoNullFieldsOrProperties();
+
+		verify(mockProperties).token();
+		verify(mockProperties).channel();
 	}
 }

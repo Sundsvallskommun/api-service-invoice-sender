@@ -61,6 +61,8 @@ integration:
   
   # Messaging
   messaging:
+    connectTimeout: PT1S
+    readTimeout: PT2S
     url: http://something.com/messaging
     token: someToken
     channel: someChannel
@@ -71,9 +73,15 @@ integration:
     invoice:
       subject: someSubject
       reference-prefix: 'Faktura #'
-    status-report:
-      sender-name: SomeSender
-      sender-email-address: noreply@something.com
+    error-report:
+      sender-name: SomeErrorSender
+      sender-email-address: noreply.error@something.com
       recipient-email-addresses:
-        - someone@something.com
-      subject-prefix: somePrefix
+        - someone.error@something.com
+      subject-prefix: someErrorPrefix
+    status-report:
+      sender-name: SomeStatusSender
+      sender-email-address: noreply.status@something.com
+      recipient-email-addresses:
+        - someone.status@something.com
+      subject-prefix: someStatusPrefix

@@ -29,6 +29,8 @@ import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 @Component
 public class MessagingMapper {
 
+	private static final Map<String, List<String>> HIGH_PRIORITY = Map.of("X-Priority", List.of("1"));
+
 	private final MessagingIntegrationProperties properties;
 	private final FileSystem fileSystem;
 
@@ -60,18 +62,22 @@ public class MessagingMapper {
 				.content(encodedInvoiceContent)));
 	}
 
-	public EmailRequest toEmailRequest(final String htmlMessage, final String subject, final LocalDate date, Map<String, List<String>> headers) {
-		return new EmailRequest()
-			.sender(new EmailSender()
-				.name(properties.statusReport().senderName())
-				.address(properties.statusReport().senderEmailAddress()))
-			.subject(ofNullable(subject).orElse("").concat(" ") + ISO_DATE.format(date).trim())
-			.headers(headers)
-			.htmlMessage(htmlMessage);
+	public EmailRequest toStatusEmailRequest(final String htmlMessage, final LocalDate date) {
+		return toEmailRequest(htmlMessage, properties.statusReport().subjectPrefix(), date, properties.statusReport().senderName(), properties.statusReport().senderEmailAddress(), null);
 	}
 
-	public EmailRequest toEmailRequest(final String htmlMessage, final LocalDate date) {
-		return toEmailRequest(htmlMessage, properties.statusReport().subjectPrefix(), date, null);
+	public EmailRequest toErrorEmailRequest(final String htmlMessage, final LocalDate date) {
+		return toEmailRequest(htmlMessage, properties.errorReport().subjectPrefix(), date, properties.errorReport().senderName(), properties.errorReport().senderEmailAddress(), HIGH_PRIORITY);
+	}
+
+	private EmailRequest toEmailRequest(final String htmlMessage, final String subjectPrefix, final LocalDate date, final String senderName, final String senderEmailAddress, final Map<String, List<String>> headers) {
+		return new EmailRequest()
+			.sender(new EmailSender()
+				.name(senderName)
+				.address(senderEmailAddress))
+			.subject(ofNullable(subjectPrefix).orElse("").concat(" ") + ISO_DATE.format(date).trim())
+			.headers(headers)
+			.htmlMessage(htmlMessage);
 	}
 
 	public SlackRequest toSlackRequest(String message) {

@@ -30,7 +30,6 @@ import generated.se.sundsvall.messaging.SlackRequest;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,7 +71,13 @@ class MessagingIntegrationTests {
 	private MessagingIntegrationProperties.StatusReport mockStatusReportProperties;
 
 	@Mock
+	private MessagingIntegrationProperties.ErrorReport mockErrorReportProperties;
+
+	@Mock
 	private MessagingClient mockClient;
+
+	@Mock
+	private EmailRequest mockEmailRequest;
 
 	@Mock
 	private ITemplateEngine mockTemplateEngine;
@@ -182,20 +187,20 @@ class MessagingIntegrationTests {
 	void testSendErrorReport() {
 		final var batchName = "batchName";
 		final var date = LocalDate.now();
-		final var emailRequest = new EmailRequest();
-		final var headerMap = Map.of("X-Priority", List.of("1"));
 		final var message = "message";
-		final var recipientEmailAddresses = List.of("Recipeint@test.se");
+		final var recipientEmailAddress = "Recipeint@test.se";
+		final var recipientEmailAddresses = List.of(recipientEmailAddress);
 
-		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
-		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
+		when(mockIntegrationProperties.errorReport()).thenReturn(mockErrorReportProperties);
+		when(mockErrorReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 		when(mockTemplateEngine.process(eq(ERROR_TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
-		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE, "Kritiskt fel vid exekvering", date, headerMap)).thenReturn(emailRequest);
+		when(messagingMapper.toErrorEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(mockEmailRequest);
 
 		messagingIntegration.sendErrorReport(date, MUNICIPALITY_ID, batchName, message);
 
-		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE, "Kritiskt fel vid exekvering", date, headerMap);
-		verify(mockClient).sendEmail(MUNICIPALITY_ID, emailRequest);
+		verify(mockEmailRequest).setEmailAddress(recipientEmailAddress);
+		verify(messagingMapper).toErrorEmailRequest(ENCODED_HTML_MESSAGE, date);
+		verify(mockClient).sendEmail(MUNICIPALITY_ID, mockEmailRequest);
 		verify(mockTemplateEngine).process(eq(ERROR_TEMPLATE_NAME), any(Context.class));
 		verifyNoMoreInteractions(mockClient, mockTemplateEngine);
 	}
@@ -205,20 +210,19 @@ class MessagingIntegrationTests {
 	void testSendErrorReportWhenExcpetionIsThrown(List<String> recipientEmailAddresses, int expectedNumberOfCalls) {
 		final var batchName = "batchName";
 		final var date = LocalDate.now();
-		final var emailRequest = new EmailRequest();
-		final var headerMap = Map.of("X-Priority", List.of("1"));
 		final var message = "message";
 
-		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
-		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
+		when(mockIntegrationProperties.errorReport()).thenReturn(mockErrorReportProperties);
+		when(mockErrorReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 		when(mockTemplateEngine.process(eq(ERROR_TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
-		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE, "Kritiskt fel vid exekvering", date, headerMap)).thenReturn(emailRequest);
-		when(mockClient.sendEmail(MUNICIPALITY_ID, emailRequest)).thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
+		when(messagingMapper.toErrorEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(mockEmailRequest);
+		when(mockClient.sendEmail(MUNICIPALITY_ID, mockEmailRequest)).thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
 
 		messagingIntegration.sendErrorReport(date, MUNICIPALITY_ID, batchName, message);
 
-		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE, "Kritiskt fel vid exekvering", date, headerMap);
-		verify(mockClient, times(expectedNumberOfCalls)).sendEmail(MUNICIPALITY_ID, emailRequest);
+		recipientEmailAddresses.stream().forEach(recipientEmailAddress -> verify(mockEmailRequest).setEmailAddress(recipientEmailAddress));
+		verify(messagingMapper).toErrorEmailRequest(ENCODED_HTML_MESSAGE, date);
+		verify(mockClient, times(expectedNumberOfCalls)).sendEmail(MUNICIPALITY_ID, mockEmailRequest);
 		verify(mockTemplateEngine).process(eq(ERROR_TEMPLATE_NAME), any(Context.class));
 		verifyNoMoreInteractions(mockTemplateEngine, mockClient);
 	}
@@ -227,19 +231,20 @@ class MessagingIntegrationTests {
 	void testSendStatusReport() {
 		final var date = LocalDate.now();
 		final List<BatchEntity> batches = emptyList();
-		final List<String> recipientEmailAddresses = List.of("Recipeint@test.se");
-		final var emailRequest = new EmailRequest();
+		final var recipientEmailAddress = "Recipeint@test.se";
+		final List<String> recipientEmailAddresses = List.of(recipientEmailAddress);
 
 		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
 		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 
 		when(mockTemplateEngine.process(eq(STATUS_TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
-		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(emailRequest);
+		when(messagingMapper.toStatusEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(mockEmailRequest);
 
 		messagingIntegration.sendStatusReport(batches, date, MUNICIPALITY_ID);
 
-		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE, date);
-		verify(mockClient).sendEmail(MUNICIPALITY_ID, emailRequest);
+		verify(mockEmailRequest).setEmailAddress(recipientEmailAddress);
+		verify(messagingMapper).toStatusEmailRequest(ENCODED_HTML_MESSAGE, date);
+		verify(mockClient).sendEmail(MUNICIPALITY_ID, mockEmailRequest);
 		verify(mockTemplateEngine).process(eq(STATUS_TEMPLATE_NAME), any(Context.class));
 		verifyNoMoreInteractions(mockClient, mockTemplateEngine);
 	}
@@ -249,20 +254,19 @@ class MessagingIntegrationTests {
 	void testSendStatusReportWhenExceptionIsThrown(List<String> recipientEmailAddresses, int expectedNumberOfCalls) {
 		final var date = LocalDate.now();
 		final List<BatchEntity> batches = emptyList();
-		final var emailRequest = new EmailRequest();
 
 		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
 		when(mockStatusReportProperties.recipientEmailAddresses()).thenReturn(recipientEmailAddresses);
 
 		when(mockTemplateEngine.process(eq(STATUS_TEMPLATE_NAME), any(Context.class))).thenReturn(HTML_MESSAGE);
-		when(messagingMapper.toEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(emailRequest);
-		when(mockClient.sendEmail(MUNICIPALITY_ID, emailRequest))
-			.thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
+		when(messagingMapper.toStatusEmailRequest(ENCODED_HTML_MESSAGE, date)).thenReturn(mockEmailRequest);
+		when(mockClient.sendEmail(MUNICIPALITY_ID, mockEmailRequest)).thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
 
 		messagingIntegration.sendStatusReport(batches, date, MUNICIPALITY_ID);
 
-		verify(messagingMapper).toEmailRequest(ENCODED_HTML_MESSAGE, date);
-		verify(mockClient, times(expectedNumberOfCalls)).sendEmail(MUNICIPALITY_ID, emailRequest);
+		recipientEmailAddresses.stream().forEach(recipientEmailAddress -> verify(mockEmailRequest).setEmailAddress(recipientEmailAddress));
+		verify(messagingMapper).toStatusEmailRequest(ENCODED_HTML_MESSAGE, date);
+		verify(mockClient, times(expectedNumberOfCalls)).sendEmail(MUNICIPALITY_ID, mockEmailRequest);
 		verify(mockTemplateEngine).process(eq(STATUS_TEMPLATE_NAME), any(Context.class));
 		verifyNoMoreInteractions(mockTemplateEngine, mockClient);
 	}

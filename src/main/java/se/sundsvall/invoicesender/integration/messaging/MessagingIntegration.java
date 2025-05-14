@@ -10,7 +10,6 @@ import generated.se.sundsvall.messaging.MessageStatus;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -30,7 +29,6 @@ public class MessagingIntegration {
 
 	static final String STATUS_TEMPLATE_NAME = "status-report";
 	static final String ERROR_TEMPLATE_NAME = "error-report";
-	static final Map<String, List<String>> HIGH_PRIORITY = Map.of("X-Priority", List.of("1"));
 
 	private final MessagingIntegrationProperties properties;
 	private final MessagingClient client;
@@ -78,9 +76,9 @@ public class MessagingIntegration {
 
 	public void sendErrorReport(final LocalDate date, final String municipalityId, String batchName, String message) {
 		LOG.info("Sending error report");
-		final var request = messagingMapper.toEmailRequest(generateErrorReportMessage(municipalityId, batchName, message), "Kritiskt fel vid exekvering", date, HIGH_PRIORITY);
+		final var request = messagingMapper.toErrorEmailRequest(generateErrorReportMessage(municipalityId, batchName, message), date);
 
-		for (final var recipientEmailAddress : properties.statusReport().recipientEmailAddresses()) {
+		for (final var recipientEmailAddress : properties.errorReport().recipientEmailAddresses()) {
 			try {
 				request.setEmailAddress(recipientEmailAddress);
 				client.sendEmail(municipalityId, request);
@@ -94,7 +92,7 @@ public class MessagingIntegration {
 
 	public void sendStatusReport(final List<BatchEntity> batches, final LocalDate date, final String municipalityId) {
 		LOG.info("Sending status report");
-		final var request = messagingMapper.toEmailRequest(generateStatusReportMessage(batches), date);
+		final var request = messagingMapper.toStatusEmailRequest(generateStatusReportMessage(batches), date);
 
 		for (final var recipientEmailAddress : properties.statusReport().recipientEmailAddresses()) {
 			try {

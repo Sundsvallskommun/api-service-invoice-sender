@@ -4,12 +4,12 @@
 		"bodyPatterns": [
 			{
 				"equalToJson": {
-					"emailAddress": "someone@something.com",
-					"subject": "somePrefix 2020-01-04",
+					"emailAddress": "someone.status@something.com",
+					"subject": "someStatusPrefix 2020-01-04",
 					"htmlMessage": "${json-unit.ignore}",
 					"sender": {
-						"name": "SomeSender",
-						"address": "noreply@something.com"
+						"name": "SomeStatusSender",
+						"address": "noreply.status@something.com"
 					},
 					"attachments": []
 				}

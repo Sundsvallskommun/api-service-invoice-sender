@@ -1,15 +1,16 @@
 {
 	"request": {
 		"method": "POST",
+		"url": "/messaging/2281/email",
 		"bodyPatterns": [
 			{
 				"equalToJson": {
-					"emailAddress": "someone@something.com",
-					"subject": "Kritiskt fel vid exekvering 2020-01-04",
+					"emailAddress": "someone.error@something.com",
+					"subject": "someErrorPrefix 2020-01-04",
 					"htmlMessage": "${json-unit.ignore}",
 					"sender": {
-						"name": "SomeSender",
-						"address": "noreply@something.com"
+						"name": "SomeErrorSender",
+						"address": "noreply.error@something.com"
 					},
 					"attachments": [],
 					"headers": {
@@ -19,8 +20,7 @@
 					}
 				}
 			}
-		],
-		"url": "/messaging/2281/email"
+		]
 	},
 	"response": {
 		"headers": {
