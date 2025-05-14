@@ -6,6 +6,7 @@ import static generated.se.sundsvall.messaging.DigitalInvoiceFile.ContentTypeEnu
 import static generated.se.sundsvall.messaging.DigitalInvoiceRequest.TypeEnum.INVOICE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
+import static java.util.Optional.ofNullable;
 
 import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
@@ -20,6 +21,7 @@ import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
@@ -58,13 +60,18 @@ public class MessagingMapper {
 				.content(encodedInvoiceContent)));
 	}
 
-	public EmailRequest toEmailRequest(final String htmlMessage, final LocalDate date) {
+	public EmailRequest toEmailRequest(final String htmlMessage, final String subject, final LocalDate date, Map<String, List<String>> headers) {
 		return new EmailRequest()
 			.sender(new EmailSender()
 				.name(properties.statusReport().senderName())
 				.address(properties.statusReport().senderEmailAddress()))
-			.subject(properties.statusReport().subjectPrefix().trim().concat(" ") + ISO_DATE.format(date))
+			.subject(ofNullable(subject).orElse("").concat(" ") + ISO_DATE.format(date).trim())
+			.headers(headers)
 			.htmlMessage(htmlMessage);
+	}
+
+	public EmailRequest toEmailRequest(final String htmlMessage, final LocalDate date) {
+		return toEmailRequest(htmlMessage, properties.statusReport().subjectPrefix(), date, null);
 	}
 
 	public SlackRequest toSlackRequest(String message) {

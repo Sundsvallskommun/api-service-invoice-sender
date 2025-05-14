@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,14 +49,14 @@ class MessagingMapperTests {
 
 	@Test
 	void toDigitalInvoiceRequest() throws IOException {
-		var invoice = createItemEntity(item -> item.setFilename("test.file"));
+		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
 		when(properties.invoice()).thenReturn(mockInvoiceProperties);
 		when(mockInvoiceProperties.subject()).thenReturn("someSubject");
 		when(mockInvoiceProperties.referencePrefix()).thenReturn("someReferencePrefix");
 		when(mockFileSystem.getPath(testFilePath)).thenReturn(Paths.get(testFilePath));
 
-		var result = mapper.toDigitalInvoiceRequest(invoice, testFilePath);
+		final var result = mapper.toDigitalInvoiceRequest(invoice, testFilePath);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getSubject()).isEqualTo("someSubject");
@@ -78,15 +80,15 @@ class MessagingMapperTests {
 
 	@Test
 	void toEmailRequest() {
-		var date = LocalDate.now();
-		var htmlMessage = "someHtmlMessage";
+		final var date = LocalDate.now();
+		final var htmlMessage = "someHtmlMessage";
 
 		when(properties.statusReport()).thenReturn(mockStatusReportProperties);
 		when(mockStatusReportProperties.senderName()).thenReturn("someSenderName");
 		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someSenderEmailAddress");
 		when(mockStatusReportProperties.subjectPrefix()).thenReturn("someSubjectPrefix");
 
-		var result = mapper.toEmailRequest(htmlMessage, date);
+		final var result = mapper.toEmailRequest(htmlMessage, date);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getSender()).satisfies(sender -> {
@@ -95,16 +97,40 @@ class MessagingMapperTests {
 		});
 		assertThat(result.getSubject()).isEqualTo("someSubjectPrefix " + ISO_DATE.format(LocalDate.now()));
 		assertThat(result.getHtmlMessage()).isEqualTo(htmlMessage);
+		assertThat(result.getHeaders()).isNull();
+	}
+
+	@Test
+	void toEmailRequestWithHeaders() {
+		final var date = LocalDate.now();
+		final var htmlMessage = "someHtmlMessage";
+		final var subject = "subject";
+		final var headers = Map.of("header", List.of("value1", "value2"));
+
+		when(properties.statusReport()).thenReturn(mockStatusReportProperties);
+		when(mockStatusReportProperties.senderName()).thenReturn("someSenderName");
+		when(mockStatusReportProperties.senderEmailAddress()).thenReturn("someSenderEmailAddress");
+
+		final var result = mapper.toEmailRequest(htmlMessage, subject, date, headers);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getSender()).satisfies(sender -> {
+			assertThat(sender.getName()).isEqualTo("someSenderName");
+			assertThat(sender.getAddress()).isEqualTo("someSenderEmailAddress");
+		});
+		assertThat(result.getSubject()).isEqualTo("subject " + ISO_DATE.format(LocalDate.now()));
+		assertThat(result.getHtmlMessage()).isEqualTo(htmlMessage);
+		assertThat(result.getHeaders()).isEqualTo(headers);
 	}
 
 	@Test
 	void toSlackRequest() {
-		var message = "someMessage";
+		final var message = "someMessage";
 
 		when(properties.token()).thenReturn("someToken");
 		when(properties.channel()).thenReturn("someChannel");
 
-		var result = mapper.toSlackRequest(message);
+		final var result = mapper.toSlackRequest(message);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getToken()).isEqualTo("someToken");
