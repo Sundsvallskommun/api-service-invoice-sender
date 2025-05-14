@@ -58,6 +58,7 @@ public class InvoiceProcessor {
 	private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
 	private static final String SLACK_ERROR_MESSAGE = "Fatal error occured when processing invoices. Error message: '%s'. Search ELK with log id %s for more information.";
 	private static final String ARCHIVE_INDEX = "ArchiveIndex.xml";
+	private static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>";
 
 	private final FileSystem fileSystem;
 	private final CitizenIntegration citizenIntegration;
@@ -309,7 +310,7 @@ public class InvoiceProcessor {
 	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml, final String localPath) throws IOException {
 		final var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
 		final var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
-		Files.writeString(path, XmlUtil.XML_DECLARATION.concat("\n").concat(newXml), ISO_8859_1);
+		Files.writeString(path, XML_DECLARATION.concat("\n").concat(newXml), ISO_8859_1);
 		LOG.info("Removed item {} from ArchiveIndex.xml", item.getFilename());
 		return newXml;
 	}
@@ -323,18 +324,21 @@ public class InvoiceProcessor {
 	 */
 	void extractItemMetadata(final ItemEntity item, final String archiveIndex) {
 		LOG.info("Extracting metadata for item {}", item.getFilename());
+		var xpathExpression = X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename());
+		LOG.info("Xpath expression: {}", xpathExpression);
 
 		// Evaluate
-		final var result = XmlUtil.find(archiveIndex, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
+		final var result = XmlUtil.find(archiveIndex, xpathExpression);
+
 		// Extract the item metadata
-		final var invoiceNumber = result.select("InvoiceNo").text();
-		final var invoiceDate = result.select("InvoiceDate").text();
-		final var dueDate = result.select("DueDate").text();
-		final var payable = !"01".equals(result.select("AGF").text().trim());
-		final var reminder = "1".equals(result.select("Reminder").text());
-		final var accountNumber = result.select("PaymentNo").text();
-		final var paymentReference = result.select("PaymentReference").text();
-		final var totalAmount = result.select("TotalAmount").text();
+		final var invoiceNumber = XmlUtil.getChildNodeText(result, "InvoiceNo");
+		final var invoiceDate = XmlUtil.getChildNodeText(result, "InvoiceDate");
+		final var dueDate = XmlUtil.getChildNodeText(result, "DueDate");
+		final var payable = !"01".equals(XmlUtil.getChildNodeText(result, "AGF"));
+		final var reminder = "1".equals(XmlUtil.getChildNodeText(result, "Reminder"));
+		final var accountNumber = XmlUtil.getChildNodeText(result, "PaymentNo");
+		final var paymentReference = XmlUtil.getChildNodeText(result, "PaymentReference");
+		final var totalAmount = XmlUtil.getChildNodeText(result, "TotalAmount");
 
 		// Check if we've managed to extract all required metadata fields. If not - mark it as incomplete and
 		// bail out early since we won't do any further processing on the item

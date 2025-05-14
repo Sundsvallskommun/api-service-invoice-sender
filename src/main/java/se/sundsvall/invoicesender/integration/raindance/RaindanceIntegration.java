@@ -164,7 +164,7 @@ public class RaindanceIntegration {
 							continue;
 						}
 
-						LOG.info("  Found file '{}'", zipEntryName);
+						LOG.info("Found file '{}'", zipEntryName);
 
 						// Store the file locally
 						var zipEntryOutFile = localBatchWorkDirectory.resolve(zipEntryName);

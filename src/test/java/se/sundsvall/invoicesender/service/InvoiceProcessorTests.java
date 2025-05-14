@@ -175,7 +175,7 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void extractItemMetadata_2(@Load("/files/ArchiveIndex.xml") final String xml) {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000002_to_9101011234.pdf"));
+		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000002_to_9101011235.pdf"));
 
 		invoiceProcessor.extractItemMetadata(item, xml);
 

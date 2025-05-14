@@ -234,7 +234,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.map(filename -> XmlUtil.find(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(filename)))
 			.forEach(elements -> {
 				// Ensure that the ArchiveIndex.xml in root file contains entries for all invoices (is not tampered with)
-				assertThat(elements).isNotEmpty();
+				assertThat(elements).isNotNull();
 			});
 	}
 
@@ -249,13 +249,13 @@ class InvoiceSenderIT extends AbstractAppTest {
 		invoices.stream()
 			.filter(invoice -> invoice.status() == Invoice.Status.NOT_SENT)
 			.map(invoice -> XmlUtil.find(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(invoice.filename())))
-			.forEach(elements -> assertThat(elements).isNotEmpty());
+			.forEach(elements -> assertThat(elements).isNotNull());
 
 		// Ensure that the ArchiveIndex.xml does not contain entries for invoices that were sent
 		invoices.stream()
 			.filter(invoice -> invoice.status() == Invoice.Status.SENT)
 			.map(invoice -> XmlUtil.find(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(invoice.filename())))
-			.forEach(elements -> assertThat(elements).isEmpty());
+			.forEach(elements -> assertThat(elements).isNull());
 	}
 
 	private void assertZipOnlyContainsArchiveIndex(final SmbFile outFile) throws IOException {
