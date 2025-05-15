@@ -31,14 +31,4 @@ public final class XmlUtil {
 
 		return doc.body().selectXpath(xpathExpression);
 	}
-
-	public static String getValue(final Elements node, final String nodeName) {
-		return node.select(nodeName).text();
-	}
-
-	public static String getValue(final String xml, final String xpathExpression, final String nodeName) {
-		var doc = Jsoup.parse(xml, CASE_SENSITIVE_PARSER);
-
-		return doc.body().selectXpath(xpathExpression).select(nodeName).text();
-	}
 }
