@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sv">
+   <head>
+      <title>Kritiskt fel vid exekvering</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <style type="text/css">
+         body { font-family: "Arial", sans-serif; }
+         td, th { padding: 3px; }
+         th { text-align: left; border-top: 1px solid black; border-bottom: 1px solid black; }
+         td.spacer { margin-top: 25px; display: block; }
+      </style>
+   </head>
+   <body>
+      <table aria-label="Felrapport">
+         <thead>
+            <tr>
+               <th>
+                  <p>
+                     Ett kritiskt fel inträffade vid exekvering av batch <span th:text="${batchName}">[batchName]</span> för kommunkod <span th:text="${municipalityId}">[municipalityId]</span>
+                  </p>
+               </th>
+            </tr>
+         </thead>
+         <tbody>
+            <tr>
+               <td class="spacer">
+                  Felmeddelande:
+               </td>
+            </tr>
+            <tr>
+               <td>
+               		<code th:text="${message}">[message]</code>
+               <td>
+            </tr>
+         </tbody>
+         <tfoot>
+            <tr>
+               <td class="spacer">
+                  Filtrera loggar i ELK på requestId <b><span th:text="${requestId}">[requestId]</span></b> för ytterligare information kring felet.
+               </td>
+            </tr>
+         </tfoot>
+      </table>
+   </body>
+</html>

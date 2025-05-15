@@ -1,7 +1,12 @@
 {
 	"request": {
 		"method": "POST",
-		"url": "/messaging/2281/slack"
+		"url": "/messaging/2281/slack",
+		"bodyPatterns": [
+			{
+				"contains": "[invalid_token_response]"
+			}
+		]
 	},
 	"response": {
 		"headers": {

@@ -1,12 +1,21 @@
 {
 	"request": {
 		"method": "POST",
+		"url": "/messaging/2281/email",
 		"bodyPatterns": [
 			{
-				"contains": "someone@something.com"
+				"equalToJson": {
+					"emailAddress": "someone.status@something.com",
+					"subject": "someStatusPrefix 2020-01-01",
+					"htmlMessage": "${json-unit.ignore}",
+					"sender": {
+						"name": "SomeStatusSender",
+						"address": "noreply.status@something.com"
+					},
+					"attachments": []
+				}
 			}
-		],
-		"url": "/messaging/2281/email"
+		]
 	},
 	"response": {
 		"headers": {

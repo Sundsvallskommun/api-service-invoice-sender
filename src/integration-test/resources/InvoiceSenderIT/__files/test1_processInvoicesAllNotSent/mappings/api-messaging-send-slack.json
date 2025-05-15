@@ -1,0 +1,31 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/messaging/2281/slack",
+		"bodyPatterns": [
+			{
+				"equalToJson": {
+					"token": "someToken",
+					"channel": "someChannel",
+					"message": "Batch: Faktura-pdf-200101_000001\nDate: 2020-01-01\nInvoices sent: 0\nInvoices not sent: 4\n"
+				}
+			}
+		]
+	},
+	"response": {
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"messageId": "bb25d4ae-7ae3-4140-9ff0-93f77bff770a",
+			"deliveries": [
+				{
+					"deliveryId": "7d6f8933-91b1-493c-a947-34c6a47e0015",
+					"messageType": "SLACK",
+					"status": "SENT"
+				}
+			]
+		},
+		"status": 201
+	}
+}

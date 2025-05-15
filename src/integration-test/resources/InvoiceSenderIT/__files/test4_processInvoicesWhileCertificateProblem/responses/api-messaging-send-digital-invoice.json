@@ -1,0 +1,5 @@
+{
+	"title": "Bad Gateway",
+	"status": 502,
+	"detail": "DigitalMailSender error: {detail=[invalid_token_response] An error occurred while attempting to retrieve the OAuth 2.0 Access Token Response: I/O error on POST request for \"https://3rdpart.for.digitalmail.com/v2/auth\": PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target, status=500 Internal Server Error, title=Internal Server Error}"
+}

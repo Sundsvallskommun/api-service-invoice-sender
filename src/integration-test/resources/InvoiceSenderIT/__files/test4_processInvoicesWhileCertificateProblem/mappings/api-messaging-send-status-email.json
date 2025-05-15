@@ -3,7 +3,16 @@
 		"method": "POST",
 		"bodyPatterns": [
 			{
-				"contains": "someone@something.com"
+				"equalToJson": {
+					"emailAddress": "someone.status@something.com",
+					"subject": "someStatusPrefix 2020-01-04",
+					"htmlMessage": "${json-unit.ignore}",
+					"sender": {
+						"name": "SomeStatusSender",
+						"address": "noreply.status@something.com"
+					},
+					"attachments": []
+				}
 			}
 		],
 		"url": "/messaging/2281/email"
@@ -16,7 +25,7 @@
 			"messageId": "bb25d4ae-7ae3-4140-9ff0-93f77bff770a",
 			"deliveries": [
 				{
-					"deliveryId": "7d6f8933-91b1-493c-a947-34c6a47e0015",
+					"deliveryId": "7d6f8933-91b1-493c-a947-34c6a47e0016",
 					"messageType": "EMAIL",
 					"status": "SENT"
 				}

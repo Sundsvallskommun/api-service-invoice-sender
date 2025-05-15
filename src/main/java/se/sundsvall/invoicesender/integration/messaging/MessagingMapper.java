@@ -6,6 +6,7 @@ import static generated.se.sundsvall.messaging.DigitalInvoiceFile.ContentTypeEnu
 import static generated.se.sundsvall.messaging.DigitalInvoiceRequest.TypeEnum.INVOICE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
+import static java.util.Optional.ofNullable;
 
 import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
@@ -20,12 +21,15 @@ import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 @Component
 public class MessagingMapper {
+
+	private static final Map<String, List<String>> HIGH_PRIORITY = Map.of("X-Priority", List.of("1"));
 
 	private final MessagingIntegrationProperties properties;
 	private final FileSystem fileSystem;
@@ -58,12 +62,21 @@ public class MessagingMapper {
 				.content(encodedInvoiceContent)));
 	}
 
-	public EmailRequest toEmailRequest(final String htmlMessage, final LocalDate date) {
+	public EmailRequest toStatusEmailRequest(final String htmlMessage, final LocalDate date) {
+		return toEmailRequest(htmlMessage, properties.statusReport().subjectPrefix(), date, properties.statusReport().senderName(), properties.statusReport().senderEmailAddress(), null);
+	}
+
+	public EmailRequest toErrorEmailRequest(final String htmlMessage, final LocalDate date) {
+		return toEmailRequest(htmlMessage, properties.errorReport().subjectPrefix(), date, properties.errorReport().senderName(), properties.errorReport().senderEmailAddress(), HIGH_PRIORITY);
+	}
+
+	private EmailRequest toEmailRequest(final String htmlMessage, final String subjectPrefix, final LocalDate date, final String senderName, final String senderEmailAddress, final Map<String, List<String>> headers) {
 		return new EmailRequest()
 			.sender(new EmailSender()
-				.name(properties.statusReport().senderName())
-				.address(properties.statusReport().senderEmailAddress()))
-			.subject(properties.statusReport().subjectPrefix().trim().concat(" ") + ISO_DATE.format(date))
+				.name(senderName)
+				.address(senderEmailAddress))
+			.subject(ofNullable(subjectPrefix).orElse("").concat(" ") + ISO_DATE.format(date).trim())
+			.headers(headers)
 			.htmlMessage(htmlMessage);
 	}
 

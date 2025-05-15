@@ -40,6 +40,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
+import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
@@ -55,6 +56,7 @@ import se.sundsvall.invoicesender.service.util.XmlUtil;
 public class InvoiceProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
+	private static final String SLACK_ERROR_MESSAGE = "Fatal error occured when processing invoices. Error message: '%s'. Search ELK with log id %s for more information.";
 	private static final String ARCHIVE_INDEX = "ArchiveIndex.xml";
 
 	private final FileSystem fileSystem;
@@ -101,11 +103,7 @@ public class InvoiceProcessor {
 				final var cronTrigger = new CronTrigger(cronExpression);
 				// Schedule it
 				taskScheduler.schedule(() -> {
-					try {
-						run(LocalDate.now(), municipalityId, batchName);
-					} catch (final Exception e) {
-						LOG.error("Failed to process invoice batch with prefix {} for municipality {}", batchName, municipalityId, e);
-					}
+					executeBatch(LocalDate.now(), municipalityId, batchName);
 				}, cronTrigger);
 			});
 		});
@@ -120,16 +118,26 @@ public class InvoiceProcessor {
 	public void run(final LocalDate date, final String municipalityId) {
 		raindanceIntegrations.get(municipalityId).getBatchSetups()
 			.forEach(batchName -> {
-				LOG.info("Running batch with prefix {} for municipality {}", batchName, municipalityId);
-				try {
-					run(date, municipalityId, batchName);
-				} catch (final IOException e) {
-					LOG.error("Failed to process invoice batch with prefix {} for municipality {}", batchName, municipalityId, e);
-				}
+				executeBatch(date, municipalityId, batchName);
 			});
 	}
 
-	public void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
+	private void executeBatch(final LocalDate date, final String municipalityId, String batchName) {
+		try {
+			LOG.info("Started process of batch with prefix {} for municipality {}", batchName, municipalityId);
+			run(date, municipalityId, batchName);
+			LOG.info("Ended process of batch with prefix {} for municipality {}", batchName, municipalityId);
+
+		} catch (final Exception e) {
+			LOG.error("Failed to process batch with prefix {} for municipality {}", batchName, municipalityId, e);
+
+			// Display error on slack and send error report to mail
+			messagingIntegration.sendSlackMessage(municipalityId, SLACK_ERROR_MESSAGE.formatted(e.getMessage(), RequestId.get()));
+			messagingIntegration.sendErrorReport(date, municipalityId, batchName, e.getMessage());
+		}
+	}
+
+	void run(final LocalDate date, final String municipalityId, final String batchName) throws IOException {
 		// Get the Raindance integration
 		final var raindanceIntegration = raindanceIntegrations.get(municipalityId);
 		// Get the batches from Raindance

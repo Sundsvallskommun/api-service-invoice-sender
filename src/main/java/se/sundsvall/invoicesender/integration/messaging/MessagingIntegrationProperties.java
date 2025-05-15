@@ -30,6 +30,8 @@ record MessagingIntegrationProperties(
 
 	@Valid @NotNull Invoice invoice,
 
+	@Valid @NotNull ErrorReport errorReport,
+
 	@Valid @NotNull StatusReport statusReport) {
 
 	record Invoice(
@@ -48,5 +50,16 @@ record MessagingIntegrationProperties(
 		@NotEmpty List<@Email @NotBlank String> recipientEmailAddresses,
 
 		@DefaultValue("Utskick av fakturor") String subjectPrefix) {
+	}
+
+	record ErrorReport(
+
+		@NotBlank String senderName,
+
+		@Email @DefaultValue("noreply@sundsvall.se") String senderEmailAddress,
+
+		@NotEmpty List<@Email @NotBlank String> recipientEmailAddresses,
+
+		@DefaultValue("Kritiskt fel vid exekvering") String subjectPrefix) {
 	}
 }

@@ -1,7 +1,16 @@
 {
 	"request": {
 		"method": "POST",
-		"url": "/messaging/2281/slack"
+		"url": "/messaging/2281/slack",
+		"bodyPatterns": [
+			{
+				"equalToJson": {
+					"token": "someToken",
+					"channel": "someChannel",
+					"message": "Batch: Faktura-pdf-200103_000003\nDate: 2020-01-03\nInvoices sent: 2\nInvoices not sent: 0\n"
+				}
+			}
+		]
 	},
 	"response": {
 		"headers": {
