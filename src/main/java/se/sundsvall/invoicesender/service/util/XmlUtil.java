@@ -10,7 +10,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -35,6 +34,53 @@ public final class XmlUtil {
 
 	private XmlUtil() {}
 
+	// ThreadLocal instances for XPath, DocumentBuilder, and Transformer to make them thread-safe
+	private static final ThreadLocal<XPath> threadLocalXPath = ThreadLocal.withInitial(() -> {
+		try {
+			return XPathFactory.newInstance().newXPath();
+		} catch (Exception e) {
+			throw new XmlException("Unable to create XPath instance", e);
+		}
+	});
+
+	private static final ThreadLocal<DocumentBuilder> threadLocalDocumentBuilder = ThreadLocal.withInitial(() -> {
+		try {
+			var documentBuilderFactory = DocumentBuilderFactory.newInstance();
+			documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			return documentBuilderFactory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			throw new XmlException("Unable to create DocumentBuilder instance", e);
+		}
+	});
+
+	private static final ThreadLocal<Transformer> threadLocalTransformer = ThreadLocal.withInitial(() -> {
+		try {
+			var transformerFactory = TransformerFactory.newInstance();
+			transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+
+			var transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+			return transformer;
+		} catch (Exception e) {
+			throw new XmlException("Unable to create TransformerFactory instance", e);
+		}
+	});
+
+	private static XPath getXPath() {
+		return threadLocalXPath.get();
+	}
+
+	private static DocumentBuilder getDocumentBuilder() {
+		return threadLocalDocumentBuilder.get();
+	}
+
+	private static Transformer getTransformer() {
+		return threadLocalTransformer.get();
+	}
+
 	/**
 	 * Removes nodes from the given XML string that match the provided XPath expression.
 	 *
@@ -49,7 +95,7 @@ public final class XmlUtil {
 			var document = toDocument(xml);
 
 			// Find the matching nodes
-			var xPath = XPathFactory.newInstance().newXPath();
+			var xPath = getXPath();
 			var nodesToRemove = (NodeList) xPath.evaluate(xpathExpression, document, XPathConstants.NODESET);
 
 			// And remove them
@@ -63,6 +109,8 @@ public final class XmlUtil {
 			throw new XmlException("Invalid XPath expression", e);
 		} catch (Exception e) {
 			throw new XmlException("Unable to parse XML", e);
+		} finally {
+			threadLocalXPath.remove();
 		}
 	}
 
@@ -75,13 +123,15 @@ public final class XmlUtil {
 	 */
 	public static Node find(final String xml, final String xpathExpression) {
 		validateInput(xml, xpathExpression);
-		XPath xPath = XPathFactory.newInstance().newXPath();
 		try {
+			XPath xPath = getXPath();
 			var document = toDocument(xml);
 
 			return (Node) xPath.evaluate(xpathExpression, document, XPathConstants.NODE);
 		} catch (Exception e) {
 			throw new XmlException("Unable to parse XML", e);
+		} finally {
+			threadLocalXPath.remove();
 		}
 	}
 
@@ -109,9 +159,13 @@ public final class XmlUtil {
 		return "";
 	}
 
-	private static Document toDocument(final String xml) throws IOException, SAXException, ParserConfigurationException {
-		var inputSource = new InputSource(new StringReader(xml));
-		return getDocumentBuilder().parse(inputSource);
+	private static Document toDocument(final String xml) throws IOException, SAXException {
+		try (var stringReader = new StringReader(xml)) {
+			var inputSource = new InputSource(stringReader);
+			return getDocumentBuilder().parse(inputSource);
+		} finally {
+			threadLocalDocumentBuilder.remove();
+		}
 	}
 
 	private static String toString(final Document document) {
@@ -122,29 +176,9 @@ public final class XmlUtil {
 			return stringWriter.toString().replaceAll(EMPTY_OR_BLANK_LINE, "");
 		} catch (TransformerException | IOException e) {
 			throw new XmlException("Unable to convert XML document to string", e);
+		} finally {
+			threadLocalTransformer.remove();
 		}
-	}
-
-	// DocumentBuilder is not thread safe so we create a new instance for each call
-
-	private static DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
-		var documentBuilderFactory = DocumentBuilderFactory.newInstance();
-		documentBuilderFactory.setNamespaceAware(true);
-		documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-		documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-		return documentBuilderFactory.newDocumentBuilder();
-	}
-	// Transformer is not thread safe so we create a new instance for each call
-
-	private static Transformer getTransformer() throws TransformerConfigurationException {
-		var transformerFactory = TransformerFactory.newInstance();
-		transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-		transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-
-		var transformer = transformerFactory.newTransformer();
-		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-		return transformer;
 	}
 
 	/**
