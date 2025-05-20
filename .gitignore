@@ -50,5 +50,8 @@ target/
 # Local environment
 .env
 
+# Local samba folder for samba docker container
+share/
+
 # Spring
 application-default.*

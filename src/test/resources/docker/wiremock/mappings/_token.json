@@ -1,0 +1,13 @@
+{
+  "request": {
+    "url": "/token",
+    "method": "POST"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "status": 200,
+	"body": "{\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpdHN1cHBvcnRAc3VuZHN2YWxsLnNlIiwidXNlcm5hbWUiOiJJVC1zdXBwb3J0IiwiaXNzIjoiaW5vb2xhYnMuY29tIiwiYXVkIjoiYmV0YSIsImlhdCI6MTcyNjQ4NjI4Mi4yMjk0MzYsImV4cCI6MTcyNzA5MTA4NC4yMjk0NTd9.c1YAX-QlqjKj6I05weCJ4nFCce5-08IUkSw-VWmZaaQ\",\"expires_in\": -1,\"refresh_token\": \"IwOGYzYTlmM2YxOTQ5MGE3YmNmMDFkNTVk\",\"scope\": \"create\",\"token_type\": \"bearer\"}"
+  }
+}

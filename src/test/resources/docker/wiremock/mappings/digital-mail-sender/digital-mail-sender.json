@@ -1,0 +1,21 @@
+{
+  "request": {
+    "url": "/digital-mail-sender/2281/send-digital-mail",
+    "method": "POST"
+  },
+  "response": {
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "digital-mail-sender/200.response",
+    "status": 200,
+	"jsonBody": {
+      "deliveryStatus": {
+        "delivered": true,
+        "partyId": "97edca90-7fa8-457e-8223-aa078055465c",
+        "transactionId": "fc235213-4f11-4d64-ad92-1780bfd16dde"
+      }
+    }
+  }
+}
+
