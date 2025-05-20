@@ -46,7 +46,7 @@ cd api-service-invoice-sender
    docker-compose up
    ```
 
-   Place the .7z-files in the Kivra folder here: `src/test/resources/share/Kivra`. This will make the files available for the samba container.
+   Place the .7z-files in the Kivra folder here: `src/test/resources/share/Kivra`. This will make the files available for the service via the samba container.
 
 ## Dependencies
 

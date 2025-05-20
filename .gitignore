@@ -50,7 +50,7 @@ target/
 # Local environment
 .env
 
-# Local samba folder for samba docker container
+# Local samba share folder for local testing, ignore these files/folders since they will be filled with 7z-files.  
 share/
 
 # Spring
