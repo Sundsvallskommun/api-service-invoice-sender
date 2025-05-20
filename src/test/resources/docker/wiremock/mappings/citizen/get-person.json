@@ -1,38 +1,39 @@
 {
-  "name": "api-citizen-get-person",
-  "priority": 100,
-  "request": {
-    "method": "GET",
-    "urlPathPattern": "/citizen/2281/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
-  },
-  "response": {
-    "transformers": [ "response-template" ],
-    "status": 200,
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "jsonBody": {
-      "personId": "{{ request.pathSegments.[1] }}",
-      "givenname": "Bob",
-      "lastname": "Something",
-      "gender": "M",
-      "civilStatus": "G ",
-      "nrDate": "20100601",
-      "classified": "N",
-      "protectedNR": "N",
-      "addresses": [
-        {
-          "realEstateDescription": "APPLESEED 123",
-          "address": "SOME STREET 19",
-          "postalCode": "123 45",
-          "city": "THE CITY",
-          "municipality": "2281",
-          "country": "THE COUNTRY",
-          "emigrated": false,
-          "addressType": "POPULATION_REGISTRATION_ADDRESS"
-        }
-      ]
-    }
-  }
+	"name": "api-citizen-get-person",
+	"priority": 100,
+	"request": {
+		"method": "GET",
+		"urlPathPattern": "/citizen/2281/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
+	},
+	"response": {
+		"transformers": [
+			"response-template"
+		],
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"personId": "{{ request.pathSegments.[1] }}",
+			"givenname": "Bob",
+			"lastname": "Something",
+			"gender": "M",
+			"civilStatus": "G ",
+			"nrDate": "20100601",
+			"classified": "N",
+			"protectedNR": "N",
+			"addresses": [
+				{
+					"realEstateDescription": "APPLESEED 123",
+					"address": "SOME STREET 19",
+					"postalCode": "123 45",
+					"city": "THE CITY",
+					"municipality": "2281",
+					"country": "THE COUNTRY",
+					"emigrated": false,
+					"addressType": "POPULATION_REGISTRATION_ADDRESS"
+				}
+			]
+		}
+	}
 }
-

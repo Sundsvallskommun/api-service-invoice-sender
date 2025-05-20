@@ -1,6 +1,7 @@
 {
 	"request": {
 		"method": "POST",
+		"url": "/messaging/2281/email",
 		"bodyPatterns": [
 			{
 				"equalToJson": {
@@ -11,11 +12,11 @@
 						"name": "SomeStatusSender",
 						"address": "noreply.status@something.com"
 					},
-					"attachments": []
+					"attachments": [],
+					"headers": {}
 				}
 			}
-		],
-		"url": "/messaging/2281/email"
+		]
 	},
 	"response": {
 		"headers": {

@@ -1,16 +1,17 @@
 {
-  "name": "api-party-match-anything-and-return-random-uuid",
-  "request": {
-    "method": "GET",
-    "urlPathPattern": "/party/2281/PRIVATE/(.*)/partyId"
-  },
-  "response": {
-    "transformers": [ "response-template" ],
-    "status": 200,
-    "headers": {
-      "Content-Type": "text/plain"
-    },
-    "body": "{{randomValue type='UUID'}}"
-  }
+	"name": "api-party-match-anything-and-return-random-uuid",
+	"request": {
+		"method": "GET",
+		"urlPathPattern": "/party/2281/PRIVATE/(.*)/partyId"
+	},
+	"response": {
+		"transformers": [
+			"response-template"
+		],
+		"status": 200,
+		"headers": {
+			"Content-Type": "text/plain"
+		},
+		"body": "{{randomValue type='UUID'}}"
+	}
 }
-

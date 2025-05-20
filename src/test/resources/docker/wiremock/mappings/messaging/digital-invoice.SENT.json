@@ -1,23 +1,22 @@
 {
-  "request": {
-    "url": "/messaging/2281/digital-invoice",
-    "method": "POST"
-  },
-  "response": {
-    "status": 201,
-    "headers": {
-      "Content-Type": "application/json"
-    },
-    "jsonBody": {
-      "messageId": "6f3418ad-0f34-46f9-996d-62da839d103b",
-      "deliveries": [
-        {
-          "deliveryId": "eedeb87d-183d-41d9-be3d-520cd52c3572",
-          "messageType": "DIGITAL_INVOICE",
-          "status": "SENT"
-        }
-      ]
-    }
-  }
+	"request": {
+		"url": "/messaging/2281/digital-invoice",
+		"method": "POST"
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"messageId": "6f3418ad-0f34-46f9-996d-62da839d103b",
+			"deliveries": [
+				{
+					"deliveryId": "eedeb87d-183d-41d9-be3d-520cd52c3572",
+					"messageType": "DIGITAL_INVOICE",
+					"status": "SENT"
+				}
+			]
+		}
+	}
 }
-
