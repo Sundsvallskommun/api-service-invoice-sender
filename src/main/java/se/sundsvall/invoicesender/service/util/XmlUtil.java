@@ -1,34 +1,208 @@
 package se.sundsvall.invoicesender.service.util;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Node;
-import org.jsoup.parser.ParseSettings;
-import org.jsoup.parser.Parser;
-import org.jsoup.select.Elements;
+import io.micrometer.common.util.StringUtils;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public final class XmlUtil {
 
-	public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>";
+	private static final Logger LOG = LoggerFactory.getLogger(XmlUtil.class);
 
 	private static final String EMPTY_OR_BLANK_LINE = "(?m)^[ \t]*\r?\n";
 
-	private static final Parser CASE_SENSITIVE_PARSER = Parser.htmlParser()
-		.settings(new ParseSettings(true, true));
-
 	private XmlUtil() {}
 
-	public static String remove(final String xml, final String xpathExpression) {
-		var doc = Jsoup.parse(xml, CASE_SENSITIVE_PARSER);
-		doc.outputSettings().indentAmount(4).prettyPrint(false);
+	// ThreadLocal instances for XPath, DocumentBuilder, and Transformer to make them thread-safe
+	private static final ThreadLocal<XPath> threadLocalXPath = ThreadLocal.withInitial(() -> {
+		try {
+			return XPathFactory.newInstance().newXPath();
+		} catch (Exception e) {
+			throw new XmlException("Unable to create XPath instance", e);
+		}
+	});
 
-		doc.body().selectXpath(xpathExpression).forEach(Node::remove);
+	private static final ThreadLocal<DocumentBuilder> threadLocalDocumentBuilder = ThreadLocal.withInitial(() -> {
+		try {
+			var documentBuilderFactory = DocumentBuilderFactory.newInstance();
+			documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+			return documentBuilderFactory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			throw new XmlException("Unable to create DocumentBuilder instance", e);
+		}
+	});
 
-		return doc.body().html().replaceAll(EMPTY_OR_BLANK_LINE, "");
+	private static final ThreadLocal<Transformer> threadLocalTransformer = ThreadLocal.withInitial(() -> {
+		try {
+			var transformerFactory = TransformerFactory.newInstance();
+			transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+
+			var transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+			return transformer;
+		} catch (Exception e) {
+			throw new XmlException("Unable to create TransformerFactory instance", e);
+		}
+	});
+
+	private static XPath getXPath() {
+		return threadLocalXPath.get();
 	}
 
-	public static Elements find(final String xml, final String xpathExpression) {
-		var doc = Jsoup.parse(xml, CASE_SENSITIVE_PARSER);
+	private static DocumentBuilder getDocumentBuilder() {
+		return threadLocalDocumentBuilder.get();
+	}
 
-		return doc.body().selectXpath(xpathExpression);
+	private static Transformer getTransformer() {
+		return threadLocalTransformer.get();
+	}
+
+	/**
+	 * Removes nodes from the given XML string that match the provided XPath expression.
+	 *
+	 * @param  xml             the XML string
+	 * @param  xpathExpression the XPath expression
+	 * @return                 the modified XML string
+	 */
+	public static String remove(final String xml, final String xpathExpression) {
+		validateInput(xml, xpathExpression);
+		LOG.info("Removing nodes from xml matching XPath {}", xpathExpression);
+		try {
+			var document = toDocument(xml);
+
+			// Find the matching nodes
+			var xPath = getXPath();
+			var nodesToRemove = (NodeList) xPath.evaluate(xpathExpression, document, XPathConstants.NODESET);
+
+			// And remove them
+			for (var i = 0; i < nodesToRemove.getLength(); i++) {
+				var nodeToRemove = nodesToRemove.item(i);
+				nodeToRemove.getParentNode().removeChild(nodesToRemove.item(i));
+			}
+
+			return toString(document);
+		} catch (XPathExpressionException e) {
+			throw new XmlException("Invalid XPath expression", e);
+		} catch (Exception e) {
+			throw new XmlException("Unable to parse XML", e);
+		} finally {
+			threadLocalXPath.remove();
+		}
+	}
+
+	/**
+	 * Finds a single node in the given XML string that matches the provided XPath expression.
+	 *
+	 * @param  xml             the XML string
+	 * @param  xpathExpression the XPath expression
+	 * @return                 the matching node, or null if no match is found
+	 */
+	public static Node find(final String xml, final String xpathExpression) {
+		validateInput(xml, xpathExpression);
+		try {
+			XPath xPath = getXPath();
+			var document = toDocument(xml);
+
+			return (Node) xPath.evaluate(xpathExpression, document, XPathConstants.NODE);
+		} catch (Exception e) {
+			throw new XmlException("Unable to parse XML", e);
+		} finally {
+			threadLocalXPath.remove();
+		}
+	}
+
+	/**
+	 * Retrieves the text content of a child node with the specified name.
+	 *
+	 * @param  node          the parent node
+	 * @param  childNodeName the name of the child node
+	 * @return               the text content of the child node, or an empty string if not found
+	 */
+	public static String getChildNodeText(final Node node, final String childNodeName) {
+		if (node == null || StringUtils.isBlank(childNodeName)) {
+			LOG.warn("Invalid input: node or childNodeName is null or empty");
+			return "";
+		}
+		var childNodes = node.getChildNodes();
+
+		for (var i = 0; i < childNodes.getLength(); i++) {
+			var childNode = childNodes.item(i);
+			if (childNode.getNodeName().equals(childNodeName)) {
+				return childNode.getTextContent();
+			}
+		}
+
+		return "";
+	}
+
+	private static Document toDocument(final String xml) throws IOException, SAXException {
+		try (var stringReader = new StringReader(xml)) {
+			var inputSource = new InputSource(stringReader);
+			return getDocumentBuilder().parse(inputSource);
+		} finally {
+			threadLocalDocumentBuilder.remove();
+		}
+	}
+
+	private static String toString(final Document document) {
+		LOG.debug("Converting Document to XML string");
+
+		try (var stringWriter = new StringWriter()) {
+			getTransformer().transform(new DOMSource(document), new StreamResult(stringWriter));
+			return stringWriter.toString().replaceAll(EMPTY_OR_BLANK_LINE, "");
+		} catch (TransformerException | IOException e) {
+			throw new XmlException("Unable to convert XML document to string", e);
+		} finally {
+			threadLocalTransformer.remove();
+		}
+	}
+
+	/**
+	 * Sanity check input parameters.
+	 * 
+	 * @param xml             the XML string
+	 * @param xpathExpression the XPath expression
+	 */
+	private static void validateInput(final String xml, final String xpathExpression) {
+		if (StringUtils.isBlank(xml)) {
+			throw new XmlException("XML input cannot be null or blank");
+		}
+		if (StringUtils.isBlank(xpathExpression)) {
+			throw new XmlException("XPath expression cannot be null or blank");
+		}
+	}
+
+	public static class XmlException extends RuntimeException {
+		public XmlException(final String message) {
+			super(message);
+		}
+
+		public XmlException(final String message, final Throwable cause) {
+			super(message, cause);
+		}
 	}
 }

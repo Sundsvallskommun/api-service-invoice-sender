@@ -5,6 +5,12 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 
 import java.util.UUID;
 import java.util.function.Consumer;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.service.model.Metadata;
@@ -59,6 +65,19 @@ public final class TestDataFactory {
 		}
 
 		return batch;
+	}
+
+	public static Node generateNode() throws ParserConfigurationException {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document document = builder.newDocument();
+
+		Element element = document.createElement("testElement");
+
+		element.setAttribute("id", "test123");
+		element.setTextContent("Test Node Content");
+
+		return element;
 	}
 
 }

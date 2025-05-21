@@ -2,6 +2,7 @@ package se.sundsvall.invoicesender.integration.db;
 
 import static java.util.Optional.ofNullable;
 
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +15,7 @@ import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 @Component
+@Transactional
 public class DbIntegration {
 
 	private final BatchRepository batchRepository;
