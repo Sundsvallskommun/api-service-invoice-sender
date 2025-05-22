@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,7 +103,7 @@ class MessagingMapperTests {
 		});
 		assertThat(result.getSubject()).isEqualTo("someStatusSubjectPrefix " + ISO_DATE.format(LocalDate.now()));
 		assertThat(result.getHtmlMessage()).isEqualTo(htmlMessage);
-		assertThat(result.getHeaders()).isNull();
+		assertThat(result.getHeaders()).isNullOrEmpty();
 
 		verify(mockStatusReportProperties).senderName();
 		verify(mockStatusReportProperties).senderEmailAddress();
@@ -116,7 +114,6 @@ class MessagingMapperTests {
 	void toErrorEmailRequest() {
 		final var date = LocalDate.now();
 		final var htmlMessage = "someErrorHtmlMessage";
-		final var headers = Map.of("X-Priority", List.of("1"));
 
 		when(mockProperties.errorReport()).thenReturn(mockErrorReportProperties);
 		when(mockErrorReportProperties.senderName()).thenReturn("someErrorSenderName");
@@ -132,7 +129,7 @@ class MessagingMapperTests {
 		});
 		assertThat(result.getSubject()).isEqualTo("someErrorSubjectPrefix " + ISO_DATE.format(LocalDate.now()));
 		assertThat(result.getHtmlMessage()).isEqualTo(htmlMessage);
-		assertThat(result.getHeaders()).isEqualTo(headers);
+		assertThat(result.getHeaders()).isNullOrEmpty();
 
 		verify(mockErrorReportProperties).senderName();
 		verify(mockErrorReportProperties).senderEmailAddress();

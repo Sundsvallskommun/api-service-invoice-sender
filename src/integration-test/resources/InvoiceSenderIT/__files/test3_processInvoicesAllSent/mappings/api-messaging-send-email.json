@@ -12,7 +12,8 @@
 						"name": "SomeStatusSender",
 						"address": "noreply.status@something.com"
 					},
-					"attachments": []
+					"attachments": [],
+					"headers": {}
 				}
 			}
 		]

@@ -50,5 +50,8 @@ target/
 # Local environment
 .env
 
+# Local samba share folder for local testing, ignore these files/folders since they will be filled with 7z-files.  
+share/
+
 # Spring
 application-default.*

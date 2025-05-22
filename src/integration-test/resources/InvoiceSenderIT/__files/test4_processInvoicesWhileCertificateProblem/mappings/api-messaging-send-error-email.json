@@ -13,11 +13,7 @@
 						"address": "noreply.error@something.com"
 					},
 					"attachments": [],
-					"headers": {
-						"X-Priority": [
-							"1"
-						]
-					}
+					"headers": {}
 				}
 			}
 		]

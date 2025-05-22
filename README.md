@@ -38,6 +38,16 @@ cd api-service-invoice-sender
    mvn spring-boot:run
    ```
 
+   **Run the service locally:**
+
+   Start the docker containers for wiremock and samba using the docker-compose file located in `src/test/resources/docker`.
+
+   ```bash
+   docker-compose up
+   ```
+
+   Place the .7z-files in the Kivra folder here: `src/test/resources/share/Kivra`. This will make the files available for the service via the samba container.
+
 ## Dependencies
 
 This microservice depends on the following services:
