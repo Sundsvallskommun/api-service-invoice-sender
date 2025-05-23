@@ -27,7 +27,7 @@ public class DbIntegration {
 	}
 
 	public Page<BatchDto> getBatches(final LocalDate from, final LocalDate to, final Pageable pageRequest, final String municipalityId) {
-		final var result = batchRepository.findAllByCompletedAtBetweenAndMunicipalityId(
+		var result = batchRepository.findAllByCompletedAtBetweenAndMunicipalityId(
 			ofNullable(from).map(LocalDate::atStartOfDay).orElse(null),
 			ofNullable(to).map(LocalDate::atStartOfDay).map(t -> t.plusDays(1)).orElse(null),
 			municipalityId, pageRequest);
@@ -51,14 +51,8 @@ public class DbIntegration {
 
 	BatchDto mapToBatchDto(final BatchEntity batchEntity) {
 		return Optional.ofNullable(batchEntity).map(batch -> new BatchDto(
-			batch.getId(),
-			batch.getBasename(),
-			batch.getStartedAt(),
-			batch.getCompletedAt(),
-			batch.getTotalItems(),
-			batch.getSentItems(),
-			false))
+			batch.getId(), batch.getFilename(), batch.getStartedAt(),
+			batch.getCompletedAt(), batch.getTotalItems(), batch.getSentItems(), false))
 			.orElse(null);
 	}
-
 }

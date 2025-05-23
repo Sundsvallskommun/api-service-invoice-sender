@@ -25,10 +25,10 @@ public class CitizenIntegration {
 	 */
 	public boolean hasProtectedIdentity(final String partyId, final String municipalityId) {
 		try {
-			final var cleanPartyId = strip(partyId, "\"");
+			var cleanPartyId = strip(partyId, "\"");
 			// Get the person data, or rather just the HTTP status code for it - a request for data for
 			// a protected identity person yields a 204 No Content
-			final var personResponse = citizenClient.getPerson(municipalityId, cleanPartyId);
+			var personResponse = citizenClient.getPerson(municipalityId, cleanPartyId);
 
 			return personResponse.getStatusCode().isSameCodeAs(NO_CONTENT);
 		} catch (final Exception e) {

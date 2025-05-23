@@ -3,6 +3,7 @@ package se.sundsvall.invoicesender.service.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static se.sundsvall.invoicesender.TestDataFactory.generateNode;
 
 import java.util.stream.Stream;
@@ -22,17 +23,17 @@ class XmlUtilTests {
 
 	@Test
 	void testRemove(@Load("/files/ArchiveIndex.xml") String originalXml, @Load("/files/ArchiveIndex_removedFiles_noXmlDeclaration.xml") String wantedXml) {
-		var xpathExpressionFile1 = "//file[filename='Faktura_00000001_to_9001011234.pdf']";
-		var xpathExpressionFile2 = "//file[filename='Faktura_00000004_to_9301011237.pdf']";
+		final var xpathExpressionFile1 = "//file[filename='Faktura_00000001_to_9001011234.pdf']";
+		final var xpathExpressionFile2 = "//file[filename='Faktura_00000004_to_9301011237.pdf']";
 
 		// Remove two <file> elements from the original XML
-		var first = XmlUtil.remove(originalXml, xpathExpressionFile1);
-		var resultingXml = XmlUtil.remove(first, xpathExpressionFile2);
+		final var first = XmlUtil.remove(originalXml, xpathExpressionFile1);
+		final var resultingXml = XmlUtil.remove(first, xpathExpressionFile2);
 
 		assertThat(first).isNotNull();
 		assertThat(resultingXml).isNotNull();
 
-		var diff = DiffBuilder
+		final var diff = DiffBuilder
 			.compare(resultingXml)
 			.withTest(wantedXml)
 			.ignoreWhitespace()
@@ -46,10 +47,18 @@ class XmlUtilTests {
 	}
 
 	@Test
-	void testFind(@Load("/files/ArchiveIndex.xml") final String originalXml) {
-		var xpathExpression = "//file[filename='Faktura_00000001_to_9001011234.pdf']";
+	void testRemoveThrowsException(@Load("/files/ArchiveIndex.xml") String originalXml) {
+		final var faultyXpathExpression = "//file[";
 
-		var result = XmlUtil.find(originalXml, xpathExpression);
+		final var e = assertThrows(XmlUtil.XmlException.class, () -> XmlUtil.remove(originalXml, faultyXpathExpression));
+		assertThat(e.getMessage()).isEqualTo("Invalid XPath expression");
+	}
+
+	@Test
+	void testFind(@Load("/files/ArchiveIndex.xml") final String originalXml) {
+		final var xpathExpression = "//file[filename='Faktura_00000001_to_9001011234.pdf']";
+
+		final var result = XmlUtil.find(originalXml, xpathExpression);
 
 		assertThat(result).isNotNull();
 
@@ -78,7 +87,7 @@ class XmlUtilTests {
 
 	@Test
 	void testFind_shouldThrowException_whenFaultyXml() {
-		var faultyXml = createFaultyXml();
+		final var faultyXml = createFaultyXml();
 		assertThatExceptionOfType(XmlUtil.XmlException.class).isThrownBy(() -> XmlUtil.find(faultyXml, "//parent/child"))
 			.withMessage("Unable to parse XML")
 			.withCauseInstanceOf(Exception.class);
@@ -86,7 +95,7 @@ class XmlUtilTests {
 
 	@Test
 	void testRemove_shouldThrowException_whenFaultyXml() {
-		var faultyXml = createFaultyXml();
+		final var faultyXml = createFaultyXml();
 		assertThatExceptionOfType(XmlUtil.XmlException.class).isThrownBy(() -> XmlUtil.remove(faultyXml, "//parent/child"))
 			.withMessage("Unable to parse XML")
 			.withCauseInstanceOf(Exception.class);
@@ -99,10 +108,11 @@ class XmlUtilTests {
 	}
 
 	static Stream<Arguments> getChildNodeTextProvider() throws ParserConfigurationException {
-		var node = generateNode();
+		final var node = generateNode();
 		return Stream.of(
 			Arguments.of(null, "childNodeName"),
 			Arguments.of(node, null),
+			Arguments.of(node, "childNodeName"),
 			Arguments.of(node, ""),
 			Arguments.of(node, " "));
 	}

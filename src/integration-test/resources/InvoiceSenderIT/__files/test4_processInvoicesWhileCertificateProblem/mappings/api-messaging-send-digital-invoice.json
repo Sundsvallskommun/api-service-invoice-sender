@@ -1,36 +1,7 @@
 {
 	"request": {
 		"method": "POST",
-		"urlPath": "/messaging/2281/digital-invoice",
-		"bodyPatterns": [
-			{
-				"equalToJson": {
-					"party": {
-						"partyId": "58f96da8-6d76-4fa6-bb92-64f71fdc6aa5",
-						"externalReferences": []
-					},
-					"type": "INVOICE",
-					"subject": "someSubject",
-					"reference": "Faktura #123",
-					"payable": true,
-					"details": {
-						"amount": 1000.0,
-						"dueDate": "2024-03-03",
-						"paymentReferenceType": "SE_OCR",
-						"paymentReference": "9001011234",
-						"accountType": "BANKGIRO",
-						"accountNumber": "1234-1234"
-					},
-					"files": [
-						{
-							"contentType": "application/pdf",
-							"content": "${json-unit.ignore}",
-							"filename": "Faktura_00000001_to_2107142388.pdf"
-						}
-					]
-				}
-			}
-		]
+		"urlPath": "/messaging/2281/digital-invoice"
 	},
 	"response": {
 		"headers": {

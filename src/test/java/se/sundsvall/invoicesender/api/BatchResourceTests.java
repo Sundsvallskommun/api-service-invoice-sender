@@ -49,7 +49,7 @@ class BatchResourceTests {
 
 	@Test
 	void triggerBatchWithInvalidData() {
-		final var response = webTestClient.post()
+		var response = webTestClient.post()
 			.uri(PATH + "/trigger/not-a-date", "2281")
 			.exchange()
 			.expectStatus().isBadRequest()
@@ -65,7 +65,7 @@ class BatchResourceTests {
 
 	@Test
 	void triggerBatch() {
-		final var date = LocalDate.of(2019, 2, 28);
+		var date = LocalDate.of(2019, 2, 28);
 
 		webTestClient.post()
 			.uri(PATH + "/trigger/{date}", "2281", date.format(DateTimeFormatter.ISO_DATE))
@@ -79,7 +79,7 @@ class BatchResourceTests {
 
 	@Test
 	void getAllWithInvalidPagingData() {
-		final var response = webTestClient.get()
+		var response = webTestClient.get()
 			.uri(PATH + "?page={page}&pageSize={pageSize}", "2281", 0, 0)
 			.exchange()
 			.expectStatus().isBadRequest()
@@ -116,7 +116,7 @@ class BatchResourceTests {
 				new BatchDto(1, "something", LocalDateTime.now(), LocalDateTime.now(), 1, 2, false),
 				new BatchDto(2, "something-else", LocalDateTime.now(), LocalDateTime.now(), 3, 4, false))));
 
-		final var response = webTestClient.get()
+		var response = webTestClient.get()
 			.uri(PATH, "2281")
 			.exchange()
 			.expectStatus().isOk()
