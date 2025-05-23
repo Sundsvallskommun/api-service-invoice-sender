@@ -1,8 +1,8 @@
 package se.sundsvall.invoicesender.service;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
-import static java.util.function.Predicate.not;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
@@ -32,13 +32,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
-
 import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
@@ -56,8 +54,7 @@ public class InvoiceProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(InvoiceProcessor.class);
 	private static final String SLACK_ERROR_MESSAGE = "Fatal error occured when processing invoices. Error message: '%s'. Search ELK with log id %s for more information.";
-	private static final String ARCHIVE_INDEX = "ArchiveIndex.xml";
-	private static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>";
+	private static final String ARCHIVE_INDEX_FILENAME = "ArchiveIndex.xml";
 
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
@@ -148,13 +145,13 @@ public class InvoiceProcessor {
 				LOG.info("Processing batch {}", batchEntity.getFilename());
 				// Extract the ArchiveIndex.xml item
 				final var archiveIndexItem = batchEntity.getItems().stream()
-					.filter(item -> item.getFilename().equalsIgnoreCase(ARCHIVE_INDEX))
+					.filter(item -> item.getFilename().equalsIgnoreCase(ARCHIVE_INDEX_FILENAME))
 					.findFirst()
 					.orElse(null);
+
 				// If we don't have any archive index item - bail out
 				if (archiveIndexItem == null) {
 					LOG.info("Unable to process batch {}, since it contains no ArchiveIndex.xml item", batchEntity.getFilename());
-
 					continue;
 				}
 				archiveIndexItem.setStatus(IGNORED);
@@ -162,7 +159,7 @@ public class InvoiceProcessor {
 				// Get the actual XML from the ArchiveIndex
 				var archiveIndex = new String(archiveIndexItem.getData(), ISO_8859_1);
 
-				for (final var item : batchEntity.getItems()) {
+				for (final var item : batchEntity.getItems().stream().filter(item -> notEqual(item, archiveIndexItem)).toList()) { // Do not process index file
 					// Mark invoice items
 					markItem(item, municipalityId);
 					if (ITEM_IS_NOT_PROCESSABLE.test(item)) {
@@ -218,7 +215,7 @@ public class InvoiceProcessor {
 					}
 
 					// Send digital mail for the invoices where the recipient party id is set
-					sendDigitalInvoices(municipalityId, item);
+					sendDigitalInvoice(municipalityId, item);
 					if (INVOICE_COULD_NOT_BE_SENT.test(item)) {
 						// Stop processing item if the invoice could not be sent.
 						LOG.info("Invoice could not be sent - skipping item {}", item.getFilename());
@@ -227,13 +224,10 @@ public class InvoiceProcessor {
 					}
 
 					dbIntegration.persistItem(item);
-					// Remove the item from ArchiveIndex.xml
+					// Update the archive index - ArchiveIndex.xml
 					archiveIndex = removeItemFromArchiveIndex(item, archiveIndex);
 
 				}
-				// Update the ArchiveIndex.xml item
-				archiveIndex = XmlUtil.XML_DECLARATION.concat("\n").concat(archiveIndex);
-				archiveIndexItem.setData(archiveIndex.getBytes(ISO_8859_1));
 			} else {
 				LOG.info("Batch processing is disabled for {}", batchEntity.getFilename());
 			}
@@ -262,7 +256,7 @@ public class InvoiceProcessor {
 	 * @param item           the item to mark
 	 * @param municipalityId the municipality id
 	 */
-	void markItems(final ItemEntity item, final String municipalityId) {
+	void markItem(final ItemEntity item, final String municipalityId) {
 		if (ITEM_IS_A_PDF.test(item)) {
 			LOG.info("Setting item {} type to INVOICE", item.getFilename());
 			item.setType(INVOICE);
@@ -307,11 +301,9 @@ public class InvoiceProcessor {
 	 *
 	 * @param  item            the item to remove
 	 * @param  archiveIndexXml the archive index XML file as a string
-	 * @param  localPath       the local path to the file
 	 * @return                 the updated XML file as a string
-	 * @throws IOException     if an I/O error occurs
 	 */
-	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml) throws IOException {
+	String removeItemFromArchiveIndex(final ItemEntity item, final String archiveIndexXml) {
 		final var newXml = XmlUtil.remove(archiveIndexXml, X_PATH_FILENAME_EXPRESSION.formatted(item.getFilename()));
 		LOG.info("Removed item {} from ArchiveIndex.xml", item.getFilename());
 		return newXml;
@@ -378,7 +370,7 @@ public class InvoiceProcessor {
 	 * @param item           the item to check
 	 * @param municipalityId the municipality id
 	 */
-	void markProtectedIdentityItems(final ItemEntity item, final String municipalityId) {
+	void markProtectedIdentityItem(final ItemEntity item, final String municipalityId) {
 		if (citizenIntegration.hasProtectedIdentity(item.getRecipientPartyId(), municipalityId)) {
 			item.setStatus(RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID);
 		}
@@ -391,7 +383,7 @@ public class InvoiceProcessor {
 	 * @param item           the item to check
 	 * @param municipalityId the municipality id
 	 */
-	void fetchInvoiceRecipientPartyIds(final ItemEntity item, final String municipalityId) {
+	void fetchInvoiceRecipientPartyId(final ItemEntity item, final String municipalityId) {
 		partyIntegration.getPartyId(item.getRecipientLegalId(), municipalityId)
 			.ifPresentOrElse(legalIdAndPartyId -> {
 				LOG.info("Fetched recipient party id for item {}", item.getFilename());
@@ -413,7 +405,7 @@ public class InvoiceProcessor {
 	 * @param localPath      the local path to the file
 	 * @param municipalityId the municipality id
 	 */
-	void sendDigitalInvoices(final String municipalityId, final ItemEntity item) {
+	void sendDigitalInvoice(final String municipalityId, final ItemEntity item) {
 		final var status = messagingIntegration.sendInvoice(municipalityId, item);
 		item.setStatus(status);
 

@@ -14,13 +14,11 @@ import java.nio.file.FileSystem;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ClassPathResource;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingMapperTests {
@@ -43,22 +41,15 @@ class MessagingMapperTests {
 	@InjectMocks
 	private MessagingMapper mapper;
 
-	private String testFilePath;
-
-	@BeforeEach
-	void setUp() throws IOException {
-		testFilePath = new ClassPathResource("files").getFile().getAbsolutePath();
-	}
-
 	@Test
 	void toDigitalInvoiceRequest() throws IOException {
-		var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("test.file"));
+		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("test.file"));
 
 		when(mockProperties.invoice()).thenReturn(mockInvoiceProperties);
 		when(mockInvoiceProperties.subject()).thenReturn("someSubject");
 		when(mockInvoiceProperties.referencePrefix()).thenReturn("someReferencePrefix");
 
-		var result = mapper.toDigitalInvoiceRequest(item);
+		final var result = mapper.toDigitalInvoiceRequest(item);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getSubject()).isEqualTo("someSubject");
@@ -81,7 +72,6 @@ class MessagingMapperTests {
 
 		verify(mockInvoiceProperties).subject();
 		verify(mockInvoiceProperties).referencePrefix();
-		verify(mockFileSystem).getPath(testFilePath);
 	}
 
 	@Test

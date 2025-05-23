@@ -1,21 +1,13 @@
 package apptest;
 
-import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static apptest.util.TestUtil.extractZipFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.OK;
 import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
-import static se.sundsvall.invoicesender.util.IOUtil.copy;
-import static se.sundsvall.invoicesender.util.IOUtil.decompressLzma;
-import static se.sundsvall.invoicesender.util.IOUtil.unzip;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -110,16 +102,19 @@ class InvoiceSenderIT extends AbstractAppTest {
 			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000003_to_9201011234.pdf"),
 			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_9301011234.pdf"));
 
-		// Assert that the ZIP in the return folder contains the expected entries
+		// Asserts that the ZIP in the return folder contains the expected entries
 		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
-
-			assertThatArchiveIndexExistsAndContainsInvoices(outFile, invoices);
+			assertArchiveIndex(invoices, outFile);
+			assertZipEntries(invoices, outFile);
 		}
 
-		// Assert that the original ZIP is equal to the ZIP in the archive folder
-		assertThatArchivedFileIsEqualToOriginalFile(inputFile);
+		// Asserts that the original ZIP is equal to the ZIP in the archive folder
+		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+			final var originalFile = new File(TESTDATA_DIR + File.separator + inputFile);
+			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
+		}
 	}
 
 	/**
@@ -142,12 +137,12 @@ class InvoiceSenderIT extends AbstractAppTest {
 			new Invoice(Invoice.Status.SENT, "Faktura_00000003_to_202108132388.pdf"),
 			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_20323217.pdf"));
 
-		// Assert that the ZIP in the return folder contains the expected entries
+		// Asserts that the ZIP in the return folder contains the expected entries
 		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
-
-			assertThatArchiveIndexExistsAndContainsInvoices(outFile, invoices);
+			assertArchiveIndex(invoices, outFile);
+			assertZipEntries(invoices, outFile);
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
@@ -179,8 +174,9 @@ class InvoiceSenderIT extends AbstractAppTest {
 		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
-
-			assertThatArchiveIndexExists(outFile);
+			assertArchiveIndex(invoices, outFile);
+			assertZipEntries(invoices, outFile);
+			assertZipOnlyContainsArchiveIndex(outFile);
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
@@ -270,8 +266,17 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private void assertZipEntries(final List<Invoice> invoices, final SmbFile outFile) throws IOException {
 		final var zipEntries = extractZipFile(outFile);
 
-			assertThat(archiveFileBytes).isEqualTo(originalFileBytes);
-		}
+		// Ensures that the ZIP file contains entries for all invoices that weren't sent
+		invoices.stream()
+			.filter(invoice -> invoice.status() == Invoice.Status.NOT_SENT)
+			.map(Invoice::filename)
+			.forEach(filename -> assertThat(zipEntries).containsKey(filename));
+
+		// Ensures that the ZIP file does not contain entries for invoices that were sent
+		invoices.stream()
+			.filter(invoice -> invoice.status() == Invoice.Status.SENT)
+			.map(Invoice::filename)
+			.forEach(filename -> assertThat(zipEntries).doesNotContainKey(filename));
 	}
 
 	private record Invoice(Status status, String filename) {

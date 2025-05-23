@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,7 +45,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
@@ -91,13 +89,6 @@ class MessagingIntegrationTests {
 	@InjectMocks
 	private MessagingIntegration messagingIntegration;
 
-	private String testFilePath;
-
-	@BeforeEach
-	void setUp() throws IOException {
-		testFilePath = new ClassPathResource("files").getFile().getAbsolutePath();
-	}
-
 	@Test
 	void testSendInvoiceSuccessful() throws IOException {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
@@ -120,13 +111,13 @@ class MessagingIntegrationTests {
 	void testSendInvoiceFailed(MessageStatus resultStatus) throws IOException {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
 
-		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(messagingMapper.toDigitalInvoiceRequest(invoice)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(any(String.class), any(DigitalInvoiceRequest.class)))
 			.thenReturn(new MessageResult()
 				.deliveries(List.of(new DeliveryResult()
 					.status(resultStatus))));
 
-		final var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
+		final var result = messagingIntegration.sendInvoice(MUNICIPALITY_ID, invoice);
 		assertThat(result).isEqualTo(NOT_SENT);
 
 		verify(mockClient).sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class));
@@ -141,7 +132,7 @@ class MessagingIntegrationTests {
 		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
 			.thenThrow(new ResponseStatusException(INTERNAL_SERVER_ERROR));
 
-		final var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
+		final var result = messagingIntegration.sendInvoice(MUNICIPALITY_ID, invoice);
 
 		assertThat(result).isEqualTo(NOT_SENT);
 
@@ -154,11 +145,11 @@ class MessagingIntegrationTests {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
 		final var certificateException = Problem.valueOf(Status.BAD_GATEWAY, "prefix [invalid_token_response] suffix");
 
-		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
+		when(messagingMapper.toDigitalInvoiceRequest(invoice)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
 			.thenThrow(certificateException);
 
-		final var e = assertThrows(ThrowableProblem.class, () -> messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID));
+		final var e = assertThrows(ThrowableProblem.class, () -> messagingIntegration.sendInvoice(MUNICIPALITY_ID, invoice));
 
 		assertThat(e).isSameAs(certificateException);
 		verify(mockClient).sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class));

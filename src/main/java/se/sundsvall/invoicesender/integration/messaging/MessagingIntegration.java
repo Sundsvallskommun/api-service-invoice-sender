@@ -2,6 +2,7 @@ package se.sundsvall.invoicesender.integration.messaging;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
@@ -152,6 +153,6 @@ public class MessagingIntegration {
 			Date: %s
 			Invoices sent: %s
 			Invoices not sent: %s
-			""".formatted(batch.getFilename(), date, numberOfSentInvoices, numberOfNotSentInvoices);
+			""".formatted(substringBefore(batch.getFilename(), "."), date, numberOfSentInvoices, numberOfNotSentInvoices);
 	}
 }
