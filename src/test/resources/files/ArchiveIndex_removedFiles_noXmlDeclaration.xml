@@ -7,7 +7,8 @@
 		<InvoiceType>00</InvoiceType>
 		<InvoiceNo>123</InvoiceNo>
 		<InvoiceDate>2024-02-02</InvoiceDate>
-		<AGF>00</AGF>
+		<AGF>00 
+		</AGF>
 		<PaymentReference>9001011235</PaymentReference>
 		<TotalAmount>1000.00</TotalAmount>
 		<Postage>B</Postage>
@@ -31,7 +32,8 @@
 		<InvoiceNo>123</InvoiceNo>
 		<InvoiceDate>2024-02-02</InvoiceDate>
 		<DueDate>2024-03-03</DueDate>
-		<AGF>00</AGF>
+		<AGF>00 
+		</AGF>
 		<PaymentReference>9001011236</PaymentReference>
 		<TotalAmount>1000.00</TotalAmount>
 		<Postage>B</Postage>

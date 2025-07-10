@@ -1,5 +1,7 @@
 package se.sundsvall.invoicesender.service.util;
 
+import static java.util.Optional.ofNullable;
+
 import io.micrometer.common.util.StringUtils;
 import java.io.IOException;
 import java.io.StringReader;
@@ -38,33 +40,33 @@ public final class XmlUtil {
 	private static final ThreadLocal<XPath> threadLocalXPath = ThreadLocal.withInitial(() -> {
 		try {
 			return XPathFactory.newInstance().newXPath();
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new XmlException("Unable to create XPath instance", e);
 		}
 	});
 
 	private static final ThreadLocal<DocumentBuilder> threadLocalDocumentBuilder = ThreadLocal.withInitial(() -> {
 		try {
-			var documentBuilderFactory = DocumentBuilderFactory.newInstance();
+			final var documentBuilderFactory = DocumentBuilderFactory.newInstance();
 			documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
 			documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 			return documentBuilderFactory.newDocumentBuilder();
-		} catch (ParserConfigurationException e) {
+		} catch (final ParserConfigurationException e) {
 			throw new XmlException("Unable to create DocumentBuilder instance", e);
 		}
 	});
 
 	private static final ThreadLocal<Transformer> threadLocalTransformer = ThreadLocal.withInitial(() -> {
 		try {
-			var transformerFactory = TransformerFactory.newInstance();
+			final var transformerFactory = TransformerFactory.newInstance();
 			transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
 			transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
 
-			var transformer = transformerFactory.newTransformer();
+			final var transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 			return transformer;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new XmlException("Unable to create TransformerFactory instance", e);
 		}
 	});
@@ -92,22 +94,22 @@ public final class XmlUtil {
 		validateInput(xml, xpathExpression);
 		LOG.info("Removing nodes from xml matching XPath {}", xpathExpression);
 		try {
-			var document = toDocument(xml);
+			final var document = toDocument(xml);
 
 			// Find the matching nodes
-			var xPath = getXPath();
-			var nodesToRemove = (NodeList) xPath.evaluate(xpathExpression, document, XPathConstants.NODESET);
+			final var xPath = getXPath();
+			final var nodesToRemove = (NodeList) xPath.evaluate(xpathExpression, document, XPathConstants.NODESET);
 
 			// And remove them
 			for (var i = 0; i < nodesToRemove.getLength(); i++) {
-				var nodeToRemove = nodesToRemove.item(i);
+				final var nodeToRemove = nodesToRemove.item(i);
 				nodeToRemove.getParentNode().removeChild(nodesToRemove.item(i));
 			}
 
 			return toString(document);
-		} catch (XPathExpressionException e) {
+		} catch (final XPathExpressionException e) {
 			throw new XmlException("Invalid XPath expression", e);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new XmlException("Unable to parse XML", e);
 		} finally {
 			threadLocalXPath.remove();
@@ -124,11 +126,11 @@ public final class XmlUtil {
 	public static Node find(final String xml, final String xpathExpression) {
 		validateInput(xml, xpathExpression);
 		try {
-			XPath xPath = getXPath();
-			var document = toDocument(xml);
+			final var xPath = getXPath();
+			final var document = toDocument(xml);
 
 			return (Node) xPath.evaluate(xpathExpression, document, XPathConstants.NODE);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new XmlException("Unable to parse XML", e);
 		} finally {
 			threadLocalXPath.remove();
@@ -147,12 +149,12 @@ public final class XmlUtil {
 			LOG.warn("Invalid input: node or childNodeName is null or empty");
 			return "";
 		}
-		var childNodes = node.getChildNodes();
 
+		final var childNodes = node.getChildNodes();
 		for (var i = 0; i < childNodes.getLength(); i++) {
-			var childNode = childNodes.item(i);
+			final var childNode = childNodes.item(i);
 			if (childNode.getNodeName().equals(childNodeName)) {
-				return childNode.getTextContent();
+				return ofNullable(childNode.getTextContent()).map(String::trim).orElse("");
 			}
 		}
 
@@ -161,7 +163,7 @@ public final class XmlUtil {
 
 	private static Document toDocument(final String xml) throws IOException, SAXException {
 		try (var stringReader = new StringReader(xml)) {
-			var inputSource = new InputSource(stringReader);
+			final var inputSource = new InputSource(stringReader);
 			return getDocumentBuilder().parse(inputSource);
 		} finally {
 			threadLocalDocumentBuilder.remove();
@@ -183,7 +185,7 @@ public final class XmlUtil {
 
 	/**
 	 * Sanity check input parameters.
-	 * 
+	 *
 	 * @param xml             the XML string
 	 * @param xpathExpression the XPath expression
 	 */
@@ -197,6 +199,8 @@ public final class XmlUtil {
 	}
 
 	public static class XmlException extends RuntimeException {
+		private static final long serialVersionUID = 3792852597914506707L;
+
 		public XmlException(final String message) {
 			super(message);
 		}
