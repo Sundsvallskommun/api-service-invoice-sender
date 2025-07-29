@@ -160,4 +160,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 
 
-Copyright (c) 2023 Sundsvalls kommun
+Copyright (c) 2025 Sundsvalls kommun
