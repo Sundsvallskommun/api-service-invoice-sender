@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IN_PROGRESS;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
@@ -102,10 +103,9 @@ public class InvoiceProcessor {
 
 				// Create the cron trigger
 				final var cronTrigger = new CronTrigger(cronExpression);
+
 				// Schedule it
-				taskScheduler.schedule(() -> {
-					executeBatch(LocalDate.now(), municipalityId, batchName);
-				}, cronTrigger);
+				taskScheduler.schedule(() -> executeBatch(LocalDate.now(), municipalityId, batchName), cronTrigger);
 			});
 		});
 	}
@@ -118,12 +118,13 @@ public class InvoiceProcessor {
 	 */
 	public void run(final LocalDate date, final String municipalityId) {
 		raindanceIntegrations.get(municipalityId).getBatchSetups()
-			.forEach(batchName -> {
-				executeBatch(date, municipalityId, batchName);
-			});
+			.forEach(batchName -> executeBatch(date, municipalityId, batchName));
 	}
 
-	private void executeBatch(final LocalDate date, final String municipalityId, String batchName) {
+	private void executeBatch(LocalDate date, String municipalityId, String batchName) {
+		municipalityId = sanitizeForLogging(municipalityId);
+		batchName = sanitizeForLogging(batchName);
+
 		try {
 			LOG.info("Started process of batch with prefix {} for municipality {}", batchName, municipalityId);
 			run(date, municipalityId, batchName);
