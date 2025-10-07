@@ -1,102 +1,267 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <Index>
 	<file>
-		<filename>Faktura_00000001_to_9001011234.pdf</filename>
-		<Reminder>0</Reminder>
-		<CustomerNumber>9001011234</CustomerNumber>
-		<SocSec />
-		<InvoiceType>00</InvoiceType>
-		<InvoiceNo>123</InvoiceNo>
-		<InvoiceDate>2024-02-02</InvoiceDate>
-		<DueDate>2024-03-03</DueDate>
-		<AGF>00 
-		</AGF>
-		<PaymentReference>9001011234</PaymentReference>
-		<TotalAmount>1000.00</TotalAmount>
-		<Postage>B</Postage>
-		<BuyerParty_Name>John Doe</BuyerParty_Name>
-		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
-		<BuyerParty_Street />
-		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
-		<BuyerParty_City>Testvall</BuyerParty_City>
-		<BuyerParty_Country />
-		<FUI_name />
-		<PaymentType />
-		<PaymentNo>1234-1234</PaymentNo>
-		<Currency>SEK</Currency>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225035_to_5502272684.pdf</filename>
+		<fakturanr>54225035</fakturanr>
+		<ocrnr>5422503507</ocrnr>
+		<belopp_att_betala>875.00</belopp_att_betala>
+		<kundid>5502272684</kundid>
+		<fakturadatum>2025-09-15</fakturadatum>
+		<forfallodatum>2025-10-15</forfallodatum>
+		<kund_namn1>Testsson Test 1</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan 1</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro>AG</autogiro>
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
 	</file>
 	<file>
-		<filename>Faktura_00000002_to_9101011235.pdf</filename>
-		<Reminder>0</Reminder>
-		<CustomerNumber>9101011235</CustomerNumber>
-		<SocSec />
-		<InvoiceType>00</InvoiceType>
-		<InvoiceNo>123</InvoiceNo>
-		<InvoiceDate>2024-02-02</InvoiceDate>
-		<AGF>00 
-		</AGF>
-		<PaymentReference>9001011235</PaymentReference>
-		<TotalAmount>1000.00</TotalAmount>
-		<Postage>B</Postage>
-		<BuyerParty_Name>John Doe</BuyerParty_Name>
-		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
-		<BuyerParty_Street />
-		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
-		<BuyerParty_City>Testvall</BuyerParty_City>
-		<BuyerParty_Country />
-		<FUI_name />
-		<PaymentType />
-		<PaymentNo>1234-1234</PaymentNo>
-		<Currency>SEK</Currency>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225036_to_5703122621.pdf</filename>
+		<fakturanr>54225036</fakturanr>
+		<ocrnr>5422503606</ocrnr>
+		<belopp_att_betala /> <!-- Invalid for testing -->
+		<kundid>5703122621</kundid>
+		<fakturadatum>2025-09-15</fakturadatum>
+		<forfallodatum>2025-10-15</forfallodatum>
+		<kund_namn1>Testsson Test 2</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan 2</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro />
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
 	</file>
 	<file>
-		<filename>Faktura_00000003_to_9201011236.pdf</filename>
-		<Reminder>0</Reminder>
-		<CustomerNumber>9201011236</CustomerNumber>
-		<SocSec />
-		<InvoiceType>00</InvoiceType>
-		<InvoiceNo>123</InvoiceNo>
-		<InvoiceDate>2024-02-02</InvoiceDate>
-		<DueDate>2024-03-03</DueDate>
-		<AGF>00 
-		</AGF>
-		<PaymentReference>9001011236</PaymentReference>
-		<TotalAmount>1000.00</TotalAmount>
-		<Postage>B</Postage>
-		<BuyerParty_Name>John Doe</BuyerParty_Name>
-		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
-		<BuyerParty_Street />
-		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
-		<BuyerParty_City>Testvall</BuyerParty_City>
-		<BuyerParty_Country />
-		<FUI_name />
-		<PaymentType />
-		<PaymentNo>1234-1234</PaymentNo>
-		<Currency>SEK</Currency>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225038_to_5811112217.pdf</filename>
+		<fakturanr>54225038</fakturanr>
+		<ocrnr>5422503804</ocrnr>
+		<belopp_att_betala>1168.00</belopp_att_betala>
+		<kundid>5811112217</kundid>
+		<fakturadatum>2025-09-15</fakturadatum>
+		<forfallodatum>2025-10-15</forfallodatum>
+		<kund_namn1>Testsson Test 3</kund_namn1>
+		<kund_namn2>C/O Andersson</kund_namn2>
+		<kund_postadress>Testgatan 3</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro />  <!-- Blank for testing -->
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
 	</file>
 	<file>
-		<filename>Faktura_00000004_to_9301011237.pdf</filename>
-		<Reminder>0</Reminder>
-		<CustomerNumber>9301011237</CustomerNumber>
-		<SocSec />
-		<InvoiceType>00</InvoiceType>
-		<InvoiceNo>123</InvoiceNo>
-		<InvoiceDate>2024-02-02</InvoiceDate>
-		<DueDate>2024-03-03</DueDate>
-		<AGF>00 
-		</AGF>
-		<PaymentReference>9001011237</PaymentReference>
-		<TotalAmount>1000.00</TotalAmount>
-		<Postage>B</Postage>
-		<BuyerParty_Name>John Doe</BuyerParty_Name>
-		<BuyerParty_CareOf>Testtorget</BuyerParty_CareOf>
-		<BuyerParty_Street />
-		<BuyerParty_ZipCode>123 45</BuyerParty_ZipCode>
-		<BuyerParty_City>Testvall</BuyerParty_City>
-		<BuyerParty_Country />
-		<FUI_name />
-		<PaymentType />
-		<PaymentNo>1234-1234</PaymentNo>
-		<Currency>SEK</Currency>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225039_to_5502272684.pdf</filename>
+		<fakturanr>54225039</fakturanr>
+		<ocrnr>5422503903</ocrnr>
+		<belopp_att_betala>1563.00</belopp_att_betala>
+		<kundid>5502272684</kundid>
+		<fakturadatum>2025-09-15</fakturadatum>
+		<forfallodatum>2025-10-15</forfallodatum>
+		<kund_namn1>Testsson Test 1</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan 1</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro>AG</autogiro>
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
+	</file>
+	<file>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225041_to_5502272684.pdf</filename>
+		<fakturanr>54225041</fakturanr>
+		<ocrnr>5422504109</ocrnr>
+		<belopp_att_betala>1500.00</belopp_att_betala>
+		<kundid>5502272684</kundid>
+		<fakturadatum>2025-08-01</fakturadatum>
+		<forfallodatum>2025-08-31</forfallodatum>
+		<kund_namn1>Testsson Test 1</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan 1</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro>AG</autogiro>
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
+	</file>
+	<file>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225042_to_6103213499.pdf</filename>
+		<fakturanr>54225042</fakturanr>
+		<ocrnr>5422504208</ocrnr>
+		<belopp_att_betala>985.00</belopp_att_betala>
+		<kundid>6103213499</kundid>
+		<fakturadatum>2025-09-16</fakturadatum>
+		<forfallodatum>2025-10-16</forfallodatum>
+		<kund_namn1>Testsson Utland</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan Utland 1</kund_postadress>
+		<kund_postnummer />
+		<kund_postort />
+		<kund_land>Norway</kund_land>
+		<autogiro />
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
+	</file>
+	<file>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225059_to_5703122621.pdf</filename>
+		<fakturanr>54225059</fakturanr>
+		<ocrnr>5422505908</ocrnr>
+		<belopp_att_betala>1719.00</belopp_att_betala>
+		<kundid>5703122621</kundid>
+		<fakturadatum>2025-09-17</fakturadatum>
+		<forfallodatum>2025-10-17</forfallodatum>
+		<kund_namn1>Testsson Test 2</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan 2</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro />
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
+	</file>
+	<file>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225061_to_5703122621.pdf</filename>
+		<fakturanr>54225061</fakturanr>
+		<ocrnr>5422506104</ocrnr>
+		<belopp_att_betala>438.00</belopp_att_betala>
+		<kundid>5703122621</kundid>
+		<fakturadatum>2025-09-17</fakturadatum>
+		<forfallodatum>2025-10-17</forfallodatum>
+		<kund_namn1>Testsson Test 2</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan 2</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro />
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
+	</file>
+	<file>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Faktura_54225062_to_6103213499.pdf</filename>
+		<fakturanr>54225062</fakturanr>
+		<ocrnr>5422506203</ocrnr>
+		<belopp_att_betala>1719.00</belopp_att_betala>
+		<kundid>6103213499</kundid>
+		<fakturadatum>2025-09-17</fakturadatum>
+		<forfallodatum>2025-10-17</forfallodatum>
+		<kund_namn1>Testsson Utland</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan Utland 1</kund_postadress>
+		<kund_postnummer />
+		<kund_postort />
+		<kund_land>Norway</kund_land>
+		<autogiro />
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
+	</file>
+	<file>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Kreditfaktura_54225037_to_5811112217.pdf</filename>
+		<fakturanr>54225037</fakturanr>
+		<ocrnr>5422503705</ocrnr>
+		<belopp_att_betala>-920.00</belopp_att_betala>
+		<kundid>5811112217</kundid>
+		<fakturadatum>2025-09-15</fakturadatum>
+		<forfallodatum>2025-10-15</forfallodatum>
+		<kund_namn1>Testsson Test 3</kund_namn1>
+		<kund_namn2>C/O Andersson</kund_namn2>
+		<kund_postadress>Testgatan 3</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro>AG</autogiro>
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
+	</file>
+	<file>
+		<idatakundnr>3910</idatakundnr>
+		<idatarutinnr>3910101</idatarutinnr>
+		<filename>Kreditfaktura_54225060_to_5703122621.pdf</filename>
+		<fakturanr>54225060</fakturanr>
+		<ocrnr>5422506005</ocrnr>
+		<belopp_att_betala>-1875.00</belopp_att_betala>
+		<kundid>5703122621</kundid>
+		<fakturadatum>2025-09-17</fakturadatum>
+		<forfallodatum>2025-10-17</forfallodatum>
+		<kund_namn1>Testsson Test 2</kund_namn1>
+		<kund_namn2 />
+		<kund_postadress>Testgatan 2</kund_postadress>
+		<kund_postnummer>865 33</kund_postnummer>
+		<kund_postort>Sundsvall</kund_postort>
+		<kund_land>Sweden</kund_land>
+		<autogiro />
+		<ag_betalare />
+		<retur />
+		<gironr>5989-2810</gironr>
+		<bankkod />
+		<personnummer />
+		<betalningssatt />
 	</file>
 </Index>

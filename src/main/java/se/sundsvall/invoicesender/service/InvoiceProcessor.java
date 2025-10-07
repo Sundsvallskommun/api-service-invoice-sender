@@ -332,14 +332,13 @@ public class InvoiceProcessor {
 		final var result = XmlUtil.find(archiveIndex, xpathExpression);
 
 		// Extract the item metadata
-		final var invoiceNumber = XmlUtil.getChildNodeText(result, "InvoiceNo");
-		final var invoiceDate = XmlUtil.getChildNodeText(result, "InvoiceDate");
-		final var dueDate = XmlUtil.getChildNodeText(result, "DueDate");
-		final var payable = !"01".equals(XmlUtil.getChildNodeText(result, "AGF"));
-		final var reminder = "1".equals(XmlUtil.getChildNodeText(result, "Reminder"));
-		final var accountNumber = XmlUtil.getChildNodeText(result, "PaymentNo");
-		final var paymentReference = XmlUtil.getChildNodeText(result, "PaymentReference");
-		final var totalAmount = XmlUtil.getChildNodeText(result, "TotalAmount");
+		final var invoiceNumber = XmlUtil.getChildNodeText(result, "fakturanr");
+		final var invoiceDate = XmlUtil.getChildNodeText(result, "fakturadatum");
+		final var dueDate = XmlUtil.getChildNodeText(result, "forfallodatum");
+		final var payable = XmlUtil.getChildNodeText(result, "autogiro").isBlank();
+		final var accountNumber = XmlUtil.getChildNodeText(result, "gironr");
+		final var paymentReference = XmlUtil.getChildNodeText(result, "ocrnr");
+		final var totalAmount = XmlUtil.getChildNodeText(result, "belopp_att_betala");
 
 		// Check if we've managed to extract all required metadata fields. If not - mark it as incomplete and
 		// bail out early since we won't do any further processing on the item
@@ -354,7 +353,6 @@ public class InvoiceProcessor {
 			.withInvoiceDate(invoiceDate)
 			.withDueDate(dueDate)
 			.withPayable(payable)
-			.withReminder(reminder)
 			.withAccountNumber(accountNumber)
 			.withPaymentReference(paymentReference)
 			.withTotalAmount(totalAmount));

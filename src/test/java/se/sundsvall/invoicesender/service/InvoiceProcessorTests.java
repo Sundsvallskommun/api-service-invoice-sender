@@ -148,23 +148,23 @@ class InvoiceProcessorTests {
 	}
 
 	/**
-	 * Test scenario where item have complete metadata.
+	 * Test scenario where item have complete metadata. Uses an invoice with populated autogiro field, payable should be
+	 * false.
 	 */
 	@Test
 	void extractItemMetadata_1(@Load("/files/ArchiveIndex.xml") final String xml) {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
+		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_54225035_to_5502272684.pdf"));
 
 		invoiceProcessor.extractItemMetadata(item, xml);
 
 		assertThat(item.getMetadata()).satisfies(metadata -> {
-			assertThat(metadata.getInvoiceNumber()).isEqualTo("123");
-			assertThat(metadata.getInvoiceDate()).isEqualTo("2024-02-02");
-			assertThat(metadata.getDueDate()).isEqualTo("2024-03-03");
-			assertThat(metadata.isPayable()).isTrue();
-			assertThat(metadata.isReminder()).isFalse();
-			assertThat(metadata.getAccountNumber()).isEqualTo("1234-1234");
-			assertThat(metadata.getPaymentReference()).isEqualTo("9001011234");
-			assertThat(metadata.getTotalAmount()).isEqualTo("1000.00");
+			assertThat(metadata.getInvoiceNumber()).isEqualTo("54225035");
+			assertThat(metadata.getInvoiceDate()).isEqualTo("2025-09-15");
+			assertThat(metadata.getDueDate()).isEqualTo("2025-10-15");
+			assertThat(metadata.isPayable()).isFalse();
+			assertThat(metadata.getAccountNumber()).isEqualTo("5989-2810");
+			assertThat(metadata.getPaymentReference()).isEqualTo("5422503507");
+			assertThat(metadata.getTotalAmount()).isEqualTo("875.00");
 		});
 		assertThat(item.getStatus()).isEqualTo(UNHANDLED);
 	}
@@ -175,11 +175,32 @@ class InvoiceProcessorTests {
 	 */
 	@Test
 	void extractItemMetadata_2(@Load("/files/ArchiveIndex.xml") final String xml) {
-		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000002_to_9101011235.pdf"));
+		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_54225036_to_5703122621.pdf"));
 
 		invoiceProcessor.extractItemMetadata(item, xml);
 
 		assertThat(item.getStatus()).isEqualTo(METADATA_INCOMPLETE);
+	}
+
+	/**
+	 * Test scenario where item have complete metadata. Uses an invoice with blank autogiro field, payable should be true.
+	 */
+	@Test
+	void extractItemMetadata_3(@Load("/files/ArchiveIndex.xml") final String xml) {
+		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_54225038_to_5811112217.pdf"));
+
+		invoiceProcessor.extractItemMetadata(item, xml);
+
+		assertThat(item.getMetadata()).satisfies(metadata -> {
+			assertThat(metadata.getInvoiceNumber()).isEqualTo("54225038");
+			assertThat(metadata.getInvoiceDate()).isEqualTo("2025-09-15");
+			assertThat(metadata.getDueDate()).isEqualTo("2025-10-15");
+			assertThat(metadata.isPayable()).isTrue();
+			assertThat(metadata.getAccountNumber()).isEqualTo("5989-2810");
+			assertThat(metadata.getPaymentReference()).isEqualTo("5422503804");
+			assertThat(metadata.getTotalAmount()).isEqualTo("1168.00");
+		});
+		assertThat(item.getStatus()).isEqualTo(UNHANDLED);
 	}
 
 	@Test
@@ -345,21 +366,21 @@ class InvoiceProcessorTests {
 	@Test
 	void run_2() throws IOException {
 		final var item = createItemEntity(itemBeingModified -> itemBeingModified.setFilename("Faktura_00000001_to_9001011234.pdf"));
-		final var invoiceProessorSpy = spy(invoiceProcessor);
-		runMethodCommonStubs(item, invoiceProessorSpy);
+		final var invoiceProcessorSpy = spy(invoiceProcessor);
+		runMethodCommonStubs(item, invoiceProcessorSpy);
 
-		doAnswer(updateItem(INVOICE, IN_PROGRESS)).when(invoiceProessorSpy).markItems(item, MUNICIPALITY_ID);
-		doAnswer(updateItem(METADATA_INCOMPLETE)).when(invoiceProessorSpy).extractItemMetadata(item, "mocked-string");
+		doAnswer(updateItem(INVOICE, IN_PROGRESS)).when(invoiceProcessorSpy).markItems(item, MUNICIPALITY_ID);
+		doAnswer(updateItem(METADATA_INCOMPLETE)).when(invoiceProcessorSpy).extractItemMetadata(item, "mocked-string");
 
-		invoiceProessorSpy.run(LocalDate.now(), MUNICIPALITY_ID, "BatchName");
+		invoiceProcessorSpy.run(LocalDate.now(), MUNICIPALITY_ID, "BatchName");
 
-		verify(invoiceProessorSpy).markItems(item, MUNICIPALITY_ID);
-		verify(invoiceProessorSpy).extractItemMetadata(item, "mocked-string");
-		verify(invoiceProessorSpy, never()).extractInvoiceRecipientLegalId(any());
-		verify(invoiceProessorSpy, never()).validateLegalId(any());
-		verify(invoiceProessorSpy, never()).markProtectedIdentityItems(any(), eq(MUNICIPALITY_ID));
-		verify(invoiceProessorSpy, never()).fetchInvoiceRecipientPartyIds(any(), any());
-		verify(invoiceProessorSpy, never()).sendDigitalInvoices(any(), any(), any());
+		verify(invoiceProcessorSpy).markItems(item, MUNICIPALITY_ID);
+		verify(invoiceProcessorSpy).extractItemMetadata(item, "mocked-string");
+		verify(invoiceProcessorSpy, never()).extractInvoiceRecipientLegalId(any());
+		verify(invoiceProcessorSpy, never()).validateLegalId(any());
+		verify(invoiceProcessorSpy, never()).markProtectedIdentityItems(any(), eq(MUNICIPALITY_ID));
+		verify(invoiceProcessorSpy, never()).fetchInvoiceRecipientPartyIds(any(), any());
+		verify(invoiceProcessorSpy, never()).sendDigitalInvoices(any(), any(), any());
 		verify(dbIntegrationMock).persistItem(item);
 	}
 
