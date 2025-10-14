@@ -11,7 +11,7 @@
 					},
 					"type": "INVOICE",
 					"subject": "someSubject",
-					"reference": "Faktura #123",
+					"reference": "Faktura #54225035",
 					"payable": true,
 					"details": {
 						"amount": 1000.0,

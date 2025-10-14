@@ -22,8 +22,8 @@ class XmlUtilTests {
 
 	@Test
 	void testRemove(@Load("/files/ArchiveIndex.xml") String originalXml, @Load("/files/ArchiveIndex_removedFiles_noXmlDeclaration.xml") String wantedXml) {
-		var xpathExpressionFile1 = "//file[filename='Faktura_00000001_to_9001011234.pdf']";
-		var xpathExpressionFile2 = "//file[filename='Faktura_00000004_to_9301011237.pdf']";
+		var xpathExpressionFile1 = "//file[filename='Faktura_54225035_to_5502272684.pdf']";
+		var xpathExpressionFile2 = "//file[filename='Faktura_54225036_to_5703122621.pdf']";
 
 		// Remove two <file> elements from the original XML
 		var first = XmlUtil.remove(originalXml, xpathExpressionFile1);
@@ -47,33 +47,34 @@ class XmlUtilTests {
 
 	@Test
 	void testFind(@Load("/files/ArchiveIndex.xml") final String originalXml) {
-		var xpathExpression = "//file[filename='Faktura_00000001_to_9001011234.pdf']";
+		var xpathExpression = "//file[filename='Faktura_54225041_to_5502272684.pdf']";
 
 		var result = XmlUtil.find(originalXml, xpathExpression);
 
 		assertThat(result).isNotNull();
 
-		assertThat(XmlUtil.getChildNodeText(result, "filename")).isEqualTo("Faktura_00000001_to_9001011234.pdf");
-		assertThat(XmlUtil.getChildNodeText(result, "CustomerNumber")).isEqualTo("9001011234");
-		assertThat(XmlUtil.getChildNodeText(result, "SocSec")).isEmpty();
-		assertThat(XmlUtil.getChildNodeText(result, "InvoiceType")).isEqualTo("00");
-		assertThat(XmlUtil.getChildNodeText(result, "InvoiceNo")).isEqualTo("123");
-		assertThat(XmlUtil.getChildNodeText(result, "InvoiceDate")).isEqualTo("2024-02-02");
-		assertThat(XmlUtil.getChildNodeText(result, "DueDate")).isEqualTo("2024-03-03");
-		assertThat(XmlUtil.getChildNodeText(result, "AGF")).isEqualTo("00");
-		assertThat(XmlUtil.getChildNodeText(result, "PaymentReference")).isEqualTo("9001011234");
-		assertThat(XmlUtil.getChildNodeText(result, "TotalAmount")).isEqualTo("1000.00");
-		assertThat(XmlUtil.getChildNodeText(result, "Postage")).isEqualTo("B");
-		assertThat(XmlUtil.getChildNodeText(result, "BuyerParty_Name")).isEqualTo("John Doe");
-		assertThat(XmlUtil.getChildNodeText(result, "BuyerParty_CareOf")).isEqualTo("Testtorget");
-		assertThat(XmlUtil.getChildNodeText(result, "BuyerParty_Street")).isEmpty();
-		assertThat(XmlUtil.getChildNodeText(result, "BuyerParty_ZipCode")).isEqualTo("123 45");
-		assertThat(XmlUtil.getChildNodeText(result, "BuyerParty_City")).isEqualTo("Testvall");
-		assertThat(XmlUtil.getChildNodeText(result, "BuyerParty_Country")).isEmpty();
-		assertThat(XmlUtil.getChildNodeText(result, "FUI_name")).isEmpty();
-		assertThat(XmlUtil.getChildNodeText(result, "PaymentType")).isEmpty();
-		assertThat(XmlUtil.getChildNodeText(result, "PaymentNo")).isEqualTo("1234-1234");
-		assertThat(XmlUtil.getChildNodeText(result, "Currency")).isEqualTo("SEK");
+		assertThat(XmlUtil.getChildNodeText(result, "filename")).isEqualTo("Faktura_54225041_to_5502272684.pdf");
+		assertThat(XmlUtil.getChildNodeText(result, "idatakundnr")).isEqualTo("3910");
+		assertThat(XmlUtil.getChildNodeText(result, "idatarutinnr")).isEqualTo("3910101");
+		assertThat(XmlUtil.getChildNodeText(result, "fakturanr")).isEqualTo("54225041");
+		assertThat(XmlUtil.getChildNodeText(result, "ocrnr")).isEqualTo("5422504109");
+		assertThat(XmlUtil.getChildNodeText(result, "belopp_att_betala")).isEqualTo("1500.00");
+		assertThat(XmlUtil.getChildNodeText(result, "kundid")).isEqualTo("5502272684");
+		assertThat(XmlUtil.getChildNodeText(result, "fakturadatum")).isEqualTo("2025-08-01");
+		assertThat(XmlUtil.getChildNodeText(result, "forfallodatum")).isEqualTo("2025-08-31");
+		assertThat(XmlUtil.getChildNodeText(result, "kund_namn1")).isEqualTo("Testsson Test 1");
+		assertThat(XmlUtil.getChildNodeText(result, "kund_namn2")).isBlank();
+		assertThat(XmlUtil.getChildNodeText(result, "kund_postadress")).isEqualTo("Testgatan 1");
+		assertThat(XmlUtil.getChildNodeText(result, "kund_postnummer")).isEqualTo("865 33");
+		assertThat(XmlUtil.getChildNodeText(result, "kund_postort")).isEqualTo("Sundsvall");
+		assertThat(XmlUtil.getChildNodeText(result, "kund_land")).isEqualTo("Sweden");
+		assertThat(XmlUtil.getChildNodeText(result, "autogiro")).isEqualTo("AG");
+		assertThat(XmlUtil.getChildNodeText(result, "ag_betalare")).isBlank();
+		assertThat(XmlUtil.getChildNodeText(result, "retur")).isBlank();
+		assertThat(XmlUtil.getChildNodeText(result, "gironr")).isEqualTo("5989-2810");
+		assertThat(XmlUtil.getChildNodeText(result, "bankkod")).isBlank();
+		assertThat(XmlUtil.getChildNodeText(result, "personnummer")).isBlank();
+		assertThat(XmlUtil.getChildNodeText(result, "betalningssatt")).isBlank();
 	}
 
 	@Test
@@ -89,6 +90,20 @@ class XmlUtilTests {
 		var faultyXml = createFaultyXml();
 		assertThatExceptionOfType(XmlUtil.XmlException.class).isThrownBy(() -> XmlUtil.remove(faultyXml, "//parent/child"))
 			.withMessage("Unable to parse XML")
+			.withCauseInstanceOf(Exception.class);
+	}
+
+	@Test
+	void testRemove_shouldThrowException_whenInvalidXPath() {
+		var validXml = """
+			<root>
+				<parent>
+					<child>some child content</child>
+				</parent>
+				<grandchild>some other content</grandchild>
+			</root>""";
+		assertThatExceptionOfType(XmlUtil.XmlException.class).isThrownBy(() -> XmlUtil.remove(validXml, "///invalidXpath"))
+			.withMessage("Invalid XPath expression")
 			.withCauseInstanceOf(Exception.class);
 	}
 

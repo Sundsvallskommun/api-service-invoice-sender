@@ -86,7 +86,6 @@ public class RaindanceIntegration {
 
 	public List<BatchEntity> readBatches(final LocalDate date, final String batchName, final String municipalityId) throws IOException {
 		LOG.info("Reading batch(es) for {}", date);
-
 		var datePart = date.format(DATE_FORMATTER);
 		try (var share = new SmbFile(incomingShareUrl, context)) {
 			var batches = new ArrayList<BatchEntity>();
