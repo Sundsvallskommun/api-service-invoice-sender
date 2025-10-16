@@ -133,6 +133,12 @@ server:
 
 ### Additional Notes
 
+- **How to create zip-files for testing**
+
+  **Make a folder with the ArchiveIndex.xml and all the pdf-files**
+  - Run: `for dir in */; do zip -r "${dir%/}.zip" "$dir"; done`*
+  - Then run `for zip in *.zip; do 7z a "${zip%.zip}.7z" "$zip"; done`*
+
 - **Application Profiles:**
 
   Use Spring profiles (`dev`, `prod`, etc.) to manage different configurations for different environments.
