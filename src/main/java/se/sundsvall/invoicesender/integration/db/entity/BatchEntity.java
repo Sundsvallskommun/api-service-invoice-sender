@@ -79,6 +79,10 @@ public class BatchEntity {
 	@Column(name = "data", columnDefinition = "LONGBLOB")
 	private byte[] data;
 
+	public long getTotalItemsExcludingArchiveIndex() {
+		return totalItems > 0 ? totalItems - 1 : 0;
+	}
+
 	public Integer getId() {
 		return id;
 	}
@@ -96,11 +100,11 @@ public class BatchEntity {
 		return date;
 	}
 
-	public void setDate(LocalDate date) {
+	public void setDate(final LocalDate date) {
 		this.date = date;
 	}
 
-	public BatchEntity withDate(LocalDate date) {
+	public BatchEntity withDate(final LocalDate date) {
 		this.date = date;
 		return this;
 	}
@@ -109,11 +113,11 @@ public class BatchEntity {
 		return data;
 	}
 
-	public void setData(byte[] data) {
+	public void setData(final byte[] data) {
 		this.data = data;
 	}
 
-	public BatchEntity withData(byte[] data) {
+	public BatchEntity withData(final byte[] data) {
 		this.data = data;
 		return this;
 	}
@@ -122,11 +126,11 @@ public class BatchEntity {
 		return completed;
 	}
 
-	public void setCompleted(boolean completed) {
+	public void setCompleted(final boolean completed) {
 		this.completed = completed;
 	}
 
-	public BatchEntity withCompleted(boolean completed) {
+	public BatchEntity withCompleted(final boolean completed) {
 		this.completed = completed;
 		return this;
 	}
@@ -135,11 +139,11 @@ public class BatchEntity {
 		return targetPath;
 	}
 
-	public void setTargetPath(String targetPath) {
+	public void setTargetPath(final String targetPath) {
 		this.targetPath = targetPath;
 	}
 
-	public BatchEntity withTargetPath(String targetPath) {
+	public BatchEntity withTargetPath(final String targetPath) {
 		this.targetPath = targetPath;
 		return this;
 	}
@@ -313,7 +317,7 @@ public class BatchEntity {
 		if (this == o) {
 			return true;
 		}
-		if (o instanceof BatchEntity other) {
+		if (o instanceof final BatchEntity other) {
 			return id != null && id.equals(other.id);
 		}
 

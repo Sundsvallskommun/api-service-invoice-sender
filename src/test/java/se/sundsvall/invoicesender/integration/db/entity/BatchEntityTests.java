@@ -1,6 +1,7 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class BatchEntityTests {
 
@@ -24,10 +26,10 @@ class BatchEntityTests {
 	void testBuilderPattern() {
 		assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
-		var date = LocalDate.now();
-		var now = LocalDateTime.now();
+		final var date = LocalDate.now();
+		final var now = LocalDateTime.now();
 
-		var batchEntity = new BatchEntity()
+		final var batchEntity = new BatchEntity()
 			.withId(12345)
 			.withBasename("someBasename")
 			.withMunicipalityId("2281")
@@ -69,10 +71,10 @@ class BatchEntityTests {
 	void testSettersAndGetters() {
 		assertThat(new BatchEntity().getStartedAt()).isNotNull();
 
-		var date = LocalDate.now();
-		var now = LocalDateTime.now();
+		final var date = LocalDate.now();
+		final var now = LocalDateTime.now();
 
-		var batchEntity = new BatchEntity();
+		final var batchEntity = new BatchEntity();
 		batchEntity.setId(12345);
 		batchEntity.setBasename("someBasename");
 		batchEntity.setMunicipalityId("2281");
@@ -137,5 +139,21 @@ class BatchEntityTests {
 				Arguments.of(new BatchEntity(), "someString", false),
 				Arguments.of(new BatchEntity().withId(321).withBasename("baseName1"), new BatchEntity().withId(321).withBasename("baseName2"), true));
 		}
+
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("totalItemsProvider")
+	void testGetTotalItemsExcludingArchiveIndex(final String name, final BatchEntity batchEntity, final long expectedTotalItems) {
+		assertThat(batchEntity.getTotalItemsExcludingArchiveIndex()).isEqualTo(expectedTotalItems);
+
+	}
+
+	public static Stream<Arguments> totalItemsProvider() {
+		return Stream.of(
+			arguments("totalItems is greater than 0", new BatchEntity().withTotalItems(5L), 4L),
+			arguments("totalItems is 0", new BatchEntity().withTotalItems(0L), 0L),
+			arguments("totalItems is negative", new BatchEntity().withTotalItems(-3L), 0L) // Shouldn't happen but test anyway
+		);
 	}
 }
