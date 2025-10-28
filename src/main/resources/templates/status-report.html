@@ -26,8 +26,7 @@
     <th:block th:if="${batch.processingEnabled}">
     <tr>
         <td>Totalt antal fakturor:</td>
-		<!-- Subtract one as we don't want to count ArchiveIndex.xml. And make sure it doesn't go below 0 -->
-		<td th:text="${batch.totalItems - 1 > 0 ? batch.totalItems - 1 : 0}">[total items]</td>
+		<td th:text="${batch.totalItemsExcludingArchiveIndex}">[total items]</td>
     </tr>
     <tr>
         <td>Antal skickade som digital post:</td>
@@ -35,7 +34,7 @@
     </tr>
     <tr>
         <td>Antal ej behandlade:</td>
-        <td th:text="${batch.totalItems - batch.sentItems}">[unsent items]</td>
+		<td th:text="${batch.totalItemsExcludingArchiveIndex - batch.sentItems}">[unsent items]</td>
     </tr>
     <tr><td colspan="2" class="spacer"></td></tr>
     </th:block>
