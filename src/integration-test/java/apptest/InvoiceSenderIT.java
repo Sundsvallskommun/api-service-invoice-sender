@@ -20,10 +20,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.MountableFile;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.invoicesender.Application;
@@ -44,6 +44,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String RAINDANCE_INCOMING_DIR = "smb://localhost:%d/files/incoming/%s";
 	private static final String RAINDANCE_ARCHIVE_DIR = "smb://localhost:%d/files/archive/%s";
 	private static final String RAINDANCE_RETURN_DIR = "smb://localhost:%d/files/return/%s";
+	
 	@Container
 	public static GenericContainer<?> smbContainer = new GenericContainer<>("dockurr/samba")
 		.withExposedPorts(445)
@@ -51,8 +52,8 @@ class InvoiceSenderIT extends AbstractAppTest {
 			"NAME", "files",
 			"USER", "user",
 			"PASS", "p4ssw0rd"))
-		.withCopyToContainer(MountableFile.forClasspathResource("testdata"), "/storage/incoming")
-		.withTmpFs(Map.of("/storage/return", "rw", "/storage/archive", "rw"));
+		.withTmpFs(Map.of("/storage/return", "rw", "/storage/archive", "rw"))
+		.withClasspathResourceMapping("testdata", "/storage/incoming", BindMode.READ_WRITE);
 
 	private static int smbContainerPort;
 	private static CIFSContext cifsContext;
