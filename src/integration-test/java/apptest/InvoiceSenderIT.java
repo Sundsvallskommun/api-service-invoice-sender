@@ -44,13 +44,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String RAINDANCE_INCOMING_DIR = "smb://localhost:%d/files/incoming/%s";
 	private static final String RAINDANCE_ARCHIVE_DIR = "smb://localhost:%d/files/archive/%s";
 	private static final String RAINDANCE_RETURN_DIR = "smb://localhost:%d/files/return/%s";
-
-	@Autowired
-	private RaindanceIntegrationProperties raindanceIntegrationProperties;
-
-	private static int smbContainerPort;
-	private static CIFSContext cifsContext;
-
 	@Container
 	public static GenericContainer<?> smbContainer = new GenericContainer<>("dockurr/samba")
 		.withExposedPorts(445)
@@ -60,6 +53,10 @@ class InvoiceSenderIT extends AbstractAppTest {
 			"PASS", "p4ssw0rd"))
 		.withTmpFs(Map.of("/storage/return", "rw", "/storage/archive", "rw"))
 		.withClasspathResourceMapping("testdata", "/storage/incoming", BindMode.READ_WRITE);
+	private static int smbContainerPort;
+	private static CIFSContext cifsContext;
+	@Autowired
+	private RaindanceIntegrationProperties raindanceIntegrationProperties;
 
 	@DynamicPropertySource
 	static void afterSambaContainerStarted(final DynamicPropertyRegistry registry) {
@@ -78,6 +75,8 @@ class InvoiceSenderIT extends AbstractAppTest {
 				.withCredentials(new NtlmPasswordAuthenticator(
 					raindanceEnvironment.domain(), raindanceEnvironment.username(), raindanceEnvironment.password()));
 		}
+		smbContainer.execInContainer("sh", "-c", "chmod -R 777 /storage");
+
 	}
 
 	/**
@@ -101,7 +100,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_9301011234.pdf"));
 
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -109,7 +108,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			final var originalFile = new File(TESTDATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
@@ -136,7 +135,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 			new Invoice(Invoice.Status.NOT_SENT, "Faktura_00000004_to_20323217.pdf"));
 
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -144,7 +143,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			final var originalFile = new File(TESTDATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
@@ -169,7 +168,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 			new Invoice(Invoice.Status.SENT, "Faktura_00000002_to_202108022399.pdf"));
 
 		// Asserts that the ZIP in the return folder contains the expected entries
-		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isTrue();
 			assertThat(outFile.isFile()).isTrue();
 			assertArchiveIndex(invoices, outFile);
@@ -178,7 +177,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 
 		// Asserts that the original ZIP is equal to the ZIP in the archive folder
-		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			final var originalFile = new File(TESTDATA_DIR + File.separator + inputFile);
 			assertThat(extractZipFile(archiveFile)).usingRecursiveComparison().isEqualTo(extractZipFile(originalFile));
 		}
@@ -198,16 +197,16 @@ class InvoiceSenderIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 
 		// Asserts that there is no ZIP in the return folder
-		try (var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var outFile = new SmbFile(RAINDANCE_RETURN_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(outFile.exists()).isFalse(); // No return file should exist as execution has not processed file due to certificate problem
 		}
 		// Asserts that there is no ZIP in the archive folder
-		try (var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var archiveFile = new SmbFile(RAINDANCE_ARCHIVE_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			assertThat(archiveFile.exists()).isFalse(); // No archive file should exist as execution has not processed file due to certificate problem
 		}
 
 		// Asserts that the original ZIP is untouched
-		try (var rootFile = new SmbFile(RAINDANCE_INCOMING_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
+		try (final var rootFile = new SmbFile(RAINDANCE_INCOMING_DIR.formatted(smbContainerPort, inputFile), cifsContext)) {
 			// Invoices that are part of the ZIP file and should be there
 			final var expectedInvoiceEntries = List.of(
 				"Faktura_00000001_to_2107142388.pdf",
@@ -217,7 +216,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 		}
 	}
 
-	private void assertOriginalFile(SmbFile rootFile, final List<String> expectedInvoiceEntries) throws IOException {
+	private void assertOriginalFile(final SmbFile rootFile, final List<String> expectedInvoiceEntries) throws IOException {
 		final var zipEntries = extractZipFile(rootFile);
 		final var archiveIndex = zipEntries.get(ARCHIVE_INDEX_XML);
 		final var archiveIndexXml = new String(zipEntries.get(ARCHIVE_INDEX_XML));
