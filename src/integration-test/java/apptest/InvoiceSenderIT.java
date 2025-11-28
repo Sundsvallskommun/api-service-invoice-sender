@@ -44,7 +44,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String RAINDANCE_INCOMING_DIR = "smb://localhost:%d/files/incoming/%s";
 	private static final String RAINDANCE_ARCHIVE_DIR = "smb://localhost:%d/files/archive/%s";
 	private static final String RAINDANCE_RETURN_DIR = "smb://localhost:%d/files/return/%s";
-	
 	@Container
 	public static GenericContainer<?> smbContainer = new GenericContainer<>("dockurr/samba")
 		.withExposedPorts(445)
@@ -54,7 +53,6 @@ class InvoiceSenderIT extends AbstractAppTest {
 			"PASS", "p4ssw0rd"))
 		.withTmpFs(Map.of("/storage/return", "rw", "/storage/archive", "rw"))
 		.withClasspathResourceMapping("testdata", "/storage/incoming", BindMode.READ_WRITE);
-
 	private static int smbContainerPort;
 	private static CIFSContext cifsContext;
 	@Autowired
@@ -77,6 +75,8 @@ class InvoiceSenderIT extends AbstractAppTest {
 				.withCredentials(new NtlmPasswordAuthenticator(
 					raindanceEnvironment.domain(), raindanceEnvironment.username(), raindanceEnvironment.password()));
 		}
+		smbContainer.execInContainer("sh", "-c", "chmod -R 777 /storage");
+
 	}
 
 	/**
