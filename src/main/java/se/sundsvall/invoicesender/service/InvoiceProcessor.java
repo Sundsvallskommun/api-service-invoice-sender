@@ -277,7 +277,17 @@ public class InvoiceProcessor {
 	 */
 	String mapXmlFileToString(final String localPath) throws IOException {
 		final var path = fileSystem.getPath(localPath).resolve(ARCHIVE_INDEX);
-		return Files.readString(path, ISO_8859_1);
+
+		var stringBuilder = new StringBuilder();
+
+		try (var reader = Files.newBufferedReader(path, ISO_8859_1)) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				stringBuilder.append(line).append('\n');
+			}
+		}
+
+		return stringBuilder.toString();
 	}
 
 	/**
