@@ -1,0 +1,195 @@
+openapi: 3.1.0
+info:
+  title: InvoiceSender
+  contact: { }
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  version: "2.0"
+servers:
+  - url: http://localhost:62348
+    description: Generated server url
+paths:
+  /{municipalityId}/batches/trigger/{date}:
+    post:
+      tags:
+        - Batch Resources
+      summary: Triggers batches for a given date
+      operationId: triggerBatch
+      parameters:
+        - name: municipalityId
+          in: path
+          description: Municipality id
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Successful operation
+        "500":
+          description: Internal server error
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/batches:
+    get:
+      tags:
+        - Batch Resources
+      summary: Returns all batches matching the given filters
+      operationId: getAll
+      parameters:
+        - name: municipalityId
+          in: path
+          description: Municipality id
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: from
+          in: query
+          description: "Completed from-date (inclusive). Format: yyyy-MM-dd"
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: "Completed to-date (inclusive). Format: yyyy-MM-dd"
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          description: Page (1-based)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+            exclusiveMinimum: 0
+        - name: pageSize
+          in: query
+          description: "Page size (default: 20)"
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            exclusiveMinimum: 0
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchesResponse"
+        "204":
+          description: No content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchesResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /api-docs:
+    get:
+      tags:
+        - API
+      summary: OpenAPI
+      operationId: getApiDocs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/yaml:
+              schema:
+                type: string
+      x-auth-type: None
+      x-throttling-tier: Unlimited
+      x-wso2-mutual-ssl: Optional
+components:
+  schemas:
+    Problem:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        type:
+          type: string
+          format: uri
+        parameters:
+          type: object
+          additionalProperties: { }
+    StatusType:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          format: int32
+        reasonPhrase:
+          type: string
+    BatchDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        basename:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        totalItems:
+          type: integer
+          format: int64
+        sentItems:
+          type: integer
+          format: int64
+    BatchesResponse:
+      type: object
+      properties:
+        batches:
+          type: array
+          items:
+            $ref: "#/components/schemas/BatchDto"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+  securitySchemes: { }
