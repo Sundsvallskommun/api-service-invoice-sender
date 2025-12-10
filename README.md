@@ -6,7 +6,7 @@ _The service processes invoices from Raindance and tries to deliver them using K
 
 ### Prerequisites
 
-- **Java 21 or higher**
+- **Java 25 or higher**
 - **Maven**
 - **MariaDB**
 - **Git**
