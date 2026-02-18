@@ -1,36 +1,5 @@
 package se.sundsvall.invoicesender.service;
 
-import static java.util.Optional.ofNullable;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
-import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IN_PROGRESS;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_LEGAL_ID_FOUND;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
-
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.time.LocalDate;
@@ -61,6 +30,37 @@ import se.sundsvall.invoicesender.integration.party.LegalIdAndPartyId;
 import se.sundsvall.invoicesender.integration.party.PartyIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
+
+import static java.util.Optional.ofNullable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
+import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IN_PROGRESS;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_LEGAL_ID_FOUND;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_LEGAL_ID_NOT_FOUND_OR_INVALID;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_FOUND;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
 
 @ExtendWith({
 	MockitoExtension.class, ResourceLoaderExtension.class

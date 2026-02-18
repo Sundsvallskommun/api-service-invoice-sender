@@ -1,7 +1,5 @@
 package se.sundsvall.invoicesender.service;
 
-import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -10,6 +8,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import se.sundsvall.invoicesender.Application;
+
+import static se.sundsvall.invoicesender.service.util.CronUtil.parseCronExpression;
 
 @Component
 class ScheduledRestart {

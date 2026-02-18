@@ -1,11 +1,5 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Objects.nonNull;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
-
 import generated.se.sundsvall.messaging.MessageStatus;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -20,6 +14,12 @@ import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemStatus;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.nonNull;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 
 @Component
 public class MessagingIntegration {

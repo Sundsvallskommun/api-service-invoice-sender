@@ -1,26 +1,5 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
-import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.ERROR_TEMPLATE_NAME;
-import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.STATUS_TEMPLATE_NAME;
-
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.DigitalInvoiceRequest;
 import generated.se.sundsvall.messaging.EmailRequest;
@@ -56,6 +35,27 @@ import org.zalando.problem.ThrowableProblem;
 import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
+
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.OTHER;
+import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.ERROR_TEMPLATE_NAME;
+import static se.sundsvall.invoicesender.integration.messaging.MessagingIntegration.STATUS_TEMPLATE_NAME;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingIntegrationTests {

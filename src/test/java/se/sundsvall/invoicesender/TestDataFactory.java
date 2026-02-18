@@ -1,8 +1,5 @@
 package se.sundsvall.invoicesender;
 
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
-
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.xml.parsers.DocumentBuilder;
@@ -14,6 +11,9 @@ import org.w3c.dom.Node;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 import se.sundsvall.invoicesender.service.model.Metadata;
+
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 
 public final class TestDataFactory {
 

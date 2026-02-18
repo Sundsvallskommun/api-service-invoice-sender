@@ -1,5 +1,31 @@
 package se.sundsvall.invoicesender.service;
 
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
+import se.sundsvall.dept44.requestid.RequestId;
+import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
+import se.sundsvall.invoicesender.integration.db.DbIntegration;
+import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
+import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
+import se.sundsvall.invoicesender.integration.party.PartyIntegration;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
+import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
+import se.sundsvall.invoicesender.service.model.Metadata;
+import se.sundsvall.invoicesender.service.util.XmlUtil;
+
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
@@ -26,32 +52,6 @@ import static se.sundsvall.invoicesender.util.Constants.DISABLED_CRON;
 import static se.sundsvall.invoicesender.util.Constants.RECIPIENT_PATTERN;
 import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
 import static se.sundsvall.invoicesender.util.LegalIdUtil.isValidLegalId;
-
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.support.CronTrigger;
-import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
-import se.sundsvall.dept44.requestid.RequestId;
-import se.sundsvall.invoicesender.integration.citizen.CitizenIntegration;
-import se.sundsvall.invoicesender.integration.db.DbIntegration;
-import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
-import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
-import se.sundsvall.invoicesender.integration.messaging.MessagingIntegration;
-import se.sundsvall.invoicesender.integration.party.PartyIntegration;
-import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegration;
-import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
-import se.sundsvall.invoicesender.service.model.Metadata;
-import se.sundsvall.invoicesender.service.util.XmlUtil;
 
 @Service
 public class InvoiceProcessor {

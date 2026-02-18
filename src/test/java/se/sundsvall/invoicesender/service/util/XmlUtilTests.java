@@ -1,10 +1,5 @@
 package se.sundsvall.invoicesender.service.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.fail;
-import static se.sundsvall.invoicesender.TestDataFactory.generateNode;
-
 import java.util.stream.Stream;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.jupiter.api.Test;
@@ -16,6 +11,11 @@ import org.w3c.dom.Node;
 import org.xmlunit.builder.DiffBuilder;
 import se.sundsvall.dept44.test.annotation.resource.Load;
 import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
+import static se.sundsvall.invoicesender.TestDataFactory.generateNode;
 
 @ExtendWith(ResourceLoaderExtension.class)
 class XmlUtilTests {

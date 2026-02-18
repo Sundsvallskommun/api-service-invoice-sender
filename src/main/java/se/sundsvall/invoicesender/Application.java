@@ -1,9 +1,9 @@
 package se.sundsvall.invoicesender;
 
-import static org.springframework.boot.SpringApplication.run;
-
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
 import se.sundsvall.dept44.ServiceApplication;
+
+import static org.springframework.boot.SpringApplication.run;
 
 @ServiceApplication(exclude = ThymeleafAutoConfiguration.class)
 public class Application {

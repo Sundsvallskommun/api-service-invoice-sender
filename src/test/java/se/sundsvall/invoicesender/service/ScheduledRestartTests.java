@@ -1,11 +1,11 @@
 package se.sundsvall.invoicesender.service;
 
+import org.junit.jupiter.api.Test;
+import org.springframework.scheduling.annotation.Scheduled;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
 import static org.junit.platform.commons.util.ReflectionUtils.findMethod;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.scheduling.annotation.Scheduled;
 
 class ScheduledRestartTests {
 

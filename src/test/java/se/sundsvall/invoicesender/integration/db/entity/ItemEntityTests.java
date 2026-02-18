@@ -1,9 +1,5 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
-
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -12,6 +8,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import se.sundsvall.invoicesender.service.model.Metadata;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.NOT_SENT;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
 
 class ItemEntityTests {
 
