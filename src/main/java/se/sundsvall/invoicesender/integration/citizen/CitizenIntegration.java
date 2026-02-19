@@ -1,9 +1,9 @@
 package se.sundsvall.invoicesender.integration.citizen;
 
+import org.springframework.stereotype.Component;
+
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class CitizenIntegration {

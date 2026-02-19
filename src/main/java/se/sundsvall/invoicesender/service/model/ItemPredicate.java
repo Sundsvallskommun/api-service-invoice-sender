@@ -1,5 +1,8 @@
 package se.sundsvall.invoicesender.service.model;
 
+import java.util.function.Predicate;
+import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
+
 import static java.util.function.Predicate.not;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.METADATA_INCOMPLETE;
@@ -8,9 +11,6 @@ import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPI
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.RECIPIENT_PARTY_ID_NOT_FOUND;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.SENT;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemType.INVOICE;
-
-import java.util.function.Predicate;
-import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
 
 public final class ItemPredicate {
 

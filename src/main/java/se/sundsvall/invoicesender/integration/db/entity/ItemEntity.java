@@ -1,7 +1,5 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
-import static jakarta.persistence.EnumType.STRING;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -11,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import se.sundsvall.invoicesender.service.model.Metadata;
+
+import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Table(name = "batch_items")

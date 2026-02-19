@@ -1,7 +1,5 @@
 package se.sundsvall.invoicesender.integration.db;
 
-import static java.util.Optional.ofNullable;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.invoicesender.api.model.BatchDto;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
+
+import static java.util.Optional.ofNullable;
 
 @Component
 @Transactional

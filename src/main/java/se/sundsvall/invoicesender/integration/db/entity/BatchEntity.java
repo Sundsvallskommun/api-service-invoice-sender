@@ -1,8 +1,5 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
-import static jakarta.persistence.CascadeType.PERSIST;
-import static jakarta.persistence.FetchType.LAZY;
-
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +16,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static jakarta.persistence.CascadeType.PERSIST;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "batch_executions",

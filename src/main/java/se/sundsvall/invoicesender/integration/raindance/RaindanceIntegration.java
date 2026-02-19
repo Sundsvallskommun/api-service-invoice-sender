@@ -1,12 +1,5 @@
 package se.sundsvall.invoicesender.integration.raindance;
 
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.nio.file.StandardOpenOption.WRITE;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
-import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
-import static se.sundsvall.invoicesender.service.model.ItemPredicate.UNSENT_ITEMS;
-import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,6 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
+
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.UNHANDLED;
+import static se.sundsvall.invoicesender.integration.db.entity.ItemType.UNKNOWN;
+import static se.sundsvall.invoicesender.service.model.ItemPredicate.UNSENT_ITEMS;
+import static se.sundsvall.invoicesender.util.Constants.BATCH_FILE_SUFFIX;
 
 public class RaindanceIntegration {
 

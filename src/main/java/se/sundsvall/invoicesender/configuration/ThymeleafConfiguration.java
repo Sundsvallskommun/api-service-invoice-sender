@@ -1,13 +1,13 @@
 package se.sundsvall.invoicesender.configuration;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Configuration
 class ThymeleafConfiguration {

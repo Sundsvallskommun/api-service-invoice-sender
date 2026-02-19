@@ -1,8 +1,5 @@
 package se.sundsvall.invoicesender.integration.db.entity;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +11,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class BatchEntityTests {
 

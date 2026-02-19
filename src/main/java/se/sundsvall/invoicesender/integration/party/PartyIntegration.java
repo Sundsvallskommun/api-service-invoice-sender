@@ -1,12 +1,12 @@
 package se.sundsvall.invoicesender.integration.party;
 
-import static generated.se.sundsvall.party.PartyType.PRIVATE;
-import static se.sundsvall.invoicesender.util.LegalIdUtil.guessLegalIdCenturyDigits;
-
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import static generated.se.sundsvall.party.PartyType.PRIVATE;
+import static se.sundsvall.invoicesender.util.LegalIdUtil.guessLegalIdCenturyDigits;
 
 @Component
 public class PartyIntegration {

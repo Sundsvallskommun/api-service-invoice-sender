@@ -1,9 +1,5 @@
 package se.sundsvall.invoicesender;
 
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
-
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -12,6 +8,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static se.sundsvall.invoicesender.TestDataFactory.createBatchEntity;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("junit")

@@ -1,11 +1,5 @@
 package se.sundsvall.invoicesender.api;
 
-import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
-import static org.springframework.http.MediaType.ALL_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.ResponseEntity.noContent;
-import static org.springframework.http.ResponseEntity.ok;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,6 +25,12 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.invoicesender.api.model.BatchesResponse;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.service.InvoiceProcessor;
+
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.ALL_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.ResponseEntity.noContent;
+import static org.springframework.http.ResponseEntity.ok;
 
 @Tag(name = "Batch Resources")
 @RestController

@@ -1,11 +1,5 @@
 package se.sundsvall.invoicesender.integration.messaging;
 
-import static java.time.format.DateTimeFormatter.ISO_DATE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
-
 import generated.se.sundsvall.messaging.Details;
 import generated.se.sundsvall.messaging.DigitalInvoiceFile;
 import java.io.IOException;
@@ -20,6 +14,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
+
+import static java.time.format.DateTimeFormatter.ISO_DATE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingMapperTests {

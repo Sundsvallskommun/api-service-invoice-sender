@@ -1,5 +1,7 @@
 package se.sundsvall.invoicesender.util;
 
+import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
@@ -19,8 +21,6 @@ import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_IS_NOT
 import static se.sundsvall.invoicesender.service.model.ItemPredicate.ITEM_LACKS_METADATA;
 import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_LEGAL_ID;
 import static se.sundsvall.invoicesender.service.model.ItemPredicate.RECIPIENT_HAS_INVALID_PARTY_ID;
-
-import org.junit.jupiter.api.Test;
 
 class PredicateTests {
 
