@@ -125,29 +125,19 @@ components:
     Problem:
       type: object
       properties:
-        status:
-          $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
         detail:
           type: string
         instance:
           type: string
           format: uri
+        status:
+          type: integer
+          format: int32
+        title:
+          type: string
         type:
           type: string
           format: uri
-        parameters:
-          type: object
-          additionalProperties: { }
-    StatusType:
-      type: object
-      properties:
-        statusCode:
-          type: integer
-          format: int32
-        reasonPhrase:
-          type: string
     BatchDto:
       type: object
       properties:

@@ -7,14 +7,14 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.zalando.problem.Status;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.violations.Violation;
 import se.sundsvall.invoicesender.Application;
 import se.sundsvall.invoicesender.api.model.BatchDto;
 import se.sundsvall.invoicesender.api.model.BatchesResponse;
@@ -31,9 +31,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
+@AutoConfigureWebTestClient
 class BatchResourceTests {
 
 	private static final String PATH = "/{municipalityId}/batches";
@@ -58,7 +60,7 @@ class BatchResourceTests {
 			.getResponseBody();
 
 		assertThat(response).isNotNull();
-		assertThat(response.getStatus()).isEqualTo(Status.BAD_REQUEST);
+		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 
 		verifyNoInteractions(mockDbIntegration);
 	}
@@ -88,8 +90,8 @@ class BatchResourceTests {
 			.getResponseBody();
 
 		assertThat(response).isNotNull();
-		assertThat(response.getStatus()).isEqualTo(Status.BAD_REQUEST);
-		assertThat(response.getViolations()).hasSize(2).extracting(Violation::getField)
+		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(response.getViolations()).hasSize(2).extracting(Violation::field)
 			.containsExactlyInAnyOrder("getAll.page", "getAll.pageSize");
 
 		verifyNoInteractions(mockDbIntegration);

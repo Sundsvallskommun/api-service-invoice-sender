@@ -29,9 +29,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
-import org.zalando.problem.Problem;
-import org.zalando.problem.Status;
-import org.zalando.problem.ThrowableProblem;
+import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
@@ -47,6 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static se.sundsvall.invoicesender.TestDataFactory.createItemEntity;
 import static se.sundsvall.invoicesender.integration.db.entity.ItemStatus.IGNORED;
@@ -152,7 +152,7 @@ class MessagingIntegrationTests {
 	@Test
 	void testSendInvoiceWhenCertificateProblemIsThrown() throws IOException {
 		final var invoice = createItemEntity(item -> item.setFilename("test.file"));
-		final var certificateException = Problem.valueOf(Status.BAD_GATEWAY, "prefix [invalid_token_response] suffix");
+		final var certificateException = Problem.valueOf(BAD_GATEWAY, "prefix [invalid_token_response] suffix");
 
 		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
@@ -173,7 +173,7 @@ class MessagingIntegrationTests {
 
 		when(messagingMapper.toDigitalInvoiceRequest(invoice, testFilePath)).thenReturn(new DigitalInvoiceRequest());
 		when(mockClient.sendDigitalInvoice(eq(MUNICIPALITY_ID), any(DigitalInvoiceRequest.class)))
-			.thenThrow(Problem.valueOf(Status.BAD_GATEWAY, message));
+			.thenThrow(Problem.valueOf(BAD_GATEWAY, message));
 
 		final var result = messagingIntegration.sendInvoice(testFilePath, invoice, MUNICIPALITY_ID);
 
