@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
-import org.zalando.problem.ThrowableProblem;
+import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.invoicesender.integration.db.entity.BatchEntity;
 import se.sundsvall.invoicesender.integration.db.entity.ItemEntity;
@@ -57,7 +57,7 @@ public class MessagingIntegration {
 
 			return status == MessageStatus.SENT ? SENT : NOT_SENT;
 		} catch (final ThrowableProblem e) {
-			if (nonNull(e.getDetail()) && e.getDetail().contains("[invalid_token_response]")) {
+			if (nonNull(e.getMessage()) && e.getMessage().contains("[invalid_token_response]")) {
 				LOG.error("Messaging indicates that the certificate to the external digital mail provider in digital-mail-sender-service is invalid");
 				throw e;
 			}
