@@ -1,35 +1,35 @@
 openapi: 3.1.0
 info:
   title: InvoiceSender
-  contact: { }
+  contact: {}
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
   version: "2.0"
 servers:
-  - url: http://localhost:62348
-    description: Generated server url
+- url: http://localhost:63588
+  description: Generated server url
 paths:
   /{municipalityId}/batches/trigger/{date}:
     post:
       tags:
-        - Batch Resources
+      - Batch Resources
       summary: Triggers batches for a given date
       operationId: triggerBatch
       parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality id
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: date
-          in: path
-          required: true
-          schema:
-            type: string
-            format: date
+      - name: municipalityId
+        in: path
+        description: Municipality id
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: date
+        in: path
+        required: true
+        schema:
+          type: string
+          format: date
       responses:
         "200":
           description: Successful operation
@@ -42,49 +42,49 @@ paths:
   /{municipalityId}/batches:
     get:
       tags:
-        - Batch Resources
+      - Batch Resources
       summary: Returns all batches matching the given filters
       operationId: getAll
       parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality id
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: from
-          in: query
-          description: "Completed from-date (inclusive). Format: yyyy-MM-dd"
-          required: false
-          schema:
-            type: string
-            format: date
-        - name: to
-          in: query
-          description: "Completed to-date (inclusive). Format: yyyy-MM-dd"
-          required: false
-          schema:
-            type: string
-            format: date
-        - name: page
-          in: query
-          description: Page (1-based)
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 1
-            exclusiveMinimum: 0
-        - name: pageSize
-          in: query
-          description: "Page size (default: 20)"
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 20
-            exclusiveMinimum: 0
+      - name: municipalityId
+        in: path
+        description: Municipality id
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: from
+        in: query
+        description: "Completed from-date (inclusive). Format: yyyy-MM-dd"
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        description: "Completed to-date (inclusive). Format: yyyy-MM-dd"
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: page
+        in: query
+        description: Page (1-based)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+          exclusiveMinimum: 0
+      - name: pageSize
+        in: query
+        description: "Page size (default: 20)"
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          exclusiveMinimum: 0
       responses:
         "200":
           description: Successful operation
@@ -107,7 +107,7 @@ paths:
   /api-docs:
     get:
       tags:
-        - API
+      - API
       summary: OpenAPI
       operationId: getApiDocs
       responses:
@@ -125,19 +125,19 @@ components:
     Problem:
       type: object
       properties:
+        title:
+          type: string
         detail:
           type: string
         instance:
           type: string
           format: uri
-        status:
-          type: integer
-          format: int32
-        title:
-          type: string
         type:
           type: string
           format: uri
+        status:
+          type: integer
+          format: int32
     BatchDto:
       type: object
       properties:
@@ -182,4 +182,4 @@ components:
         totalElements:
           type: integer
           format: int64
-  securitySchemes: { }
+  securitySchemes: {}
