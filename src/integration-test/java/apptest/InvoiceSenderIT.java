@@ -45,7 +45,7 @@ class InvoiceSenderIT extends AbstractAppTest {
 	private static final String RAINDANCE_ARCHIVE_DIR = "smb://localhost:%d/files/archive/%s";
 	private static final String RAINDANCE_RETURN_DIR = "smb://localhost:%d/files/return/%s";
 	@Container
-	public static GenericContainer<?> smbContainer = new GenericContainer<>("dockurr/samba")
+	public static GenericContainer<?> smbContainer = new GenericContainer<>("dockurr/samba:4.22.6")
 		.withExposedPorts(445)
 		.withEnv(Map.of(
 			"NAME", "files",
