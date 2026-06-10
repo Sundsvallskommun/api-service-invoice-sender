@@ -141,17 +141,34 @@ public class MessagingIntegration {
 	}
 
 	String generateSlackMessage(final BatchEntity batch, LocalDate date) {
+
+		if (!batch.isProcessingEnabled()) {
+			return """
+				Batch: %s
+				Date: %s
+				Processing is disabled for this batchtype - its documents are delivered as regular mail
+				""".formatted(batch.getBasename(), date);
+		}
+
 		final var numberOfSentInvoices = batch.getSentItems();
 		final var numberOfNotSentInvoices = batch.getItems().stream()
 			.filter(invoices -> invoices.getType() == INVOICE)
 			.filter(invoices -> invoices.getStatus() != SENT)
 			.count();
 
-		return """
-			Batch: %s
-			Date: %s
-			Invoices sent: %s
-			Invoices not sent: %s
-			""".formatted(batch.getBasename(), date, numberOfSentInvoices, numberOfNotSentInvoices);
+		if (numberOfSentInvoices == 0 && numberOfNotSentInvoices == 0) {
+			return """
+				Batch: %s
+				Date: %s
+				No invoices to send
+				""".formatted(batch.getBasename(), date);
+		} else {
+			return """
+				Batch: %s
+				Date: %s
+				Invoices sent digitally via Kivra: %s
+				Invoices sent via regular mail: %s
+				""".formatted(batch.getBasename(), date, numberOfSentInvoices, numberOfNotSentInvoices);
+		}
 	}
 }

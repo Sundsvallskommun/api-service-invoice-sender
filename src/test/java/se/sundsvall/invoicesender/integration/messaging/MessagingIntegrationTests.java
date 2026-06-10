@@ -8,6 +8,7 @@ import generated.se.sundsvall.messaging.MessageStatus;
 import generated.se.sundsvall.messaging.SlackRequest;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -186,7 +187,7 @@ class MessagingIntegrationTests {
 	@Test
 	void testSendErrorReport() {
 		final var batchName = "batchName";
-		final var date = LocalDate.now();
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 		final var message = "message";
 		final var recipientEmailAddress = "Recipeint@test.se";
 		final var recipientEmailAddresses = List.of(recipientEmailAddress);
@@ -209,7 +210,7 @@ class MessagingIntegrationTests {
 	@MethodSource("sendReportArgumentProvider")
 	void testSendErrorReportWhenExcpetionIsThrown(List<String> recipientEmailAddresses, int expectedNumberOfCalls) {
 		final var batchName = "batchName";
-		final var date = LocalDate.now();
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 		final var message = "message";
 
 		when(mockIntegrationProperties.errorReport()).thenReturn(mockErrorReportProperties);
@@ -229,7 +230,7 @@ class MessagingIntegrationTests {
 
 	@Test
 	void testSendStatusReport() {
-		final var date = LocalDate.now();
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 		final List<BatchEntity> batches = emptyList();
 		final var recipientEmailAddress = "Recipeint@test.se";
 		final List<String> recipientEmailAddresses = List.of(recipientEmailAddress);
@@ -252,7 +253,7 @@ class MessagingIntegrationTests {
 	@ParameterizedTest
 	@MethodSource("sendReportArgumentProvider")
 	void testSendStatusReportWhenExceptionIsThrown(List<String> recipientEmailAddresses, int expectedNumberOfCalls) {
-		final var date = LocalDate.now();
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 		final List<BatchEntity> batches = emptyList();
 
 		when(mockIntegrationProperties.statusReport()).thenReturn(mockStatusReportProperties);
@@ -280,7 +281,7 @@ class MessagingIntegrationTests {
 	@Test
 	void testSendSlackMessage() {
 		final var batch = new BatchEntity();
-		final var date = LocalDate.now();
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 		final var slackRequest = new SlackRequest()
 			.channel("Test-Channel")
 			.token("Test-Token")
@@ -298,7 +299,7 @@ class MessagingIntegrationTests {
 	@Test
 	void testSendSlackMessageWhenExceptionIsThrown() {
 		final var batch = new BatchEntity();
-		final var date = LocalDate.now();
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 		final var slackRequest = new SlackRequest();
 
 		when(messagingMapper.toSlackRequest(anyString())).thenReturn(slackRequest);
@@ -341,16 +342,54 @@ class MessagingIntegrationTests {
 				new ItemEntity().withType(OTHER).withStatus(IGNORED), // Check that ArchiveIndex.xml is not counted as an invoice.
 				new ItemEntity().withType(INVOICE).withStatus(SENT),
 				new ItemEntity().withType(INVOICE).withStatus(NOT_SENT)))
-			.withSentItems(1);
-		final var date = LocalDate.of(2025, 2, 28);
+			.withSentItems(1)
+			.withProcessingEnabled(true);
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 
 		final var message = messagingIntegration.generateSlackMessage(batch, date);
 
 		final var expected = """
 			Batch: testBasename
 			Date: 2025-02-28
-			Invoices sent: 1
-			Invoices not sent: 1
+			Invoices sent digitally via Kivra: 1
+			Invoices sent via regular mail: 1
+			""";
+		assertThat(message).isEqualTo(expected);
+	}
+
+	@Test
+	void testGenerateSlackMessageWithProcessingDisabled() {
+		final var batch = new BatchEntity()
+			.withBasename("testBasename")
+			.withProcessingEnabled(false);
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
+
+		final var message = messagingIntegration.generateSlackMessage(batch, date);
+
+		final var expected = """
+			Batch: testBasename
+			Date: 2025-02-28
+			Processing is disabled for this batchtype - its documents are delivered as regular mail
+			""";
+		assertThat(message).isEqualTo(expected);
+	}
+
+	@Test
+	void testGenerateSlackMessageWithNoInvoices() {
+		final var batch = new BatchEntity()
+			.withBasename("testBasename")
+			.withItems(List.of(
+				new ItemEntity().withType(OTHER).withStatus(IGNORED))) // Check that ArchiveIndex.xml is not counted as an invoice.
+			.withSentItems(0)
+			.withProcessingEnabled(true);
+		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
+
+		final var message = messagingIntegration.generateSlackMessage(batch, date);
+
+		final var expected = """
+			Batch: testBasename
+			Date: 2025-02-28
+			No invoices to send
 			""";
 		assertThat(message).isEqualTo(expected);
 	}
