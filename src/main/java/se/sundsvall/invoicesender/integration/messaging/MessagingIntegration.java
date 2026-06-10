@@ -142,7 +142,6 @@ public class MessagingIntegration {
 
 	String generateSlackMessage(final BatchEntity batch, LocalDate date) {
 
-		final String baseName = batch.getBasename();
 		if (!batch.isProcessingEnabled()) {
 			return """
 				Batch: %s
