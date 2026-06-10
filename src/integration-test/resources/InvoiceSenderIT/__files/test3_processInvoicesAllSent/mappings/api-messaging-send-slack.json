@@ -7,7 +7,7 @@
 				"equalToJson": {
 					"token": "someToken",
 					"channel": "someChannel",
-					"message": "Batch: Faktura-pdf-200103_000003\nDate: 2020-01-03\nInvoices sent: 2\nInvoices not sent: 0\n"
+					"message": "Batch: Faktura-pdf-200103_000003\nDate: 2020-01-03\nInvoices sent digitally via Kivra: 2\nInvoices sent via regular mail: 0\n"
 				}
 			}
 		]

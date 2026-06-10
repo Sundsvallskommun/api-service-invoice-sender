@@ -341,7 +341,8 @@ class MessagingIntegrationTests {
 				new ItemEntity().withType(OTHER).withStatus(IGNORED), // Check that ArchiveIndex.xml is not counted as an invoice.
 				new ItemEntity().withType(INVOICE).withStatus(SENT),
 				new ItemEntity().withType(INVOICE).withStatus(NOT_SENT)))
-			.withSentItems(1);
+			.withSentItems(1)
+			.withProcessingEnabled(true);
 		final var date = LocalDate.of(2025, 2, 28);
 
 		final var message = messagingIntegration.generateSlackMessage(batch, date);
@@ -349,8 +350,46 @@ class MessagingIntegrationTests {
 		final var expected = """
 			Batch: testBasename
 			Date: 2025-02-28
-			Invoices sent: 1
-			Invoices not sent: 1
+			Invoices sent digitally via Kivra: 1
+			Invoices sent via regular mail: 1
+			""";
+		assertThat(message).isEqualTo(expected);
+	}
+
+	@Test
+	void testGenerateSlackMessageWithProcessingDisabled() {
+		final var batch = new BatchEntity()
+			.withBasename("Betalningspaminnelse-pdf")
+			.withProcessingEnabled(false);
+		final var date = LocalDate.of(2025, 2, 28);
+
+		final var message = messagingIntegration.generateSlackMessage(batch, date);
+
+		final var expected = """
+			Processing disabled for "Betalningspåminnelser"
+			Batch: Betalningspaminnelse-pdf
+			Date: 2025-02-28
+			Processing disabled for this batch - its documents are delivered as regular mail
+			""";
+		assertThat(message).isEqualTo(expected);
+	}
+
+	@Test
+	void testGenerateSlackMessageWithNoInvoices() {
+		final var batch = new BatchEntity()
+			.withBasename("testBasename")
+			.withItems(List.of(
+				new ItemEntity().withType(OTHER).withStatus(IGNORED))) // Check that ArchiveIndex.xml is not counted as an invoice.
+			.withSentItems(0)
+			.withProcessingEnabled(true);
+		final var date = LocalDate.of(2025, 2, 28);
+
+		final var message = messagingIntegration.generateSlackMessage(batch, date);
+
+		final var expected = """
+			Batch: testBasename
+			Date: 2025-02-28
+			No invoices to send
 			""";
 		assertThat(message).isEqualTo(expected);
 	}
