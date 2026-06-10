@@ -143,14 +143,11 @@ public class MessagingIntegration {
 	String generateSlackMessage(final BatchEntity batch, LocalDate date) {
 
 		final String baseName = batch.getBasename();
-		if (!batch.isProcessingEnabled()
-			&& baseName != null
-			&& baseName.startsWith("Betalningspaminnelse")) {
+		if (!batch.isProcessingEnabled()) {
 			return """
-				Processing disabled for "Betalningspåminnelser"
 				Batch: %s
 				Date: %s
-				Processing disabled for this batch - its documents are delivered as regular mail
+				Processing is disabled for this batchtype - its documents are delivered as regular mail
 				""".formatted(batch.getBasename(), date);
 		}
 

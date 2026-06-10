@@ -360,17 +360,16 @@ class MessagingIntegrationTests {
 	@Test
 	void testGenerateSlackMessageWithProcessingDisabled() {
 		final var batch = new BatchEntity()
-			.withBasename("Betalningspaminnelse-pdf")
+			.withBasename("testBasename")
 			.withProcessingEnabled(false);
 		final var date = LocalDate.of(2025, Month.FEBRUARY, 28);
 
 		final var message = messagingIntegration.generateSlackMessage(batch, date);
 
 		final var expected = """
-			Processing disabled for "Betalningspåminnelser"
-			Batch: Betalningspaminnelse-pdf
+			Batch: testBasename
 			Date: 2025-02-28
-			Processing disabled for this batch - its documents are delivered as regular mail
+			Processing is disabled for this batchtype - its documents are delivered as regular mail
 			""";
 		assertThat(message).isEqualTo(expected);
 	}
