@@ -5,6 +5,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,7 @@ public class InvoiceProcessor {
 				final var cronTrigger = new CronTrigger(cronExpression);
 
 				// Schedule it
-				taskScheduler.schedule(() -> executeBatch(LocalDate.now(), municipalityId, batchName), cronTrigger);
+				taskScheduler.schedule(() -> executeBatch(LocalDate.now(ZoneId.systemDefault()), municipalityId, batchName), cronTrigger);
 			});
 		});
 	}
@@ -430,7 +431,7 @@ public class InvoiceProcessor {
 
 	void updateAndPersistBatch(final BatchEntity batchEntity) {
 		batchEntity.setCompleted(true);
-		batchEntity.setCompletedAt(LocalDateTime.now());
+		batchEntity.setCompletedAt(LocalDateTime.now(ZoneId.systemDefault()));
 
 		batchEntity.setIgnoredItems(batchEntity.getItems().stream()
 			.filter(item -> item.getStatus() == IGNORED)

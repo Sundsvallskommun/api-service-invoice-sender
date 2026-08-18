@@ -13,6 +13,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,7 +51,7 @@ public class BatchEntity {
 	private LocalDate date;
 
 	@Column(name = "started_at", nullable = false)
-	private LocalDateTime startedAt = LocalDateTime.now();
+	private LocalDateTime startedAt = LocalDateTime.now(ZoneId.systemDefault());
 
 	@Column(name = "completed_at")
 	private LocalDateTime completedAt;

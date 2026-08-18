@@ -1,6 +1,7 @@
 package se.sundsvall.invoicesender.util;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.stream.Stream;
@@ -54,7 +55,7 @@ public final class LegalIdUtil {
 	}
 
 	public static String guessLegalIdCenturyDigits(final String legalIdWithDigitsOnly) {
-		var currentYear = LocalDate.now().getYear();
+		var currentYear = LocalDate.now(ZoneId.systemDefault()).getYear();
 		var birthYear = getBirthYear(legalIdWithDigitsOnly);
 
 		if (birthYear > currentYear % 100) {
