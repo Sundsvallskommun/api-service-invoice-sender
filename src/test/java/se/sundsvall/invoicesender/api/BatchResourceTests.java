@@ -21,6 +21,7 @@ import se.sundsvall.invoicesender.api.model.BatchesResponse;
 import se.sundsvall.invoicesender.integration.db.DbIntegration;
 import se.sundsvall.invoicesender.service.InvoiceProcessor;
 
+import static java.time.Month.FEBRUARY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -67,7 +68,7 @@ class BatchResourceTests {
 
 	@Test
 	void triggerBatch() {
-		final var date = LocalDate.of(2019, 2, 28);
+		final var date = LocalDate.of(2019, FEBRUARY, 28);
 
 		webTestClient.post()
 			.uri(PATH + "/trigger/{date}", "2281", date.format(DateTimeFormatter.ISO_DATE))
