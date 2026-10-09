@@ -1,11 +1,5 @@
 package apptest;
 
-import static apptest.util.TestUtil.extractZipFile;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpStatus.OK;
-import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -29,6 +23,12 @@ import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.invoicesender.Application;
 import se.sundsvall.invoicesender.integration.raindance.RaindanceIntegrationProperties;
 import se.sundsvall.invoicesender.service.util.XmlUtil;
+
+import static apptest.util.TestUtil.extractZipFile;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpStatus.OK;
+import static se.sundsvall.invoicesender.util.Constants.X_PATH_FILENAME_EXPRESSION;
 
 @Testcontainers
 @WireMockAppTestSuite(files = "classpath:/InvoiceSenderIT/", classes = Application.class)
